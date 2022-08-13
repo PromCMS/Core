@@ -22,7 +22,7 @@ class App {
       throw new AppException("Please define your project root before running the app") ;
     }
 
-    if (!$this->app) {
+    if (!isset($this->app)) {
       // Add dependency container
       $container = new Container();
   
