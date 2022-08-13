@@ -55,7 +55,7 @@ return function (Container $container) {
     ]),
     'db' => new ConfigPart__Database([
       'root' => Path::join($appRoot, '.database'),
-      'storeConfig' => (object) [
+      'storeConfig' => [
         'auto_cache' => !$IS_DEV_ENV,
         'cache_lifetime' => $IS_DEV_ENV ? null : 180, // Three minutes
         'timeout' => false,
