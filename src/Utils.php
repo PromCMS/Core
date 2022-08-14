@@ -125,7 +125,7 @@ class Utils
             throw new Exception("Module must have $moduleInfoFileName file created");
           }
 
-          $moduleInfoContent = json_decode(file_get_contents($moduleInfoPath));
+          $moduleInfoContent = (array) json_decode(file_get_contents($moduleInfoPath));
 
           if (!$moduleInfoContent) {
             throw new Exception("Not a valid module info");
@@ -151,8 +151,8 @@ class Utils
       $leftModuleInfoPath = Path::join($leftModuleRoot, 'module-info.json');
       $rightModuleInfoPath = Path::join($rightModuleRoot, 'module-info.json');
 
-      $leftModuleInfoContent = json_decode(file_get_contents($leftModuleInfoPath));
-      $rightModuleInfoContent = json_decode(file_get_contents($rightModuleInfoPath));
+      $leftModuleInfoContent = (array) json_decode(file_get_contents($leftModuleInfoPath));
+      $rightModuleInfoContent = (array) json_decode(file_get_contents($rightModuleInfoPath));
 
       return static::sortByOrderField($leftModuleInfoContent, $rightModuleInfoContent);
     });
@@ -160,7 +160,7 @@ class Utils
     return array_merge(['Core'], $moduleNames);
   }
 
-  private static function sortByOrderField($left, $right)
+  private static function sortByOrderField(array $left, array $right)
   {
     if (isset($left["order"]) || isset($right["order"])) {
       if (isset($left["order"])  && !isset($right["order"])) {

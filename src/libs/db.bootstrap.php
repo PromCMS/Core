@@ -13,5 +13,5 @@ return function (Container $container) {
     $config->db->storeConfig,
   );
 
-  Model::$defaultLanguage = $config->i18n->language;
+  Model::$defaultLanguage = $config->i18n->default;
 };
