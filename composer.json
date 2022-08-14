@@ -1,7 +1,6 @@
 {
   "name": "prom-cms/core",
   "description": "Core for PromCMS",
-  "type": "project",
   "license": "MIT",
   "authors": [
     {
