@@ -12,7 +12,7 @@ return function (App $app, Container $container) {
   // Make sure that 'Core' module is loaded first
   $moduleNames = Utils::getValidModuleNames($appRoot);
   /** @var Utils */
-  $utils = $container->get('utils');
+  $utils = $container->get(Utils::class);
   /** @var Config */
   $config = $container->get(Config::class);
 
