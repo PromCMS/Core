@@ -84,6 +84,12 @@ class App
       $modulesBootstrap = require_once __DIR__ . '/libs/modules.bootstrap.php';
 
       $modulesBootstrap($this->app, $container);
+
+      $this->app->run();
     }
+  }
+
+  public function getSlimApp() {
+    return $this->app;
   }
 }
