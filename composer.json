@@ -11,10 +11,7 @@
   "autoload": {
     "psr-4": {
       "PromCMS\\Core\\": "src/"
-    },
-    "files": [
-      "src/autoload.php"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {

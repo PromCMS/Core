@@ -7,17 +7,40 @@ use Slim\App as SlimApp;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\Session;
 
+use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
+use PromCMS\Core\Bootstrap\Utils as UtilsBootstrap;
+use PromCMS\Core\Bootstrap\Database as DatabaseBootstrap;
+use PromCMS\Core\Bootstrap\FlySystem as FlySystemBootstrap;
+use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
+use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
+use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
+
+/**
+ * PromCMS App object
+ */
 class App
 {
   private SlimApp $app;
   private string $root;
+  private static array $appModules = [
+    ConfigBootstrap::class,
+    UtilsBootstrap::class,
+    DatabaseBootstrap::class,
+    FlySystemBootstrap::class,
+    MailerBootstrap::class,
+    TwigBootstrap::class,
+  ];
 
   function __construct(string $root)
   {
     $this->root = $root;
   }
 
-  public function run()
+  /**
+   * Initializes the Application
+   * @param bool $headless Defines if current instance should not initialize session related stuff
+   */
+  public function init(bool $headless = false)
   {
     if (!$this->root) {
       throw new AppException(
@@ -34,62 +57,81 @@ class App
       // Create an app
       $this->app = AppFactory::create();
 
-      $container->set('session', new \SlimSession\Helper());
-
+      // Set app root to container
       $container->set('app.root', $this->root);
 
-      // Add routing middleware
-      $this->app->addRoutingMiddleware();
+      if (!$headless) {
+        // Add session to container
+        $container->set('session', new \SlimSession\Helper());
 
-      // Add SLIM PHP body parsing middleware
-      $this->app->addBodyParsingMiddleware();
+        // Add routing middleware
+        $this->app->addRoutingMiddleware();
+  
+        // Add SLIM PHP body parsing middleware
+        $this->app->addBodyParsingMiddleware();
+      }
 
-      $libsToInject = [
-        '/libs/config.bootstrap.php',
-        '/libs/utils.bootstrap.php',
-        '/libs/db.bootstrap.php',
-        '/libs/fly-system.bootstrap.php',
-        '/libs/mailer.bootstrap.php',
-        '/libs/twig.bootstrap.php',
-      ];
-
-      // Inject core php modules dynamically
-      foreach ($libsToInject as $libPath) {
-        $lib = require __DIR__ . $libPath;
-        $lib($container);
+      // Run bootstrap classes
+      foreach (static::$appModules as $className) {
+        (new $className())->run($this->app, $container);
       }
 
       /** @var Config */
       $config = $container->get(Config::class);
       $isDevelopment = $config->env->development;
 
-      // SLIM PHP error middleware
-      $this->app->addErrorMiddleware(
-        $config->env->debug || $isDevelopment,
-        true,
-        true,
-      );
+      if (!$headless) {
+        // SLIM PHP error middleware - we need to add this after  
+        $this->app->addErrorMiddleware(
+          $config->env->debug || $isDevelopment,
+          true,
+          true,
+        );
 
-      // Session
-      $this->app->add(
-        new Session([
-          'name' => 'prom_session',
-          'autorefresh' => true,
-          'lifetime' => '1 hour',
-          'httponly' => !$isDevelopment,
-          'secure' => !$isDevelopment,
-        ]),
-      );
+        // Add session middleware
+        $this->app->add(
+          new Session([
+            'name' => 'prom_session',
+            'autorefresh' => true,
+            'lifetime' => '1 hour',
+            'httponly' => !$isDevelopment,
+            'secure' => !$isDevelopment,
+          ]),
+        );
+      }
 
-      $modulesBootstrap = require_once __DIR__ . '/libs/modules.bootstrap.php';
-
-      $modulesBootstrap($this->app, $container);
-
-      $this->app->run();
+      // Initialize modules
+      (new ModulesBootstrap())->run($this->app, $container);
     }
   }
 
+  /**
+   * Returns slim app instance
+   */
   public function getSlimApp() {
     return $this->app;
+  }
+
+  /**
+   * Unset the slim app 
+   */
+  public function destroySlimApp() {
+    unset($this->app);
+  }
+
+  public function getAppModules() {
+    return static::$appModules;
+  }
+
+  /**
+   * Run the app instance
+   * @throws AppException in case the app is not initialized first
+   */
+  public function run() {
+    if (!isset($this->app)) {
+      throw new AppException('Cannot run application without initializing it');
+    }
+
+    $this->app->run();
   }
 }

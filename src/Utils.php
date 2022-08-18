@@ -3,23 +3,9 @@
 namespace PromCMS\Core;
 
 use Exception;
-use DI\Container;
 
 class Utils
 {
-  private string $modelsFolderName;
-  private string $controllersFolderName;
-
-  public function __construct(Container $container)
-  {
-    /** @var Config */
-    $config = $container->get(Config::class);
-    $modulesConfig = $config->system->modules;
-
-    $this->modelsFolderName = $modulesConfig->modelsFolderName;
-    $this->controllersFolderName = $modulesConfig->controllersFolderName;
-  }
-
   /**
    * Auto-loads models for specified module root. This is primarily used by modules.
    * @return string[]|false An array of module names or
@@ -30,7 +16,7 @@ class Utils
     $classes = get_declared_classes();
 
     // Autoload files and save imported filepaths to an array
-    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, $this->modelsFolderName));
+    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, "Models"));
 
     if (!$importedFilepaths) {
       return false;
@@ -42,7 +28,7 @@ class Utils
 
   public function autoloadControllers(string $moduleRoot)
   {
-    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, $this->controllersFolderName));
+    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, "Controllers"));
 
     if (!$importedFilepaths) {
       return false;

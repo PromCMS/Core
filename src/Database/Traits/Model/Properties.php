@@ -1,26 +1,6 @@
 <?php
+
 namespace PromCMS\Core\Database\Traits\Model;
-
-use PromCMS\Core\Database\ModelResult;
-use SleekDB\Store as SleekStore;
-
-trait Events
-{
-  public static function beforeSafe(array $args): array
-  {
-    return $args;
-  }
-
-  public static function beforeCreate(array $args): array
-  {
-    return $args;
-  }
-
-  public static function afterCreate(ModelResult $item): ModelResult
-  {
-    return $item;
-  }
-}
 
 trait Properties
 {
@@ -165,31 +145,3 @@ trait Properties
     return static::$casts;
   }
 }
-
-trait Store
-{
-  protected SleekStore $store;
-  protected static string $databaseDirectory;
-  protected static array $storeConfiguration;
-
-  /**
-   *  Returns store
-   */
-  public function getStore(): SleekStore
-  {
-    return $this->store;
-  }
-
-  /**
-   * Sets static config
-   */
-  static function setStoreConfig(
-    string $databaseDirectory,
-    array $storeConfiguration
-  ) {
-    static::$databaseDirectory = $databaseDirectory;
-    static::$storeConfiguration = $storeConfiguration;
-  }
-}
-
-
