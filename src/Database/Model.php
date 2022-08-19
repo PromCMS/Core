@@ -57,7 +57,7 @@ abstract class Model
    */
   public function __call($method, $parameters)
   {
-    if (method_exists(PromCMS\Core\Database\Query::class, $method)) {
+    if (method_exists(Query::class, $method)) {
       return $this->query()->{$method}(...$parameters);
     }
 
