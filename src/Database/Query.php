@@ -12,7 +12,7 @@ use SleekDB\Query as SleekQuery;
 
 class Query
 {
-  use Traits\Query\Managers, Traits\Query\Builder;
+  use \PromCMS\Core\Database\Traits\Query\Managers, \PromCMS\Core\Database\Traits\Query\Builder;
 
   protected Store $store;
   protected Model $modelClass;

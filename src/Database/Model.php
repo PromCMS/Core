@@ -8,7 +8,7 @@ use SleekDB\Store as SleekStore;
 
 abstract class Model
 {
-  use Traits\Model\Events, Traits\Model\Properties, Traits\Model\Store;
+  use \PromCMS\Core\Database\Traits\Model\Events, \PromCMS\Core\Database\Traits\Model\Properties, \PromCMS\Core\Database\Traits\Model\Store;
 
   function __construct()
   {
