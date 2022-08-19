@@ -189,8 +189,6 @@ class Query
       $this->getQueryBuilder()->_getConditionProperties()['whereConditions'],
     );
 
-    define('PHP_VERSION_MAJOR', explode('.', phpversion())[0]);
-
     if (!strpos($whereConditions, '["id","=",') !== false) {
       throw new Exception('You must specify where clause to use update');
     }
