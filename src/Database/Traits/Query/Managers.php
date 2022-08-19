@@ -4,7 +4,7 @@ namespace PromCMS\Core\Database\Traits\Query;
 use SleekDB\QueryBuilder;
 use SleekDB\Store;
 
-trait Builder
+trait Managers
 {
   protected QueryBuilder $queryBuilder;
 

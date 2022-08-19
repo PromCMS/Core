@@ -2,7 +2,7 @@
 
 namespace PromCMS\Core\Database\Traits\Query;
 
-trait Managers
+trait Builder
 {
   function where(array $arg)
   {
