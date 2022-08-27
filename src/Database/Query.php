@@ -447,13 +447,26 @@ class Query
   protected function getFieldKeyAliases()
   {
     if (!$this->modelClass->hasTranslationsEnabled()) {
-      return $this->modelClass::getFieldKeys();
+      $keys = $this->modelClass::getFieldKeys();
+
+      if ($this->modelClass->hasTimestamps()) {
+        $keys = array_merge($keys, ['updated_at', 'created_at']);
+      }
+
+      return $keys;
     }
 
     [
       $neutralFields,
       $intlFields,
     ] = $this->modelClass::getInternationalizedFields();
+
+    if ($this->modelClass->hasTimestamps()) {
+      $neutralFields = array_merge($neutralFields, [
+        'updated_at',
+        'created_at',
+      ]);
+    }
 
     $fieldKeys = $neutralFields;
     $translationsFieldName = static::$TRANSLATIONS_FIELD_NAME;
