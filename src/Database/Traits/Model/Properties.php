@@ -79,9 +79,15 @@ trait Properties
     return $this->softDelete;
   }
 
-  public static function getFieldKeys(): array
+  public function getFieldKeys(): array
   {
-    return array_values(array_keys(static::$tableColumns));
+    $keys = array_values(array_keys(static::$tableColumns));
+
+    if ($this->hasTimestamps()) {
+      $keys = array_merge($keys, ['created_at', 'updated_at']);
+    }
+
+    return $keys;
   }
 
   /**
@@ -119,7 +125,7 @@ trait Properties
     );
   }
 
-  public static function getInternationalizedFields(): array
+  public function getInternationalizedFields(): array
   {
     $neutralFields = array_values(
       array_keys(
@@ -128,6 +134,13 @@ trait Properties
         }),
       ),
     );
+
+    if ($this->hasTimestamps()) {
+      $neutralFields = array_merge($neutralFields, [
+        'created_at',
+        'updated_at',
+      ]);
+    }
 
     $intlFields = array_values(
       array_keys(
