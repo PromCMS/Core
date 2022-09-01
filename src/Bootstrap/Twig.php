@@ -3,9 +3,9 @@
 namespace PromCMS\Core\Bootstrap;
 
 use PromCMS\Core\Config;
-use Twig\Environment;
-use Twig\Loader\FilesystemLoader;
 use PromCMS\Core\Path;
+use Slim\Views\Twig as TwigViews;
+use Slim\Views\TwigMiddleware;
 
 class Twig implements AppModuleInterface
 {
@@ -26,16 +26,14 @@ class Twig implements AppModuleInterface
       }
     }
 
-    $twigLoader = new FilesystemLoader($templatesPath);
-    $twig = new Environment(
-      $twigLoader,
-      !$isDebug && !$isDevelopment
+    $container->set('twig', function () use ($templatesPath, $cachePath, $isDevelopment, $isDebug) {
+      return TwigViews::create($templatesPath, ['cache' => !$isDebug && !$isDevelopment
         ? [
           'cache' => $cachePath,
         ]
-        : [],
-    );
+        : []]);
+    });
 
-    $container->set('twig', $twig);
+    $app->add(TwigMiddleware::createFromContainer($app));
   }
 }
