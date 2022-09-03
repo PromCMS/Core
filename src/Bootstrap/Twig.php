@@ -26,7 +26,7 @@ class Twig implements AppModuleInterface
       }
     }
 
-    $container->set('twig', function () use ($templatesPath, $cachePath, $isDevelopment, $isDebug) {
+    $container->set(TwigViews::class, function () use ($templatesPath, $cachePath, $isDevelopment, $isDebug) {
       return TwigViews::create($templatesPath, ['cache' => !$isDebug && !$isDevelopment
         ? [
           'cache' => $cachePath,
@@ -34,6 +34,6 @@ class Twig implements AppModuleInterface
         : []]);
     });
 
-    $app->add(TwigMiddleware::createFromContainer($app));
+    $app->add(TwigMiddleware::createFromContainer($app, TwigViews::class));
   }
 }
