@@ -17,16 +17,10 @@ class Twig implements AppModuleInterface
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
 
-    $templatesPath = Path::join($appRoot, 'templates');
+    $defaultViewsPath = Path::join(__DIR__, '..', 'Views');
     $cachePath =  Path::join($appRoot, 'cache', 'twig');
 
-    if (!file_exists($templatesPath)) {
-      if (!mkdir($templatesPath, 0777)) {
-        throw new \Exception('Failed to create templates directory');
-      }
-    }
-
-    $twig = TwigViews::create($templatesPath, [
+    $twig = TwigViews::create([$defaultViewsPath], [
       'cache' => !$isDebug && !$isDevelopment ? $cachePath : false,
     ]);
 
