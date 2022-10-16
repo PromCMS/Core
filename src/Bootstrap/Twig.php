@@ -20,6 +20,12 @@ class Twig implements AppModuleInterface
     $defaultViewsPath = Path::join(__DIR__, '..', 'Views');
     $cachePath =  Path::join($appRoot, 'cache', 'twig');
 
+    if (!file_exists($defaultViewsPath)) {
+      if (!mkdir($defaultViewsPath, 0777)) {
+        throw new \Exception('Failed to create templates directory');
+      }
+    }
+
     $twig = TwigViews::create([$defaultViewsPath], [
       'cache' => !$isDebug && !$isDevelopment ? $cachePath : false,
     ]);
