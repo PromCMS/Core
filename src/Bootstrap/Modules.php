@@ -1,29 +1,36 @@
 <?php
+
 namespace PromCMS\Core\Bootstrap;
 
 use PromCMS\Core\Config;
 use PromCMS\Core\Path;
 use PromCMS\Core\Utils;
+use Slim\Views\Twig as TwigViews;
+use Twig\Loader\FilesystemLoader;
 
 class Modules implements AppModuleInterface
 {
   public function run($app, $container)
   {
     $appRoot = $container->get('app.root');
-  
+
     // Make sure that 'Core' module is loaded first
     $moduleNames = Utils::getValidModuleNames($appRoot);
     /** @var Utils */
     $utils = $container->get(Utils::class);
     /** @var Config */
     $config = $container->get(Config::class);
-  
+    /** @var TwigViews */
+    $twig = $container->get(TwigViews::class);
+    /** @var FilesystemLoader */
+    $twigFileLoader = $twig->getLoader();
+
     $filePathsToApiRoutes = [];
     $filePathsToFrontRoutes = [];
-  
+
     // array of loaded model names (names of classes)
     $loadedModels = [];
-  
+
     // Simple autoload load module logic
     foreach ($moduleNames as $dirname) {
       $moduleRoot = Utils::getModuleRoot($appRoot, $dirname);
@@ -32,51 +39,57 @@ class Modules implements AppModuleInterface
       $bootstrapAfter = Path::join($moduleRoot, 'bootstrap.after.php');
       $apiRoutesFilepath = Path::join($moduleRoot, 'api.routes.php');
       $frontRoutesFilepath = Path::join($moduleRoot, 'front.routes.php');
-  
+      $viewsFolderPath = Path::join($moduleRoot, 'Views');
+
       // Load bootstrap for that module
       if (file_exists($bootstrapFilepath)) {
         $module = require_once $bootstrapFilepath;
-  
+
         $module($app);
       }
-  
+
       // Load models beforehand and save these models to array
       $loadedModuleModels = $utils->autoloadModels($moduleRoot);
       if ($loadedModuleModels) {
         $loadedModels = array_merge($loadedModels, $loadedModuleModels);
       }
-  
+
+      // If we have folder of views then we add another view namespace
+      if (is_dir($viewsFolderPath)) {
+        $twigFileLoader->addPath($viewsFolderPath, "plugin:" . lcfirst($dirname));
+      }
+
       // Loads controllers beforehand
       $utils->autoloadControllers($moduleRoot);
-  
+
       if (file_exists($bootstrapAfter)) {
         $module = require_once $bootstrapAfter;
-  
+
         $module($app);
       }
-  
+
       // Add api routes definition file to set
       if (file_exists($apiRoutesFilepath)) {
         $filePathsToApiRoutes[] = $apiRoutesFilepath;
       }
-  
+
       // Add front routes definition file to set
       if (file_exists($frontRoutesFilepath)) {
         $filePathsToFrontRoutes[] = $frontRoutesFilepath;
       }
     }
-  
+
     // Set some info to memory so modules can access those
     $container->set('sysinfo', [
       'loadedModels' => $loadedModels,
     ]);
-  
+
     $routePrefix = $config->app->prefix;
     $supportedLanguages = $config->i18n->languages;
     $importedModules = [];
     $intlRoutePrefix =
       $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}';
-  
+
     foreach ([$routePrefix, $intlRoutePrefix] as $routePrefixPart) {
       // Every module should have been bootstrapped by now so we can continue to including custom routes
       $app->group($routePrefixPart, function ($router) use (
@@ -97,14 +110,14 @@ class Modules implements AppModuleInterface
               if (!isset($importedModules[$filePath])) {
                 $importedModules[$filePath] = require_once $filePath;
               }
-  
+
               $importedModules[$filePath]($app, $router);
             }
           })
           ->add(function ($request, $handler) use ($config) {
             $response = $handler->handle($request);
             $responseHeaders = $response->getHeaders();
-  
+
             return $response
               ->withHeader(
                 'Access-Control-Allow-Origin',
@@ -125,13 +138,13 @@ class Modules implements AppModuleInterface
                   : 'application/json',
               );
           });
-  
+
         // Load front routes second - same as api
         foreach ($filePathsToFrontRoutes as $filePath) {
           if (!isset($importedModules[$filePath])) {
             $importedModules[$filePath] = require_once $filePath;
           }
-  
+
           $importedModules[$filePath]($app, $router);
         }
       });
