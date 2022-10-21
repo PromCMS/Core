@@ -62,6 +62,7 @@ class Modules implements AppModuleInterface
       // Loads controllers beforehand
       $utils->autoloadControllers($moduleRoot);
 
+      // TODO: add try catch here
       if (file_exists($bootstrapAfter)) {
         $module = require_once $bootstrapAfter;
 
