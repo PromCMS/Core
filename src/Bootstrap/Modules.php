@@ -56,7 +56,7 @@ class Modules implements AppModuleInterface
 
       // If we have folder of views then we add another view namespace
       if (is_dir($viewsFolderPath)) {
-        $twigFileLoader->addPath($viewsFolderPath, "plugin:" . lcfirst($dirname));
+        $twigFileLoader->addPath($viewsFolderPath, "modules:" . lcfirst($dirname));
       }
 
       // Loads controllers beforehand
