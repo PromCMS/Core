@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace PromCMS\Tests;
 
@@ -8,20 +10,21 @@ use PromCMS\Core\App;
 use PromCMS\Core\Exceptions\AppException;
 use PromCMS\Core\Path;
 
-function rmdir_recursive($dir) {
-  foreach(scandir($dir) as $file) {
-      if ('.' === $file || '..' === $file) continue;
-      if (is_dir("$dir/$file")) rmdir_recursive("$dir/$file");
-      else unlink("$dir/$file");
+function rmdir_recursive($dir)
+{
+  foreach (scandir($dir) as $file) {
+    if ('.' === $file || '..' === $file) continue;
+    if (is_dir("$dir/$file")) rmdir_recursive("$dir/$file");
+    else unlink("$dir/$file");
   }
   rmdir($dir);
 }
 
-final class AppTest extends TestCase 
+final class AppTest extends TestCase
 {
   private static String $projectRoot;
   private static String $testProjectRoot;
-  
+
   // Setup folder and core files
   public static function setUpBeforeClass(): void
   {
@@ -50,16 +53,17 @@ final class AppTest extends TestCase
       SECURITY_SECRET=\"somesecret\"
       SECURITY_TOKEN_LIFETIME=86400 #1 day
       SECURITY_SESSION_LIFETIME=3600 #1 hour
-    "); 
+    ");
   }
 
-  public function testShouldThrowWithoutInit() {
+  public function testShouldThrowWithoutInit()
+  {
     $root = Path::join(__DIR__, "..", ".test");
     $app = new App($root);
 
     try {
       $app->run();
-    } catch (Exception|AppException $error) {
+    } catch (Exception | AppException $error) {
       $this->assertInstanceOf(AppException::class, $error);
       $this->assertEquals('Cannot run application without initializing it', $error->getMessage());
       return;
@@ -68,7 +72,8 @@ final class AppTest extends TestCase
     throw new Exception("Should throw exception without initialing the app");
   }
 
-  public function testShouldInitializeRight(): void {
+  public function testShouldInitializeRight(): void
+  {
     $app = new App(static::$testProjectRoot);
 
     $this->assertClassHasAttribute('root', App::class);

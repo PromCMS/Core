@@ -7,6 +7,7 @@ use GuzzleHttp\Psr7\Stream;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToDeleteFile;
+use PromCMS\Core\Models\Files;
 
 class FileService
 {
@@ -26,7 +27,7 @@ class FileService
     $andWhere = [];
     $orWhere = [];
 
-    return \Files::getOneById($id);
+    return Files::getOneById($id);
   }
 
   /**
@@ -37,7 +38,7 @@ class FileService
     $fixedDirectoryPath = $directoryPath . ($directoryPath !== '/' ? '/' : '');
     $regexPart = str_replace('/', '\/', $fixedDirectoryPath);
 
-    return \Files::where([
+    return Files::where([
       function ($file) use ($regexPart) {
         $pattern = '(' . $regexPart . ')[^\/]*(\.).*';
         $pattern = '/^' . $pattern . "$/m";

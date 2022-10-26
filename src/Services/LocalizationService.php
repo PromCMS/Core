@@ -4,8 +4,8 @@ namespace PromCMS\Core\Services;
 
 use DI\Container;
 use Exception;
-use GeneralTranslations;
 use PromCMS\Core\Config;
+use PromCMS\Core\Models\GeneralTranslations;
 
 class LocalizationService
 {
