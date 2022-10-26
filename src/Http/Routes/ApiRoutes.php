@@ -3,11 +3,11 @@
 namespace PromCMS\Core\Http\Routes;
 
 use Slim\Routing\RouteCollectorProxy as Router;
-use App\Middleware\Auth as AuthMiddleware;
-use App\Middleware\EntryType as EntryTypeMiddleware;
-use App\Middleware\Permission as PermissionMiddleware;
 use DI\Container;
 use PromCMS\Core\Config;
+use PromCMS\Core\Http\Middleware\AuthMiddleware;
+use PromCMS\Core\Http\Middleware\EntryTypeMiddleware;
+use PromCMS\Core\Http\Middleware\PermissionMiddleware;
 
 class ApiRoutes implements CoreRoutes
 {

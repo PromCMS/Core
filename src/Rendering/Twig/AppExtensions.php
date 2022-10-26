@@ -2,12 +2,12 @@
 
 namespace PromCMS\Core\Rendering\Twig;
 
-use App\Services\FileService;
-use App\Services\ImageService;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
 use PromCMS\Core\Path;
+use PromCMS\Core\Services\FileService;
+use PromCMS\Core\Services\ImageService;
 use Twig\Extension\AbstractExtension;
 use Rakit\Validation\Validator;
 use Slim\Views\Twig;
@@ -23,10 +23,9 @@ class AppExtensions extends AbstractExtension
 
   public function __construct(Container $container)
   {
-    $this->fileService = $container->get('file-service');
+    $this->fileService = $container->get(FileService::class);
     $this->twigService = $container->get(Twig::class);
-    $this->imageService = $container->get('image-service');
-    $this->imageService = $container->get('image-service');
+    $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
     $this->validator = new Validator();
   }

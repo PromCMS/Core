@@ -27,8 +27,8 @@ class FilesController
   {
     $this->container = $container;
     $this->fs = $container->get('filesystem');
-    $this->fileService = $container->get('file-service');
-    $this->imageService = $container->get('image-service');
+    $this->fileService = $container->get(FileService::class);
+    $this->imageService = $container->get(ImageService::class);
   }
 
   public function getInfo(
