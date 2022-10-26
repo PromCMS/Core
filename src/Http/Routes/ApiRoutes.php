@@ -12,18 +12,18 @@ use PromCMS\Core\Http\Middleware\PermissionMiddleware;
 class ApiRoutes implements CoreRoutes
 {
   private Container $container;
-  private string $controllersPath;
+  private static string $controllersPath = '\PromCMS\Core\Controllers';
 
   public function __construct($container)
   {
     $this->config = $container->get(Config::class);
     $this->container = $container;
-    $this->controllersPath = '\PromCMS\Core\Controllers';
   }
 
-  private function getControllerPath($className, $methodName)
+  static function getControllerPath($className, $methodName)
   {
-    return "$this->controllersPath\\$className:$methodName";
+    $rootPath = static::$controllersPath;
+    return "$rootPath\\$className:$methodName";
   }
 
   function attachAllHandlers($router)
@@ -36,38 +36,38 @@ class ApiRoutes implements CoreRoutes
     // Languages
     $router->get(
       '/locales/{lang}.json',
-      $this->controllersPath . '\Localization:getLocalization',
+      ApiRoutes::getControllerPath('Localization', 'getLocalization'),
     );
 
     $router->group('/settings', function (Router $innerRouter) {
-      $innerRouter->get('', $this->controllersPath . '\Settings:get');
+      $innerRouter->get('',  ApiRoutes::getControllerPath('Settings', 'get'));
     });
 
     // Profile
     $router->group('/profile', function (Router $innerRouter) use ($auth) {
       $innerRouter->get(
         '/request-password-reset',
-        $this->getControllerPath('UserProfile', 'requestPasswordReset'),
+        ApiRoutes::getControllerPath('UserProfile', 'requestPasswordReset'),
       );
       $innerRouter->get(
         '/request-email-change',
-        $this->getControllerPath('UserProfile', 'requestEmailChange'),
+        ApiRoutes::getControllerPath('UserProfile', 'requestEmailChange'),
       );
       $innerRouter->post(
         '/finalize-password-reset',
-        $this->getControllerPath('UserProfile', 'finalizePasswordReset'),
+        ApiRoutes::getControllerPath('UserProfile', 'finalizePasswordReset'),
       );
       $innerRouter->post(
         '/finalize-email-change',
-        $this->getControllerPath('UserProfile', 'finalizeEmailChange'),
+        ApiRoutes::getControllerPath('UserProfile', 'finalizeEmailChange'),
       );
-      $innerRouter->post('/login', $this->getControllerPath('UserProfile', 'login'));
+      $innerRouter->post('/login', ApiRoutes::getControllerPath('UserProfile', 'login'));
 
       $innerRouter
         ->group('', function (Router $innerRouter) {
-          $innerRouter->get('/me', $this->getControllerPath('UserProfile', 'getCurrent'));
-          $innerRouter->get('/logout', $this->getControllerPath('UserProfile', 'logout'));
-          $innerRouter->post('/update', $this->getControllerPath('UserProfile', 'update'));
+          $innerRouter->get('/me', ApiRoutes::getControllerPath('UserProfile', 'getCurrent'));
+          $innerRouter->get('/logout', ApiRoutes::getControllerPath('UserProfile', 'logout'));
+          $innerRouter->post('/update', ApiRoutes::getControllerPath('UserProfile', 'update'));
         })
         ->add($auth);
     });
@@ -78,41 +78,41 @@ class ApiRoutes implements CoreRoutes
       $entryTypeMiddleware
     ) {
       // get info about all of models
-      $innerRouter->get('', $this->getControllerPath('EntryTypes', 'getInfo'))->add($auth);
+      $innerRouter->get('', ApiRoutes::getControllerPath('EntryTypes', 'getInfo'))->add($auth);
 
       $innerRouter->group('/generalTranslations/items', function (
         Router $innerRouter
       ) use ($auth) {
-        $innerRouter->get('', $this->getControllerPath('Localization', 'getMany'));
-        $innerRouter->delete('/delete', $this->getControllerPath('Localization', 'delete'))->add($auth);
+        $innerRouter->get('', ApiRoutes::getControllerPath('Localization', 'getMany'));
+        $innerRouter->delete('/delete', ApiRoutes::getControllerPath('Localization', 'delete'))->add($auth);
         $innerRouter->post(
           '/update',
-          $this->getControllerPath('Localization', 'updateTranslation'),
+          ApiRoutes::getControllerPath('Localization', 'updateTranslation'),
         )->add($auth);
       });
 
       // Folders
       $innerRouter
         ->group('/folders', function (Router $innerRouter) {
-          $innerRouter->get('', $this->getControllerPath('Folders', 'get'));
-          $innerRouter->post('', $this->getControllerPath('Folders', 'create'));
-          $innerRouter->delete('', $this->getControllerPath('Folders', 'delete'));
+          $innerRouter->get('', ApiRoutes::getControllerPath('Folders', 'get'));
+          $innerRouter->post('', ApiRoutes::getControllerPath('Folders', 'create'));
+          $innerRouter->delete('', ApiRoutes::getControllerPath('Folders', 'delete'));
         })
         ->add($auth);
 
       // Files
       $innerRouter
         ->group('/files', function (Router $innerRouter) {
-          $innerRouter->get('/paged-items', $this->getControllerPath('Files', 'getMany'));
+          $innerRouter->get('/paged-items', ApiRoutes::getControllerPath('Files', 'getMany'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
-            $innerRouter->get('', $this->getControllerPath('Files', 'getMany'));
-            $innerRouter->post('/create', $this->getControllerPath('Files', 'create'));
+            $innerRouter->get('', ApiRoutes::getControllerPath('Files', 'getMany'));
+            $innerRouter->post('/create', ApiRoutes::getControllerPath('Files', 'create'));
 
             $innerRouter->group('/{itemId}', function (Router $innerRouter) {
-              $innerRouter->get('', $this->getControllerPath('Files', 'get'));
-              $innerRouter->patch('', $$this->getControllerPath('Files', 'update'));
-              $innerRouter->delete('', $this->getControllerPath('Files', 'delete'));
+              $innerRouter->get('', ApiRoutes::getControllerPath('Files', 'get'));
+              $innerRouter->patch('', ApiRoutes::getControllerPath('Files', 'update'));
+              $innerRouter->delete('', ApiRoutes::getControllerPath('Files', 'delete'));
             });
           });
         })
@@ -120,27 +120,27 @@ class ApiRoutes implements CoreRoutes
         ->add($auth);
       $innerRouter->get(
         '/files/items/{itemId}/raw',
-        $this->getControllerPath('Files', 'getFile'),
+        ApiRoutes::getControllerPath('Files', 'getFile'),
       );
 
       // Users
       $innerRouter
         ->group('/users', function (Router $innerRouter) {
-          $innerRouter->get('', $this->getControllerPath('Users', 'getInfo'));
+          $innerRouter->get('', ApiRoutes::getControllerPath('Users', 'getInfo'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
-            $innerRouter->get('', $this->getControllerPath('Users', 'getMany'));
-            $innerRouter->post('/create', $this->getControllerPath('Users', 'create'));
+            $innerRouter->get('', ApiRoutes::getControllerPath('Users', 'getMany'));
+            $innerRouter->post('/create', ApiRoutes::getControllerPath('Users', 'create'));
 
             $innerRouter->group('/{itemId}', function (Router $innerRouter) {
-              $innerRouter->patch('', $this->getControllerPath('Users', 'update'));
-              $innerRouter->delete('', $this->getControllerPath('Users', 'delete'));
+              $innerRouter->patch('', ApiRoutes::getControllerPath('Users', 'update'));
+              $innerRouter->delete('', ApiRoutes::getControllerPath('Users', 'delete'));
 
-              $innerRouter->patch('/block', $this->getControllerPath('Users', 'block'));
-              $innerRouter->patch('/unblock', $this->getControllerPath('Users', 'unblock'));
+              $innerRouter->patch('/block', ApiRoutes::getControllerPath('Users', 'block'));
+              $innerRouter->patch('/unblock', ApiRoutes::getControllerPath('Users', 'unblock'));
               $innerRouter->patch(
                 '/request-password-reset',
-                $this->getControllerPath('Users', 'requestPasswordReset'),
+                ApiRoutes::getControllerPath('Users', 'requestPasswordReset'),
               );
             });
           });
@@ -148,21 +148,21 @@ class ApiRoutes implements CoreRoutes
         ->add($permissionMiddleware)
         ->add($auth);
       $innerRouter
-        ->get('/users/items/{itemId}', $this->getControllerPath('Users', 'getOne'))
+        ->get('/users/items/{itemId}', ApiRoutes::getControllerPath('Users', 'getOne'))
         ->add($auth);
 
       // User roles
       $innerRouter
         ->group('/{route:user-roles|userRoles}', function (Router $innerRouter) {
-          $innerRouter->get('', $this->getControllerPath('UserRoles', 'getInfo'));
+          $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getInfo'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
-            $innerRouter->get('', $this->getControllerPath('UserRoles', 'getMany'));
-            $innerRouter->post('/create', $this->getControllerPath('UserRoles', 'create'));
+            $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getMany'));
+            $innerRouter->post('/create', ApiRoutes::getControllerPath('UserRoles', 'create'));
 
             $innerRouter->group('/{itemId}', function (Router $innerRouter) {
-              $innerRouter->patch('', $this->getControllerPath('UserRoles', 'update'));
-              $innerRouter->delete('', $this->getControllerPath('UserRoles', 'delete'));
+              $innerRouter->patch('', ApiRoutes::getControllerPath('UserRoles', 'update'));
+              $innerRouter->delete('', ApiRoutes::getControllerPath('UserRoles', 'delete'));
             });
           });
         })
@@ -171,7 +171,7 @@ class ApiRoutes implements CoreRoutes
       $innerRouter
         ->get(
           '/{route:user-roles|userRoles}/items/{itemId}',
-          $this->getControllerPath('UserRoles', 'getOne'),
+          ApiRoutes::getControllerPath('UserRoles', 'getOne'),
         )
         ->add($auth);
 
@@ -182,20 +182,20 @@ class ApiRoutes implements CoreRoutes
         $entryTypeMiddleware
       ) {
         $innerRouter
-          ->get('', $this->getControllerPath('EntryType', 'getInfo'))
+          ->get('', ApiRoutes::getControllerPath('EntryType', 'getInfo'))
           ->add($entryTypeMiddleware)
           ->add($auth);
 
         $innerRouter
           ->group('/items', function (Router $innerRouter) {
-            $innerRouter->get('', $this->getControllerPath('EntryType', 'getMany'));
-            $innerRouter->patch('/reorder', $this->getControllerPath('EntryType', 'swapTwo'));
-            $innerRouter->post('/create', $this->getControllerPath('EntryType', 'create'));
+            $innerRouter->get('', ApiRoutes::getControllerPath('EntryType', 'getMany'));
+            $innerRouter->patch('/reorder', ApiRoutes::getControllerPath('EntryType', 'swapTwo'));
+            $innerRouter->post('/create', ApiRoutes::getControllerPath('EntryType', 'create'));
 
             $innerRouter->group('/{itemId}', function (Router $innerRouter) {
-              $innerRouter->get('', $this->getControllerPath('EntryType', 'getOne'));
-              $innerRouter->patch('', $this->getControllerPath('EntryType', 'update'));
-              $innerRouter->delete('', $this->getControllerPath('EntryType', 'delete'));
+              $innerRouter->get('', ApiRoutes::getControllerPath('EntryType', 'getOne'));
+              $innerRouter->patch('', ApiRoutes::getControllerPath('EntryType', 'update'));
+              $innerRouter->delete('', ApiRoutes::getControllerPath('EntryType', 'delete'));
             });
           })
           ->add($permissionMiddleware)
