@@ -27,15 +27,13 @@ class EntryTypeMiddleware
       array_filter(
         // format all model names to be all in lowercase
         array_map(function ($modelName) {
-          return strtolower($modelName);
+          return strtolower(end(explode("\\", $modelName)));
         }, $this->loadedModels),
         function ($modelName) {
           return !in_array($modelName, [
             'files',
             'users',
             'userroles',
-            'userRoles',
-            'generalTranslations',
             'generaltranslations',
           ]);
         },
