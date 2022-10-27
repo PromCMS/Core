@@ -18,7 +18,7 @@ class Twig implements AppModuleInterface
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
 
-    $defaultViewsPath = Path::join(__DIR__, '..', 'Views');
+    $defaultViewsPath = Path::join($appRoot, 'Views');
     $cachePath =  Path::join($appRoot, 'cache', 'twig');
 
     if (!file_exists($defaultViewsPath)) {

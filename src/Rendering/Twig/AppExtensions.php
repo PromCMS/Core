@@ -98,6 +98,7 @@ class AppExtensions extends AbstractExtension
     }
 
     $assets = $config['assets'];
+    $composedAssets = '';
     $distFolderPath = $config['distFolderPath'];
     $manifestFilePath = Path::join(
       $this->config->app->root,
@@ -129,15 +130,15 @@ class AppExtensions extends AbstractExtension
 
       switch ($assetInfo['type']) {
         case 'stylesheet':
-          return "<link rel=\"stylesheet\" href=\"$src\"> \n";
+          $composedAssets .= "\n <link rel=\"stylesheet\" href=\"$src\">";
           break;
         case 'script':
           $scriptType = $assetInfo['scriptType'];
-          return "<script type=\"$scriptType\" crossorigin src=\"$src\"></script> \n";
+          $composedAssets .= "\n <script type=\"$scriptType\" crossorigin src=\"$src\"></script>";
           break;
       }
     }
 
-    return '';
+    return $composedAssets;
   }
 }

@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
 use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Models\Users;
 
 class AuthMiddleware
 {
@@ -45,7 +46,7 @@ class AuthMiddleware
       try {
         $this->container
           ->get('session')
-          ->set('user', \Users::where(['id', '=', intval($userId)])->getOne());
+          ->set('user', Users::where(['id', '=', intval($userId)])->getOne());
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
