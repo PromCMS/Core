@@ -1,4 +1,5 @@
 <?php
+
 namespace PromCMS\Core;
 
 use DI\Container;
@@ -14,6 +15,7 @@ use PromCMS\Core\Bootstrap\FlySystem as FlySystemBootstrap;
 use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
 use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
 use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
+use PromCMS\Core\Bootstrap\Services as ServicesBootstrap;
 
 /**
  * PromCMS App object
@@ -29,6 +31,7 @@ class App
     FlySystemBootstrap::class,
     MailerBootstrap::class,
     TwigBootstrap::class,
+    ServicesBootstrap::class,
   ];
 
   function __construct(string $root)
@@ -66,7 +69,7 @@ class App
 
         // Add routing middleware
         $this->app->addRoutingMiddleware();
-  
+
         // Add SLIM PHP body parsing middleware
         $this->app->addBodyParsingMiddleware();
       }
@@ -108,18 +111,21 @@ class App
   /**
    * Returns slim app instance
    */
-  public function getSlimApp() {
+  public function getSlimApp()
+  {
     return $this->app;
   }
 
   /**
    * Unset the slim app 
    */
-  public function destroySlimApp() {
+  public function destroySlimApp()
+  {
     unset($this->app);
   }
 
-  public function getAppModules() {
+  public function getAppModules()
+  {
     return static::$appModules;
   }
 
@@ -127,7 +133,8 @@ class App
    * Run the app instance
    * @throws AppException in case the app is not initialized first
    */
-  public function run() {
+  public function run()
+  {
     if (!isset($this->app)) {
       throw new AppException('Cannot run application without initializing it');
     }

@@ -2,11 +2,18 @@
 
 namespace PromCMS\Core\Bootstrap;
 
-use PromCMS\Core\Config;
-use PromCMS\Core\Path;
-use PromCMS\Core\Utils;
 use Slim\Views\Twig as TwigViews;
 use Twig\Loader\FilesystemLoader;
+use PromCMS\Core\Path;
+use PromCMS\Core\Utils;
+use PromCMS\Core\Config;
+use PromCMS\Core\Http\Routes\ApiRoutes;
+use PromCMS\Core\Http\Routes\FrontRoutes;
+use PromCMS\Core\Models\GeneralTranslations;
+use PromCMS\Core\Models\Settings;
+use PromCMS\Core\Models\UserRoles;
+use PromCMS\Core\Models\Files;
+use PromCMS\Core\Models\Users;
 
 class Modules implements AppModuleInterface
 {
@@ -29,7 +36,14 @@ class Modules implements AppModuleInterface
     $filePathsToFrontRoutes = [];
 
     // array of loaded model names (names of classes)
-    $loadedModels = [];
+    $coreModels = [
+      Users::class,
+      UserRoles::class,
+      Files::class,
+      GeneralTranslations::class,
+      Settings::class
+    ];
+    $loadedModels = $coreModels;
 
     // Simple autoload load module logic
     foreach ($moduleNames as $dirname) {
@@ -91,22 +105,34 @@ class Modules implements AppModuleInterface
     $intlRoutePrefix =
       $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}';
 
+    $coreFrontRoutes = new FrontRoutes($container);
+    $coreApiRoutes = new ApiRoutes($container);
+
     foreach ([$routePrefix, $intlRoutePrefix] as $routePrefixPart) {
       // Every module should have been bootstrapped by now so we can continue to including custom routes
       $app->group($routePrefixPart, function ($router) use (
         $filePathsToApiRoutes,
         $filePathsToFrontRoutes,
         $app,
+        $coreFrontRoutes,
+        $coreApiRoutes,
         &$importedModules,
         $config
       ) {
+        // attach core front routes
+        $coreFrontRoutes->attachAllHandlers($router);
+
         // Load api routes first from prepared set
         $router
           ->group('/api', function ($router) use (
             $filePathsToApiRoutes,
             $app,
+            $coreApiRoutes,
             &$importedModules
           ) {
+            // attach core api routes
+            $coreApiRoutes->attachAllHandlers($router);
+
             foreach ($filePathsToApiRoutes as $filePath) {
               if (!isset($importedModules[$filePath])) {
                 $importedModules[$filePath] = require_once $filePath;

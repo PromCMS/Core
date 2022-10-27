@@ -4,6 +4,7 @@ namespace PromCMS\Core\Bootstrap;
 
 use PromCMS\Core\Config;
 use PromCMS\Core\Path;
+use PromCMS\Core\Rendering\Twig\AppExtensions;
 use Slim\Views\Twig as TwigViews;
 use Slim\Views\TwigMiddleware;
 
@@ -17,7 +18,7 @@ class Twig implements AppModuleInterface
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
 
-    $defaultViewsPath = Path::join(__DIR__, '..', 'Views');
+    $defaultViewsPath = Path::join($appRoot, 'Views');
     $cachePath =  Path::join($appRoot, 'cache', 'twig');
 
     if (!file_exists($defaultViewsPath)) {
@@ -33,5 +34,8 @@ class Twig implements AppModuleInterface
     $container->set(TwigViews::class, $twig);
 
     $app->add(TwigMiddleware::createFromContainer($app, TwigViews::class));
+
+    // Add twig app extension
+    $twig->addExtension(new AppExtensions($container));
   }
 }
