@@ -8,6 +8,7 @@ use DI\Container;
 use PromCMS\Core\HttpUtils;
 use PromCMS\Core\Models\UserRoles;
 use PromCMS\Core\Services\EntryTypeService;
+use PromCMS\Core\Services\PasswordService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,7 +16,7 @@ class UserRolesController
 {
   public function __construct(Container $container)
   {
-    $this->passwordService = $container->get('password-service');
+    $this->passwordService = $container->get(PasswordService::class);
   }
 
   public function getInfo(

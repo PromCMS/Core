@@ -23,7 +23,7 @@ class ApiRoutes implements CoreRoutes
   static function getControllerPath($className, $methodName)
   {
     $rootPath = static::$controllersPath;
-    return "$rootPath\\$className:$methodName";
+    return "$rootPath\\$className" . "Controller" . ":$methodName";
   }
 
   function attachAllHandlers($router)

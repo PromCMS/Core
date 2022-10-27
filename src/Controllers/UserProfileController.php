@@ -5,6 +5,8 @@ namespace PromCMS\Core\Controllers;
 use DI\Container;
 use PromCMS\Core\HttpUtils;
 use PromCMS\Core\Models\Users;
+use PromCMS\Core\Services\JWTService;
+use PromCMS\Core\Services\PasswordService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
@@ -18,8 +20,8 @@ class UserProfileController
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->jwt = $container->get('jwt-service');
-    $this->passService = $container->get('password-service');
+    $this->jwt = $container->get(JWTService::class);
+    $this->passService = $container->get(PasswordService::class);
   }
 
   public function getCurrent(
