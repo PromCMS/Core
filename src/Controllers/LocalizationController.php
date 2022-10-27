@@ -15,7 +15,7 @@ class LocalizationController
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->localizationService = $this->container->get('localization-service');
+    $this->localizationService = $this->container->get(LocalizationService::class);
   }
 
   function updateTranslation(

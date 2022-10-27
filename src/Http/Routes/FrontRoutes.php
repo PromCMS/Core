@@ -9,11 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class FrontRoutes implements CoreRoutes
 {
-  private Config $config;
-
-  public function __construct($container)
+  function __construct($container)
   {
-    $this->config = $container->get(Config::class);
   }
 
   function attachAllHandlers($router)
@@ -23,8 +20,24 @@ class FrontRoutes implements CoreRoutes
       ResponseInterface $response,
       $args
     ) {
-      $adminPath = Path::join($this->config->app->root, 'public', 'admin');
-      $content = file_get_contents($adminPath . '/index.html', 'r');
+      $config = $this->get(Config::class);
+      $routePiece = $args['routePiece'] ?? "";
+
+      $adminPath = Path::join($config->app->root, 'public', 'admin');
+
+      if (str_ends_with($routePiece, ".css") || str_ends_with($routePiece, ".js")) {
+        $requiredPath = "$adminPath/$routePiece";
+
+        if (file_exists($requiredPath)) {
+          $content = file_get_contents("$adminPath/$routePiece", 'r');
+          $response = $response->withHeader('Content-type', str_ends_with($routePiece, ".js") ? "application/javascript" : "text/css");
+        } else {
+          return $response->withStatus(404);
+        }
+      } else {
+        $content = file_get_contents($adminPath . '/index.html', 'r');
+      }
+
       $response->getBody()->write($content);
 
       return $response;

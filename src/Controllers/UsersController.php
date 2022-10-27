@@ -8,6 +8,8 @@ use DI\Container;
 use PromCMS\Core\HttpUtils;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\EntryTypeService;
+use PromCMS\Core\Services\JWTService;
+use PromCMS\Core\Services\PasswordService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
@@ -20,7 +22,7 @@ class UsersController
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->passwordService = $container->get('password-service');
+    $this->passwordService = $container->get(PasswordService::class);
     $this->currentUser = $container->get('session')->get('user', false);
   }
 
@@ -124,7 +126,7 @@ class UsersController
     ResponseInterface $response
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
-    $jwtService = $this->container->get('jwt-service');
+    $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get('email');
     $twigService = $this->container->get(Twig::class);
 
@@ -241,7 +243,7 @@ class UsersController
     ResponseInterface $response,
     $args
   ) {
-    $jwtService = $this->container->get('jwt-service');
+    $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get('email');
     $twigService = $this->container->get(Twig::class);
 
