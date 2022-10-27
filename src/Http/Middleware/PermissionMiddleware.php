@@ -30,7 +30,9 @@ class PermissionMiddleware
       strtolower($modelName),
       // format all model names to be all in lowercase
       array_map(function ($modelName) {
-        return strtolower(end(explode("\\", $modelName)));
+        $slicedModelName = explode("\\", $modelName);
+
+        return strtolower(end($slicedModelName));
       }, $this->loadedModels),
     );
     if ($modelIndex === false) {

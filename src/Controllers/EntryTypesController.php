@@ -21,8 +21,9 @@ class EntryTypesController
 
         foreach ($this->loadedModelNames as $modelClassName) {
             $modelClass = new $modelClassName();
-            $modelName = end(explode('\\', $modelClassName));
-            $collectedModelSummaries[$modelName] = $modelClass->getSummary();
+            $slicedName = explode('\\', $modelClassName);
+            $modelName = end($slicedName);
+            $collectedModelSummaries[lcfirst($modelName)] = $modelClass->getSummary();
         }
 
         $response->getBody()->write(json_encode(
