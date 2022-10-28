@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7\MimeType;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
 use League\Flysystem\Filesystem;
+use PromCMS\Core\Config;
 use PromCMS\Core\HttpUtils;
 use PromCMS\Core\Models\Files;
 use PromCMS\Core\Services\EntryTypeService;
@@ -19,6 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class FilesController
 {
   private $container;
+  private Config $config;
   private Filesystem $fs;
   private FileService $fileService;
   private ImageService $imageService;
@@ -29,6 +31,7 @@ class FilesController
     $this->fs = $container->get('filesystem');
     $this->fileService = $container->get(FileService::class);
     $this->imageService = $container->get(ImageService::class);
+    $this->config = $container->get(Config::class);
   }
 
   public function getInfo(
