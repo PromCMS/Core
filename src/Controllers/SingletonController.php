@@ -89,8 +89,9 @@ class SingletonController
     $modelInstance = $request->getAttribute('model-instance');
     $service = new SingletonService($modelInstance);
     $where = [];
+    $deleteResult = $service->clear($where);
 
-    if (!$service->clear($where)) {
+    if (!$deleteResult) {
       HttpUtils::prepareJsonResponse($response, [], 'Failed to delete');
 
       return $response
@@ -98,7 +99,7 @@ class SingletonController
         ->withHeader('Content-Description', 'Failed to delete');
     }
 
-    HttpUtils::prepareJsonResponse($response, [], 'Singleton cleared');
+    HttpUtils::prepareJsonResponse($response, $deleteResult->getData(), 'Singleton cleared');
 
     return $response;
   }

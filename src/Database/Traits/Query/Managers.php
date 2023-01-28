@@ -1,4 +1,5 @@
 <?php
+
 namespace PromCMS\Core\Database\Traits\Query;
 
 use SleekDB\QueryBuilder;
@@ -16,7 +17,7 @@ trait Managers
     if (!isset($this->queryBuilder)) {
       $this->queryBuilder = $this->getStore()
         ->createQueryBuilder()
-        ->select($this->getFieldKeyAliases());
+        ->select($this->getI18nFieldKeyAliases());
     }
 
     return $this->queryBuilder;
@@ -35,4 +36,3 @@ trait Managers
     return $this->store;
   }
 }
-

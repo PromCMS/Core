@@ -22,7 +22,7 @@ class SingletonService
 
   private function connectWhereQuery($where = [])
   {
-    return array_merge($where, [Query::$SINGLETON_NAME_FIELD_NAME => $this->modelInstance->getName()]);
+    return array_merge($where, [Query::$SINGLETON_NAME_FIELD_NAME, '=', $this->modelInstance->getName()]);
   }
 
   /**
@@ -41,7 +41,9 @@ class SingletonService
     } catch (\Exception $ex) {
       // If item does not exist we just create it with out anything
       if ($ex instanceof EntityNotFoundException) {
-        return $query->create([]);
+        return $query->create([
+          Query::$SINGLETON_NAME_FIELD_NAME => $this->modelInstance->getName()
+        ]);
       }
 
       throw $ex;
@@ -69,6 +71,8 @@ class SingletonService
     } catch (\Exception $ex) {
       // If item does not exist we just create it with update payload
       if ($ex instanceof EntityNotFoundException) {
+        $payload[Query::$SINGLETON_NAME_FIELD_NAME] = $this->modelInstance->getName();
+
         return $query->create($payload);
       }
 
@@ -83,6 +87,6 @@ class SingletonService
   {
     $item = $this->modelInstance->where($this->connectWhereQuery($where))->delete();
 
-    return $item;
+    return $this->getOne([]);
   }
 }

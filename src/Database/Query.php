@@ -54,10 +54,6 @@ class Query
       $payload['updated_at'] = $timeNow->getTimestamp();
     }
 
-    if ($this->modelClass instanceof SingletonModel) {
-      $payload[static::$SINGLETON_NAME_FIELD_NAME] = $this->modelClass->getName();
-    }
-
     // Trigger events
     $payload = $this->modelClass::beforeSafe($payload);
     $payload = $this->modelClass::beforeCreate($payload);
@@ -102,7 +98,7 @@ class Query
     $result = $this->store->insert($payload);
 
     // Unwrap those translations
-    if ($this->modelClass->hasTranslationsEnabled()) {
+    if ($this->modelClass->hasTranslationsEnabled() && isset($result[static::$TRANSLATIONS_FIELD_NAME])) {
       $translations =
         $result[static::$TRANSLATIONS_FIELD_NAME][$this->currentLanguage];
       foreach ($intlFields as $fieldName) {
@@ -236,10 +232,11 @@ class Query
 
     $result = $result[0];
 
-    if ($this->modelClass->hasTranslationsEnabled()) {
+    // Apply aliases to place translations to root and remove translation field
+    if ($this->modelClass->hasTranslationsEnabled() && isset($result[static::$TRANSLATIONS_FIELD_NAME])) {
       $newResult = [];
 
-      foreach ($this->getFieldKeyAliases() as $fieldKey => $fieldValueOrKey) {
+      foreach ($this->getI18nFieldKeyAliases() as $fieldKey => $fieldValueOrKey) {
         if (is_int($fieldKey)) {
           if (isset($result[$fieldValueOrKey])) {
             $newResult[$fieldValueOrKey] = $result[$fieldValueOrKey];
@@ -391,7 +388,7 @@ class Query
     try {
       $match = $this->getStore()
         ->createQueryBuilder()
-        ->select($this->getFieldKeyAliases())
+        ->select($this->getI18nFieldKeyAliases())
         ->where(
           $ignoreId !== null
             ? [$uniqueFilter, 'AND', ['id', '!=', $ignoreId]]
@@ -452,7 +449,7 @@ class Query
       ->getCache();
   }
 
-  protected function getFieldKeyAliases()
+  protected function getI18nFieldKeyAliases()
   {
     if (!$this->modelClass->hasTranslationsEnabled()) {
       return $this->modelClass->getFieldKeys();

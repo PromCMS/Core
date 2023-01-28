@@ -9,6 +9,9 @@ abstract class SingletonModel extends Model
    */
   protected string $name;
 
+  // The table name is static
+  protected string $tableName = "_singletons";
+
   /**
    * Getter of singleton name
    */
@@ -19,8 +22,7 @@ abstract class SingletonModel extends Model
 
   function __construct()
   {
-    // The table name is static
-    $this->tableName = "_singletons";
+    // Ensure name which can be set or not set when extending this class
     if (!isset($this->name)) {
       $this->name = lcfirst(static::class);
     }
