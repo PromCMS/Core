@@ -7,7 +7,7 @@ use PromCMS\Core\Database\SingletonModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class EntryTypesController
+class SingletonsController
 {
     private $loadedModelNames;
 
@@ -22,7 +22,7 @@ class EntryTypesController
 
         foreach ($this->loadedModelNames as $modelClassName) {
             $modelClass = new $modelClassName();
-            if ($modelClass instanceof SingletonModel) {
+            if (($modelClass instanceof SingletonModel) == FALSE) {
                 continue;
             }
 

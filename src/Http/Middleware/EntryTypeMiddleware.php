@@ -5,15 +5,18 @@ namespace PromCMS\Core\Http\Middleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
+use PromCMS\Core\Database\SingletonModel;
 use Slim\Routing\RouteContext;
 
 class EntryTypeMiddleware
 {
   private $loadedModels;
+  private bool $singletonsOnly;
 
-  public function __construct($container)
+  public function __construct($container, $singletonsOnly = true)
   {
     $this->loadedModels = $container->get('sysinfo')['loadedModels'];
+    $this->singletonsOnly = $singletonsOnly;
   }
 
   /**
@@ -73,10 +76,20 @@ class EntryTypeMiddleware
         ->withHeader('Content-Description', 'model does not exist');
     }
 
+    $modelInstance = new $modelInstancePath();
+
+    if (($this->singletonsOnly && ($modelInstance instanceof SingletonModel) == FALSE) || !$this->singletonsOnly && $modelInstance instanceof SingletonModel) {
+      $response = new Response();
+
+      return $response
+        ->withStatus(404)
+        ->withHeader('Content-Description', 'model does not exist');
+    }
+
     // Attach on request to pass the model instance info
     $request = $request->withAttribute(
       'model-instance',
-      new $modelInstancePath(),
+      $modelInstance,
     );
     $request = $request->withAttribute(
       'model-instance-path',

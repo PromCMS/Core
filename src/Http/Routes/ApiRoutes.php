@@ -72,6 +72,28 @@ class ApiRoutes implements CoreRoutes
         ->add($auth);
     });
 
+    // Singletons
+    $router->group('/singletons', function (Router $innerRouter) use (
+      $auth,
+      $permissionMiddleware,
+      $entryTypeMiddleware
+    ) {
+      // get info about all of singleton models
+      $innerRouter->get('', ApiRoutes::getControllerPath('Singletons', 'getInfo'))->add($auth);
+
+      // Other
+      $innerRouter->group('/{modelId}', function (Router $innerRouter) use (
+        $permissionMiddleware
+      ) {
+        $innerRouter->get('', ApiRoutes::getControllerPath('Singleton', 'getOne'))->add($permissionMiddleware);
+        $innerRouter->patch('', ApiRoutes::getControllerPath('Singleton', 'update'))->add($permissionMiddleware);
+        $innerRouter->delete('', ApiRoutes::getControllerPath('Singleton', 'delete'))->add($permissionMiddleware);
+        $innerRouter->get('/info', ApiRoutes::getControllerPath('Singleton', 'getInfo'));
+      })
+        ->add($entryTypeMiddleware)
+        ->add($auth);
+    });
+
     $router->group('/entry-types', function (Router $innerRouter) use (
       $auth,
       $permissionMiddleware,
