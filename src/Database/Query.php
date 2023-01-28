@@ -15,12 +15,16 @@ class Query
   use \PromCMS\Core\Database\Traits\Query\Managers, \PromCMS\Core\Database\Traits\Query\Builder;
 
   protected Store $store;
-  protected Model $modelClass;
+  /**  
+   * @var Model|SingletonModel
+   */
+  protected $modelClass;
   protected string $currentLanguage;
   protected string $defaultLanguage;
   static string $TRANSLATIONS_FIELD_NAME = '_translations';
+  static string $SINGLETON_NAME_FIELD_NAME = '_name';
 
-  function __construct(Store $store, Model $modelClass, $defaultLanguage)
+  function __construct(Store $store, $modelClass, $defaultLanguage)
   {
     $this->store = $store;
     $this->modelClass = $modelClass;
@@ -48,6 +52,10 @@ class Query
       $timeNow = new \DateTime();
       $payload['created_at'] = $timeNow->getTimestamp();
       $payload['updated_at'] = $timeNow->getTimestamp();
+    }
+
+    if ($this->modelClass instanceof SingletonModel) {
+      $payload[static::$SINGLETON_NAME_FIELD_NAME] = $this->modelClass->getName();
     }
 
     // Trigger events
@@ -82,13 +90,9 @@ class Query
         }
         if (!isset($formattedPayload[static::$TRANSLATIONS_FIELD_NAME])) {
           $formattedPayload[static::$TRANSLATIONS_FIELD_NAME] = [];
-          $formattedPayload[static::$TRANSLATIONS_FIELD_NAME][
-            $this->currentLanguage
-          ] = [];
+          $formattedPayload[static::$TRANSLATIONS_FIELD_NAME][$this->currentLanguage] = [];
         }
-        $formattedPayload[static::$TRANSLATIONS_FIELD_NAME][
-          $this->currentLanguage
-        ][$fieldName] = $payload[$fieldName];
+        $formattedPayload[static::$TRANSLATIONS_FIELD_NAME][$this->currentLanguage][$fieldName] = $payload[$fieldName];
       }
 
       $payload = $formattedPayload;
@@ -189,20 +193,24 @@ class Query
       $this->getQueryBuilder()->_getConditionProperties()['whereConditions'],
     );
 
-    if (!strpos($whereConditions, '["id","=",') !== false) {
-      throw new Exception('You must specify where clause to use update');
+    // If its just a regular model we need to check if id is set before we run update
+    if (($this->modelClass instanceof SingletonModel) === FALSE) {
+      if (!strpos($whereConditions, '["id","=",') !== false) {
+        throw new Exception('You must specify where clause to use update');
+      }
+
+      // Hacky way to access the id from where
+      $id = intval(explode(']', explode('["id","=",', $whereConditions)[1])[0]);
+
+      // Check for conflicts
+      if ($conflictedFields = $this->existsAgainstPayload($payload, $id)) {
+        throw new EntityDuplicateException(
+          'This item already exists',
+          $conflictedFields,
+        );
+      }
     }
 
-    // Hacky way to access the id from where
-    $id = intval(explode(']', explode('["id","=",', $whereConditions)[1])[0]);
-
-    // Check for conflicts
-    if ($conflictedFields = $this->existsAgainstPayload($payload, $id)) {
-      throw new EntityDuplicateException(
-        'This item already exists',
-        $conflictedFields,
-      );
-    }
 
     // Trigger events
     $payload = $this->modelClass::beforeSafe($payload);
@@ -363,12 +371,12 @@ class Query
       $uniqueFilter[] =
         $this->modelClass->hasTranslationsEnabled() &&
         in_array($uniqueFieldName, $intlFields)
-          ? [
-            "$translationsFieldName.$currentLanguageKey.$uniqueFieldName",
-            '=',
-            $payload[$uniqueFieldName],
-          ]
-          : [$uniqueFieldName, '=', $payload[$uniqueFieldName]];
+        ? [
+          "$translationsFieldName.$currentLanguageKey.$uniqueFieldName",
+          '=',
+          $payload[$uniqueFieldName],
+        ]
+        : [$uniqueFieldName, '=', $payload[$uniqueFieldName]];
 
       if (count($filledUniqueFields) !== $index) {
         $uniqueFilter[] = 'OR';

@@ -1,12 +1,16 @@
 <?php
+
 namespace PromCMS\Core\Database;
 
 class ModelResult
 {
-  private Model $modelClass;
+  /**  
+   * @var Model|SingletonModel
+   */
+  private $modelClass;
   private array $data;
 
-  function __construct(Model $modelClass, array $data)
+  function __construct($modelClass, array $data)
   {
     $this->modelClass = $modelClass;
     $this->data = $data;
