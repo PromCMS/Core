@@ -40,6 +40,7 @@ final class SingletonModelTest extends AppTestCase
   {
     $customSingletonInstance = new CustomSingleton();
     $payload = [
+      Query::$SINGLETON_NAME_FIELD_NAME => $customSingletonInstance->getName(),
       'description' => "this is a description"
     ];
     $res = $customSingletonInstance->query()->create($payload);
@@ -48,7 +49,6 @@ final class SingletonModelTest extends AppTestCase
       array_merge(
         $payload,
         [
-          Query::$SINGLETON_NAME_FIELD_NAME => $customSingletonInstance->getName(),
           // It will be 1 every time since we don't have any data
           "id" => 1
         ]
