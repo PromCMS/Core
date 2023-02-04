@@ -460,6 +460,7 @@ class Query
     $currentLanguageKey = $this->currentLanguage;
     $defaultLanguage = $this->defaultLanguage;
 
+    // This goes through each field and sets filter function which virtually normalizes translated field from database to normal response
     foreach ($intlFields as $fieldName) {
       $fieldKeys[$fieldName] = function ($item) use (
         $fieldName,
@@ -467,6 +468,11 @@ class Query
         $currentLanguageKey,
         $defaultLanguage
       ) {
+        // If there are no translations then return void
+        if (!isset($item[$translationsFieldName])) {
+          return;
+        }
+
         $itemTranslations = $item[$translationsFieldName];
 
         if (isset($itemTranslations[$currentLanguageKey][$fieldName])) {
