@@ -34,9 +34,14 @@ class Config implements AppModuleInterface
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
     $IS_DEV_ENV = $APP_ENV == 'development';
     $DEFAULT_LANGUAGE = $_ENV['LANGUAGE'] ?? 'en';
-    $LANGUAGES = array_merge(
-      [$DEFAULT_LANGUAGE],
-      explode(',', $_ENV['MORE_LANG'] ?? ''),
+    $LANGUAGES = array_filter(
+      array_merge(
+        [$DEFAULT_LANGUAGE],
+        explode(',', $_ENV['MORE_LANG'] ?? ''),
+      ),
+      function ($item) {
+        return is_string($item) && strlen($item);
+      }
     );
 
     $config = new AppConfig([
