@@ -29,7 +29,8 @@ class ApiRoutes implements CoreRoutes
   function attachAllHandlers($router)
   {
     $auth = new AuthMiddleware($this->container);
-    $entryTypeMiddleware = new EntryTypeMiddleware($this->container);
+    $entryTypeMiddleware = new EntryTypeMiddleware($this->container, false);
+    $singletonMiddleware = new EntryTypeMiddleware($this->container, true);
     $permissionMiddleware = new PermissionMiddleware($this->container);
 
 
@@ -69,6 +70,28 @@ class ApiRoutes implements CoreRoutes
           $innerRouter->get('/logout', ApiRoutes::getControllerPath('UserProfile', 'logout'));
           $innerRouter->post('/update', ApiRoutes::getControllerPath('UserProfile', 'update'));
         })
+        ->add($auth);
+    });
+
+    // Singletons
+    $router->group('/singletons', function (Router $innerRouter) use (
+      $auth,
+      $permissionMiddleware,
+      $singletonMiddleware
+    ) {
+      // get info about all of singleton models
+      $innerRouter->get('', ApiRoutes::getControllerPath('Singletons', 'getInfo'))->add($auth);
+
+      // Other
+      $innerRouter->group('/{modelId}', function (Router $innerRouter) use (
+        $permissionMiddleware
+      ) {
+        $innerRouter->get('', ApiRoutes::getControllerPath('Singleton', 'getOne'))->add($permissionMiddleware);
+        $innerRouter->patch('', ApiRoutes::getControllerPath('Singleton', 'update'))->add($permissionMiddleware);
+        $innerRouter->delete('', ApiRoutes::getControllerPath('Singleton', 'delete'))->add($permissionMiddleware);
+        $innerRouter->get('/info', ApiRoutes::getControllerPath('Singleton', 'getInfo'));
+      })
+        ->add($singletonMiddleware)
         ->add($auth);
     });
 
