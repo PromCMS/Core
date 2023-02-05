@@ -56,9 +56,7 @@ class GeneralTranslations extends Model
 
   static bool $ignoreSeeding = false;
   static string $modelIcon = 'LanguageHiragana';
-  static $adminSettings = [
-    'layout' => 'simple',
-  ];
+  static $adminSettings = [];
 
   public function getSummary()
   {

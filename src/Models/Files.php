@@ -108,9 +108,7 @@ class Files extends Model
 
   static bool $ignoreSeeding = true;
   static string $modelIcon = 'Folder';
-  static $adminSettings = [
-    'layout' => 'simple',
-  ];
+  static $adminSettings = [];
 
   public function getSummary()
   {
