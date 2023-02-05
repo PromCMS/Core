@@ -93,9 +93,7 @@ class Users extends Model
 
   static bool $ignoreSeeding = false;
   static string $modelIcon = 'Users';
-  static $adminSettings = [
-    'layout' => 'simple',
-  ];
+  static $adminSettings = [];
 
   public function getSummary()
   {

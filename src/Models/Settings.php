@@ -106,9 +106,7 @@ class Settings extends Model
 
   static bool $ignoreSeeding = false;
   static string $modelIcon = 'Settings';
-  static $adminSettings = [
-    'layout' => 'simple',
-  ];
+  static $adminSettings = [];
 
   public function getSummary()
   {

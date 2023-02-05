@@ -85,9 +85,7 @@ class UserRoles extends Model
 
   static bool $ignoreSeeding = false;
   static string $modelIcon = 'UserExclamation';
-  static $adminSettings = [
-    'layout' => 'simple',
-  ];
+  static $adminSettings = [];
 
   public static function beforeCreate($entry): array
   {
