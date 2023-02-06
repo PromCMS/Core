@@ -6,7 +6,6 @@ use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Config;
-use PromCMS\Core\Config\i18n as i18nConfig;
 use PromCMS\Core\HttpUtils;
 use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Utils;
@@ -15,39 +14,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class EntryTypeController
 {
+  use \PromCMS\Core\Controllers\Traits\Model\I18n, \PromCMS\Core\Controllers\Traits\Model\Info;
+
   protected $currentUser;
-  protected i18nConfig $languageConfig;
-
-  private function getCurrentLanguage($request, $args)
-  {
-    $queryParams = $request->getQueryParams();
-    $nextLanguage = null;
-    $supportedLanguages = $this->languageConfig->languages;
-
-    if (
-      isset($queryParams['lang']) &&
-      in_array($queryParams['lang'], $supportedLanguages)
-    ) {
-      $nextLanguage = $queryParams['lang'];
-    }
-
-    if (isset($args['language'])) {
-      $nextLanguage = $args['language'];
-    }
-
-    return $nextLanguage;
-  }
-
-  public function getInfo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $instance = $request->getAttribute('model-instance');
-
-    HttpUtils::prepareJsonResponse($response, $instance->getSummary());
-
-    return $response;
-  }
 
   public function __construct(Container $container)
   {

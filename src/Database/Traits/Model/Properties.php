@@ -2,6 +2,9 @@
 
 namespace PromCMS\Core\Database\Traits\Model;
 
+use PromCMS\Core\Database\Query;
+use PromCMS\Core\Database\SingletonModel;
+
 trait Properties
 {
   /**
@@ -134,6 +137,10 @@ trait Properties
         }),
       ),
     );
+
+    if ($this instanceof SingletonModel) {
+      $neutralFields = array_merge($neutralFields, [Query::$SINGLETON_NAME_FIELD_NAME]);
+    }
 
     if ($this->hasTimestamps()) {
       $neutralFields = array_merge($neutralFields, [
