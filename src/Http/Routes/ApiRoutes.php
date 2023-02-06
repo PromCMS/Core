@@ -29,7 +29,8 @@ class ApiRoutes implements CoreRoutes
   function attachAllHandlers($router)
   {
     $auth = new AuthMiddleware($this->container);
-    $entryTypeMiddleware = new EntryTypeMiddleware($this->container);
+    $entryTypeMiddleware = new EntryTypeMiddleware($this->container, false);
+    $singletonMiddleware = new EntryTypeMiddleware($this->container, true);
     $permissionMiddleware = new PermissionMiddleware($this->container);
 
 
@@ -76,7 +77,7 @@ class ApiRoutes implements CoreRoutes
     $router->group('/singletons', function (Router $innerRouter) use (
       $auth,
       $permissionMiddleware,
-      $entryTypeMiddleware
+      $singletonMiddleware
     ) {
       // get info about all of singleton models
       $innerRouter->get('', ApiRoutes::getControllerPath('Singletons', 'getInfo'))->add($auth);
@@ -90,7 +91,7 @@ class ApiRoutes implements CoreRoutes
         $innerRouter->delete('', ApiRoutes::getControllerPath('Singleton', 'delete'))->add($permissionMiddleware);
         $innerRouter->get('/info', ApiRoutes::getControllerPath('Singleton', 'getInfo'));
       })
-        ->add($entryTypeMiddleware)
+        ->add($singletonMiddleware)
         ->add($auth);
     });
 

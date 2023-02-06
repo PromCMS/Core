@@ -4,8 +4,17 @@ namespace PromCMS\Core;
 
 use Exception;
 
+if (!function_exists('str_ends_with')) {
+  function str_ends_with(string $haystack, string $needle): bool
+  {
+    $needle_len = strlen($needle);
+    return ($needle_len === 0 || 0 === substr_compare($haystack, $needle, -$needle_len));
+  }
+}
+
 class Utils
 {
+  // TODO: make a better solution to this class search
   /**
    * Auto-loads models for specified module root. This is primarily used by modules.
    * @return string[]|false An array of module names or
@@ -23,7 +32,11 @@ class Utils
     }
 
     // Should have all of loaded model names in array
-    return array_values(array_diff(get_declared_classes(), $classes));
+    $diff = array_values(array_diff(get_declared_classes(), $classes));
+
+    return array_filter($diff, function ($importedName) {
+      return !str_ends_with($importedName, 'SingletonModel');
+    });
   }
 
   public function autoloadControllers(string $moduleRoot)
