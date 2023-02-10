@@ -43,7 +43,7 @@ class EntryTypeService
   /**
    * Get many items from current model
    */
-  public function getMany(array $where = [], $page = 1, $pageLimit = 15): array
+  public function getMany(array $where = [], $page = 1, $pageLimit = 15, $orderBy = []): array
   {
     $query = $this->modelInstance->query();
     $page = intval($page) > 0 ? intval($page) : 1;
@@ -54,9 +54,9 @@ class EntryTypeService
 
     $query
       ->orderBy(
-        $this->modelInstance->getSummary()->hasOrdering
+        array_merge($orderBy, $this->modelInstance->getSummary()->hasOrdering
           ? ['order' => 'asc', 'id' => 'asc']
-          : ['id' => 'asc'],
+          : ['id' => 'asc']),
       )
       ->limit($pageLimit)
       ->skip($pageLimit * ($page - 1));

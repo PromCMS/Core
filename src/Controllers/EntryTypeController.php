@@ -109,6 +109,7 @@ class EntryTypeController
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
+    $orderBy = [];
     $where = [];
 
     // If current user can view this content
@@ -117,9 +118,14 @@ class EntryTypeController
       $where = $filter;
     }
 
+    // TODO - make it more dynamic
+    if (isset($queryParams['orderBy_created_at'])) {
+      $orderBy["created_at"] = $queryParams['orderBy_created_at'];
+    }
+
     $response
       ->getBody()
-      ->write(json_encode($service->getMany($where, $page, $limit)));
+      ->write(json_encode($service->getMany($where, $page, $limit, $orderBy)));
 
     return $response;
   }
