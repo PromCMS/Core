@@ -31,6 +31,7 @@ class Users extends Model
       'translations' => true,
       'title' => 'Name',
       'type' => 'string',
+      'admin' => ['isHidden' => false, 'editor' => ['placement' => 'main']],
     ],
 
     'password' => [
@@ -51,6 +52,7 @@ class Users extends Model
       'translations' => true,
       'title' => 'Email',
       'type' => 'string',
+      'admin' => ['isHidden' => false, 'editor' => ['placement' => 'main']],
     ],
 
     'avatar' => [
@@ -61,6 +63,7 @@ class Users extends Model
       'translations' => true,
       'title' => 'Avatar',
       'type' => 'string',
+      'admin' => ['isHidden' => false, 'editor' => ['placement' => 'main']],
     ],
 
     'state' => [
@@ -72,6 +75,7 @@ class Users extends Model
       'title' => 'State',
       'type' => 'enum',
       'enum' => ['active', 'invited', 'blocked', 'password-reset'],
+      'admin' => ['isHidden' => false, 'editor' => ['placement' => 'main']],
     ],
 
     'role' => [
@@ -88,6 +92,7 @@ class Users extends Model
       'title' => 'Role',
       'adminHidden' => true,
       'labelConstructor' => 'label',
+      'admin' => ['isHidden' => false, 'editor' => ['placement' => 'main']],
     ],
   ];
 
