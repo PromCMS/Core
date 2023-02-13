@@ -102,6 +102,7 @@ class AppExtensions extends AbstractExtension
     $distFolderPath = $config['distFolderPath'];
     $manifestFilePath = Path::join(
       $this->config->app->root,
+      'public',
       $distFolderPath,
       $config['manifestFileName'],
     );
@@ -109,16 +110,19 @@ class AppExtensions extends AbstractExtension
     if (!$this->config->env->development) {
       if (!file_exists($manifestFilePath)) {
         throw new Exception(
-          'Manifest is not present in provided path in getViteAssets twig function',
+          "Manifest is not present in provided path '$manifestFilePath' in getViteAssets twig function",
         );
       }
 
       $manifestAssets = json_decode(file_get_contents($manifestFilePath), true);
-      foreach ($assets as &$assetInfo) {
+
+      foreach ($assets as $assetKey => $assetInfo) {
+        // Ignore if provided assets was not marked as an entry in twig function
         if (!isset($manifestAssets[$assetInfo['path']])) {
           continue;
         }
-        $assetInfo['path'] = implode('/', [
+
+        $assets[$assetKey]['path'] = implode('/', [
           $distFolderPath,
           $manifestAssets[$assetInfo['path']]['file'],
         ]);
