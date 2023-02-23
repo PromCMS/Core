@@ -2,11 +2,38 @@
 
 namespace PromCMS\Core\Services;
 
+use DI\Container;
+use Exception;
+use Rakit\Validation\Validator;
+
 class PasswordService
 {
+  private Validator $validator;
+
+  public function __construct()
+  {
+    $this->validator = new Validator();
+  }
+
   private function removeSpaces(string $text)
   {
     return preg_replace('/\s+/', '', $text);
+  }
+
+  /**
+   * Validates string input by password schema
+   */
+  public function validateInput(string $input)
+  {
+    $validationResult = $this->validator->validate(["password" => $input], [
+      'password' => 'required|min:6',
+    ]);
+
+    if ($validationResult->fails()) {
+      return false;
+    }
+
+    return $validationResult->getValidatedData()["password"];
   }
 
   public function generate(string $password)

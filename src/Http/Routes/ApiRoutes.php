@@ -66,6 +66,10 @@ class ApiRoutes implements CoreRoutes
 
       $innerRouter
         ->group('', function (Router $innerRouter) {
+          $innerRouter->get(
+            '/change-password',
+            ApiRoutes::getControllerPath('UserProfile', 'changePassword'),
+          );
           $innerRouter->get('/me', ApiRoutes::getControllerPath('UserProfile', 'getCurrent'));
           $innerRouter->get('/logout', ApiRoutes::getControllerPath('UserProfile', 'logout'));
           $innerRouter->post('/update', ApiRoutes::getControllerPath('UserProfile', 'update'));

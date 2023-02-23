@@ -15,7 +15,7 @@ class UserProfileController
 {
   private $container;
   private $jwt;
-  private $passService;
+  private PasswordService $passService;
 
   public function __construct(Container $container)
   {
@@ -213,6 +213,48 @@ class UserProfileController
     ]);
 
     $emailService->send();
+
+    return $response;
+  }
+
+  /**
+   * Finalizing of password renewal via token
+   */
+  public function changePassword(
+    ServerRequestInterface $request,
+    ResponseInterface $response
+  ): ResponseInterface {
+    $params = $request->getParsedBody();
+    $user = $this->container->get('session')->get('user');
+
+    // Check that we atleast have something
+    if (!isset($params['newPassword']) || !isset($params['oldPassword'])) {
+      HttpUtils::prepareJsonResponse($response, [], "Missing body values", 'missing-body-values');
+      return $response->withStatus(401);
+    }
+
+    // Get values
+    $newPassword = $params['newPassword'];
+    $oldPassword = $params['oldPassword'];
+
+    // Validate old password
+    if (!$this->passService->validate($oldPassword, $user->password)) {
+      HttpUtils::prepareJsonResponse($response, [], "Old password invalid", 'old-password-invalid');
+      return $response->withStatus(401);
+    }
+
+    // Validate new password input
+    if (!$this->passService->validateInput($newPassword)) {
+      HttpUtils::prepareJsonResponse($response, [], "New password invalid", 'new-password-invalid');
+      return $response->withStatus(401);
+    }
+
+    // Now everything is ok and we can update user password
+    $user->update([
+      'password' => $this->passService->generate($newPassword),
+    ]);
+
+    // TODO: Send email that notifies about password change
 
     return $response;
   }
