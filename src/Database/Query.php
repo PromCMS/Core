@@ -120,6 +120,9 @@ class Query
     // Trigger events
     $result = $this->modelClass::afterCreate($result);
 
+    // Delete cache when item is created
+    $this->getQueryCache()->deleteAll();
+
     return $result;
   }
 
