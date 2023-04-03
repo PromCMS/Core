@@ -11,7 +11,7 @@ trait I18n
   private function getCurrentLanguage($request, $args)
   {
     $queryParams = $request->getQueryParams();
-    $nextLanguage = null;
+    $nextLanguage = $this->languageConfig->default;
     $supportedLanguages = $this->languageConfig->languages;
 
     if (
