@@ -248,8 +248,8 @@ class EntryTypeController
         ->getOne();
 
       // just make copy of data with just 'order' values which we will be saving to db
-      $fromEntryData = ['order' => $fromEntry->order];
-      $toEntryData = ['order' => $toEntry->order];
+      $fromEntryData = ['order' => $fromEntry->order ?? $fromEntry->id];
+      $toEntryData = ['order' => $toEntry->order ?? $toEntry->id];
 
       $savedOrderId = $toEntryData['order'];
       $toEntryData['order'] = $fromEntryData['order'];
