@@ -188,7 +188,7 @@ class UserProfileController
     ];
 
     try {
-      $generatedEmailContent = $twigService->render(
+      $generatedEmailContent = $twigService->getEnvironment()->render(
         'email/password-reset.twig',
         $themePayload,
       );
