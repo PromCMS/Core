@@ -58,7 +58,7 @@ class AppExtensions extends AbstractExtension
   public function getDynamicBlock(string $blockPath, $payload = []): string
   {
     try {
-      return $this->twigService->render(
+      return $this->twigService->getEnvironment()->render(
         "dynamic-blocks/$blockPath.twig",
         $payload,
       );
