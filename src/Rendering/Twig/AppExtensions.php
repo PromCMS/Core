@@ -59,7 +59,7 @@ class AppExtensions extends AbstractExtension
   {
     try {
       return $this->twigService->getEnvironment()->render(
-        "dynamic-blocks/$blockPath.twig",
+        "$blockPath.twig",
         $payload,
       );
     } catch (\Exception $e) {
