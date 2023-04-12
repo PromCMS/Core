@@ -17,6 +17,7 @@ use Slim\Views\Twig;
 class UsersController
 {
   private $container;
+  private PasswordService $passwordService;
   private $currentUser;
 
   public function __construct(Container $container)
