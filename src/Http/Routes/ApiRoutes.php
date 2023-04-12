@@ -12,6 +12,7 @@ use PromCMS\Core\Http\Middleware\PermissionMiddleware;
 class ApiRoutes implements CoreRoutes
 {
   private Container $container;
+  private Config $config;
   private static string $controllersPath = '\PromCMS\Core\Controllers';
 
   public function __construct($container)
