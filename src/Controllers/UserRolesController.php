@@ -14,6 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class UserRolesController
 {
+  private PasswordService $passwordService;
   public function __construct(Container $container)
   {
     $this->passwordService = $container->get(PasswordService::class);
