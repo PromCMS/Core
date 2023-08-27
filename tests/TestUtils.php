@@ -14,6 +14,8 @@ class TestUtils
       static::rmdir_recursive($root);
     }
     mkdir($root);
+    echo "before";
+    echo Path::join($root, ".env");
     file_put_contents(Path::join($root, ".env"), "
       APP_NAME=\"PromCMS Test Project\"
       APP_PREFIX=
