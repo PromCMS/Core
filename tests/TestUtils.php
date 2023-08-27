@@ -20,8 +20,7 @@ class TestUtils
       APP_KEY=
       APP_DEBUG=true
       APP_URL=http://localhost:3004
-      LANGUAGE=\"en\"
-      MORE_LANG=\"cs,fr\"
+      MORE_LANG=\"en,cs,fr\"
       
       MAIL_HOST=\"test\"
       MAIL_PORT=2525

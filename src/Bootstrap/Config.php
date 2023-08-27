@@ -33,12 +33,9 @@ class Config implements AppModuleInterface
     $APP_PREFIX = $_ENV['APP_PREFIX'] ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
     $IS_DEV_ENV = $APP_ENV == 'development';
-    $DEFAULT_LANGUAGE = $_ENV['LANGUAGE'] ?? 'en';
     $LANGUAGES = array_filter(
-      array_merge(
-        [$DEFAULT_LANGUAGE],
-        explode(',', $_ENV['MORE_LANG'] ?? ''),
-      ),
+      // TODO: Deprecate accessing LANGUAGE in full release
+      explode(',', (isset($_ENV['LANGUAGE']) ? ($_ENV['LANGUAGE'] . ',') : '') . $_ENV['MORE_LANG'] ?? ''),
       function ($item) {
         return is_string($item) && strlen($item);
       }
@@ -88,7 +85,7 @@ class Config implements AppModuleInterface
         'uploadsPath' => $PROM_UPLOADS_ROOT,
       ]),
       'i18n' => new ConfigPart__i18n([
-        'default' => $DEFAULT_LANGUAGE,
+        'default' => $LANGUAGES[0],
         'languages' => $LANGUAGES,
       ]),
       'system' => new ConfigPart__System([

@@ -12,7 +12,7 @@ use SleekDB\Query as SleekQuery;
 
 class Query
 {
-  use \PromCMS\Core\Database\Traits\Query\Managers, \PromCMS\Core\Database\Traits\Query\Builder;
+  use \PromCMS\Core\Database\Traits\Query\Managers;
 
   protected Store $store;
   /**  
@@ -303,7 +303,86 @@ class Query
       ->exists();
   }
 
+  /**
+   * Adds "WHERE" to sql query
+   * @param array $arg
+   */
+  function where(array $arg)
+  { 
+    if (count($arg)) {
+      if (is_array($arg[0])) {
+        foreach ($arg as $argRow) {
+          $argRow[0] = $this->getLocalizedFieldName($argRow[0]);
+          $this->getQueryBuilder()->where($argRow);
+        }
+      } else {
+        $arg[0] = $this->getLocalizedFieldName($arg[0]);
+        $this->getQueryBuilder()->where($arg);
+      }
+    }
+
+    return $this;
+  }
+
+  function orderBy(array $arg)
+  {
+    $this->getQueryBuilder()->orderBy($arg);
+
+    return $this;
+  }
+
+  function join(\Closure $arg, string $propertyName)
+  {
+    $this->getQueryBuilder()->join($arg, $propertyName);
+
+    return $this;
+  }
+
+  function limit($count)
+  {
+    $this->getQueryBuilder()->limit($count);
+
+    return $this;
+  }
+
+  function skip($count)
+  {
+    $this->getQueryBuilder()->skip($count);
+
+    return $this;
+  }
+
+  /**
+   * Select what fields to include in result
+   */
+  function select(array $fieldNames)
+  {
+    $this->getQueryBuilder()->select($fieldNames);
+
+    return $this;
+  }
+
+  /**
+   * Opposite of select
+   */
+  function except(array $fieldNames)
+  {
+    $this->getQueryBuilder()->except($fieldNames);
+
+    return $this;
+  }
+
   // PRIVATE FUNCTIONS
+
+  private function getLocalizedFieldName(string $fieldName) {
+    $intlFields = $this->modelClass->getInternationalizedFields()[1];
+
+    if (in_array($fieldName, $intlFields) === false) {
+      return $fieldName;
+    }
+
+    return static::$TRANSLATIONS_FIELD_NAME . "." . $this->currentLanguage . "." . $fieldName;
+  }
 
   private static function serializeId($id): int
   {
