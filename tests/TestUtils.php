@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PromCMS\Tests;
 
 use PromCMS\Core\Path;
+use Symfony\Component\Dotenv\Dotenv;
 
 class TestUtils
 {
@@ -14,8 +15,6 @@ class TestUtils
       static::rmdir_recursive($root);
     }
     mkdir($root);
-    echo "before";
-    echo Path::join($root, ".env");
     file_put_contents(Path::join($root, ".env"), "
       APP_NAME=\"PromCMS Test Project\"
       APP_PREFIX=
@@ -34,6 +33,8 @@ class TestUtils
       SECURITY_TOKEN_LIFETIME=86400 #1 day
       SECURITY_SESSION_LIFETIME=3600 #1 hour
     ");
+    $dotenv = new Dotenv();
+    $dotenv->load(Path::join($root, '.env'));
   }
 
   public static function generalCleanup(string $root)
