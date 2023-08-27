@@ -32,14 +32,11 @@ class Config implements AppModuleInterface
 
     $APP_PREFIX = $_ENV['APP_PREFIX'] ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
-    echo $_ENV['MORE_LANG'];
-    echo " da ";
-    echo $_ENV['LANGUAGE'];
-
     $IS_DEV_ENV = $APP_ENV == 'development';
+    $LANGUAGE = isset($_ENV['LANGUAGE']) ? $_ENV['LANGUAGE'] : 'en';
     $LANGUAGES = array_filter(
       // TODO: Deprecate accessing LANGUAGE in full release
-      explode(',', (isset($_ENV['LANGUAGE']) ? ($_ENV['LANGUAGE'] . ',') : '') . $_ENV['MORE_LANG'] ?? ''),
+      array_merge([$LANGUAGE], explode(',', $_ENV['MORE_LANG'] ?? '')),
       function ($item) {
         return is_string($item) && strlen($item) === 2;
       }
