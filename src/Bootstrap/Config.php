@@ -37,7 +37,7 @@ class Config implements AppModuleInterface
       // TODO: Deprecate accessing LANGUAGE in full release
       explode(',', (isset($_ENV['LANGUAGE']) ? ($_ENV['LANGUAGE'] . ',') : '') . $_ENV['MORE_LANG'] ?? ''),
       function ($item) {
-        return is_string($item) && strlen($item);
+        return is_string($item) && strlen($item) === 2;
       }
     );
 
