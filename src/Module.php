@@ -28,7 +28,7 @@ class Module {
       throw new \Exception("Not a valid module info in ".static::$moduleInfoFileName);
     }
 
-    if (!isset($moduleInfoContent["name"])) {
+    if (!isset($this->config["name"])) {
       throw new \Exception("Please define your module name in ".static::$moduleInfoFileName);
     }
   }
