@@ -31,7 +31,7 @@ final class AppTest extends AppTestCase
   {
     $app = new App(static::$testProjectRoot);
 
-    $this->assertClassHasAttribute('root', App::class);
+    $this->assertObjectHasProperty('root', $app);
 
     $app->init(true);
     $container = $app->getSlimApp()->getContainer();
