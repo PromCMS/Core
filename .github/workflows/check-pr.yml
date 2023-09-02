@@ -37,12 +37,12 @@ jobs:
         uses: php-actions/composer@v6
         with:
           command: install
-          php_version: "7.4"
+          php_version: "8.2"
           version: 1
 
       - name: Test
         uses: php-actions/composer@v6
         with:
           command: test
-          php_version: "7.4"
+          php_version: "8.2"
           version: 1
