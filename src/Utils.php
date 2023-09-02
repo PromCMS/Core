@@ -114,36 +114,26 @@ class Utils
         // Firstly get all the dirs from modules folder
         glob(Path::join($appRoot, 'modules', '*'), GLOB_ONLYDIR),
       ),
-      function ($moduleName) use ($appRoot) {
-        $moduleInfoFileName  = 'module-info.json';
-        $moduleRoot = static::getModuleRoot($appRoot, $moduleName);
-        $moduleInfoPath = Path::join($moduleRoot, $moduleInfoFileName);
+      function ($moduleFolderName) use ($appRoot) {
+        $moduleRoot = static::getModuleRoot($appRoot, $moduleFolderName);
+        /**
+         * @var \PromCMS\Core\Module|null
+         */
+        $module = null;
 
         try {
-          if (!file_exists($moduleInfoPath)) {
-            throw new Exception("Module must have $moduleInfoFileName file created");
-          }
-
-          $moduleInfoContent = (array) json_decode(file_get_contents($moduleInfoPath));
-
-          if (!$moduleInfoContent) {
-            throw new Exception("Not a valid module info");
-          }
-
-          if (!isset($moduleInfoContent["name"])) {
-            throw new Exception("Please define your module name in $moduleInfoFileName");
-          }
+          $module = new Module($moduleRoot);
         } catch (\Exception $e) {
           $message = $e->getMessage();
-          echo "<b>Warning </b> - Detected module by the name '$moduleName', but an error happened during validation: $message";
+          echo "<b>Warning </b> - Detected in '$moduleRoot', but an error happened during validation: $message";
           return false;
         }
 
-        if (isset($moduleInfoContent["enabled"]) && $moduleInfoContent["enabled"] === false) {
+        if ($module->isEnabled() === false) {
           return false;
         }
 
-        return $moduleName !== 'Core';
+        return $moduleFolderName !== 'Core';
       },
     );
 
@@ -151,8 +141,8 @@ class Utils
       $leftModuleRoot = static::getModuleRoot($appRoot, $leftModuleName);
       $rightModuleRoot = static::getModuleRoot($appRoot, $rightModuleName);
 
-      $leftModuleInfoPath = Path::join($leftModuleRoot, 'module-info.json');
-      $rightModuleInfoPath = Path::join($rightModuleRoot, 'module-info.json');
+      $leftModuleInfoPath = Path::join($leftModuleRoot, Module::$moduleInfoFileName);
+      $rightModuleInfoPath = Path::join($rightModuleRoot, Module::$moduleInfoFileName);
 
       $leftModuleInfoContent = (array) json_decode(file_get_contents($leftModuleInfoPath));
       $rightModuleInfoContent = (array) json_decode(file_get_contents($rightModuleInfoPath));

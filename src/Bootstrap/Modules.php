@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Bootstrap;
 
+use PromCMS\Core\Module;
 use Slim\Views\Twig as TwigViews;
 use Twig\Loader\FilesystemLoader;
 use PromCMS\Core\Path;
@@ -49,11 +50,11 @@ class Modules implements AppModuleInterface
     foreach ($moduleNames as $dirname) {
       $moduleRoot = Utils::getModuleRoot($appRoot, $dirname);
       // Make sure that plugin has valid info file
-      $bootstrapFilepath = Path::join($moduleRoot, 'bootstrap.php');
-      $bootstrapAfter = Path::join($moduleRoot, 'bootstrap.after.php');
-      $apiRoutesFilepath = Path::join($moduleRoot, 'api.routes.php');
-      $frontRoutesFilepath = Path::join($moduleRoot, 'front.routes.php');
-      $viewsFolderPath = Path::join($moduleRoot, 'Views');
+      $bootstrapFilepath = Path::join($moduleRoot, Module::$bootstrapFileName);
+      $bootstrapAfter = Path::join($moduleRoot, Module::$afterBootstrapFileName);
+      $apiRoutesFilepath = Path::join($moduleRoot, Module::$apiRoutesFileName);
+      $frontRoutesFilepath = Path::join($moduleRoot, Module::$frontRoutesFileName);
+      $viewsFolderPath = Path::join($moduleRoot, Module::$viewsFolderName);
 
       // Load bootstrap for that module
       if (file_exists($bootstrapFilepath)) {
