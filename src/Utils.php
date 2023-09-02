@@ -139,6 +139,10 @@ class Utils
           return false;
         }
 
+        if (isset($moduleInfoContent["enabled"]) && $moduleInfoContent["enabled"] === false) {
+          return false;
+        }
+
         return $moduleName !== 'Core';
       },
     );
@@ -168,13 +172,13 @@ class Utils
         return $value < 0 ? -1 : ($value > 0  ? 1 : 0);
       }
 
-      if (!isset($left["order"])  && isset($right["order"])) {
+      if (!isset($left["order"]) && isset($right["order"])) {
         $value = intval($right["order"]);
 
-        return $value < 0 ? -1 : ($value > 0  ? 1 : 0);
+        return $value < 0 ? -1 : ($value > 0 ? -1 : 0);
       }
 
-      if (isset($left["order"])  && isset($right["order"])) {
+      if (isset($left["order"]) && isset($right["order"])) {
         $leftValue = intval($left["order"]);
         $rightValue = intval($right["order"]);
 

@@ -5,6 +5,7 @@ namespace PromCMS\Tests\Services;
 use PromCMS\Core\Database\Query;
 use PromCMS\Core\Database\SingletonModel;
 use PromCMS\Tests\AppTestCase;
+use PromCMS\Core\App;
 
 class CustomSingleton extends SingletonModel
 {
@@ -36,6 +37,13 @@ class CustomSingleton extends SingletonModel
 
 final class SingletonModelTest extends AppTestCase
 {
+  public static function setUpBeforeClass(): void
+  {
+    parent::setUpBeforeClass();
+
+    (new App(static::$testProjectRoot))->init(true);
+  }
+
   public function testShouldCreateCorrectly()
   {
     $customSingletonInstance = new CustomSingleton();

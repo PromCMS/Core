@@ -4,7 +4,7 @@ use PromCMS\Core\App;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
 use PromCMS\Tests\AppTestCase;
 
-final class AppExtensionTest extends AppTestCase
+final class AppExtensionsTest extends AppTestCase
 {
   static AppExtensions $extensionInstance;
   static String $testProjectRoot;
