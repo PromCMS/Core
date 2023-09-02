@@ -33,7 +33,8 @@
     "symfony/dotenv": "^6",
     "illuminate/support": "^10.21",
     "rakit/validation": "^1.4",
-    "slim/twig-view": "^3.3"
+    "slim/twig-view": "^3.3",
+    "twig/html-extra": "^3.7"
   },
   "require-dev": {
     "spatie/phpunit-watcher": "^1.8",

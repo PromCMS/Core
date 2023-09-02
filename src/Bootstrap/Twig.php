@@ -7,6 +7,7 @@ use PromCMS\Core\Path;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
 use Slim\Views\Twig as TwigViews;
 use Slim\Views\TwigMiddleware;
+use Twig\Extra\Html\HtmlExtension;
 
 class Twig implements AppModuleInterface
 {
@@ -37,5 +38,6 @@ class Twig implements AppModuleInterface
 
     // Add twig app extension
     $twig->addExtension(new AppExtensions($container));
+    $twig->addExtension(new HtmlExtension());
   }
 }
