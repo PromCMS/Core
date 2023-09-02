@@ -16,6 +16,7 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_release_rules: fix:patch,hotfix:patch,pre-feature:preminor,feature:minor,chore:patch,breaking:major,break:major,ci:patch,deps:patch
           
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

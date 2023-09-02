@@ -13,6 +13,8 @@ jobs:
         with:
           types: |
             fix
+            hotfix
+            pre-feature
             feature
             chore
             breaking
