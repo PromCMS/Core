@@ -139,6 +139,10 @@ class Utils
           return false;
         }
 
+        if (isset($moduleInfoContent["enabled"]) && $moduleInfoContent["enabled"] === false) {
+          return false;
+        }
+
         return $moduleName !== 'Core';
       },
     );
