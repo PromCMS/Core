@@ -6,6 +6,7 @@ use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Services\JWTService;
@@ -128,7 +129,7 @@ class UsersController
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
     $jwtService = $this->container->get(JWTService::class);
-    $emailService = $this->container->get('email');
+    $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(Twig::class);
 
     if (isset($parsedBody['data']['password'])) {
@@ -245,7 +246,7 @@ class UsersController
     $args
   ) {
     $jwtService = $this->container->get(JWTService::class);
-    $emailService = $this->container->get('email');
+    $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(Twig::class);
 
     $user = Users::getOneById($args['itemId']);

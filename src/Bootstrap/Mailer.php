@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Bootstrap;
 
 use PHPMailer\PHPMailer\PHPMailer;
+use PromCMS\Core\Mailer as MailerClass;
 
 class Mailer implements AppModuleInterface
 {
@@ -35,6 +36,6 @@ class Mailer implements AppModuleInterface
       $_ENV['APP_NAME'] ? $_ENV['APP_NAME'] : 'PROM Mailer',
     );
 
-    $container->set('email', $mailer);
+    $container->set(MailerClass::class, $mailer);
   }
 }

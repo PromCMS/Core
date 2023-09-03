@@ -4,6 +4,7 @@ namespace PromCMS\Core\Controllers;
 
 use DI\Container;
 use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\PasswordService;
@@ -160,7 +161,7 @@ class UserProfileController
     ResponseInterface $response
   ) {
     $params = $request->getQueryParams();
-    $emailService = $this->container->get('email');
+    $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(Twig::class);
 
     if (!$params['email']) {
