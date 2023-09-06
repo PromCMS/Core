@@ -70,6 +70,8 @@ process.env.INPUT_CUSTOM_RELEASE_RULES = result.join(GROUP_DIVIDER);
 process.env.INPUT_PRE_RELEASE_BRANCHES = DEVELOPMENT_BRANCH_NAME;
 process.env.INPUT_RELEASE_BRANCHES = PRODUCTION_BRANCH_NAME;
 process.env.INPUT_TYPES = Object.keys(groups).join(',');
+process.env.INPUT_DEFAULT_PRERELEASE_BUMP = 'false';
+process.env.INPUT_DEFAULT_BUMP = 'false';
 
 console.log({
   releaseRules: process.env.INPUT_CUSTOM_RELEASE_RULES,
