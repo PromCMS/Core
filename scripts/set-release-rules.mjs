@@ -3,7 +3,7 @@
 const PRODUCTION_BRANCH_NAME = 'main'
 const DEVELOPMENT_BRANCH_NAME = 'develop'
 // @ts-ignore
-const currentBranch = process.env.GITHUB_REF
+const currentBranch = process.env.GITHUB_REF_NAME
   .replace('refs/heads/', '')
   .replace('refs/pull/', '')
   .replace('/merge', '');
