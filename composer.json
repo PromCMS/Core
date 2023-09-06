@@ -34,7 +34,8 @@
     "illuminate/support": "^10.21",
     "rakit/validation": "^1.4",
     "slim/twig-view": "^3.3",
-    "twig/html-extra": "^3.7"
+    "twig/html-extra": "^3.7",
+    "justinrainbow/json-schema": "^5.2"
   },
   "require-dev": {
     "spatie/phpunit-watcher": "^1.8",
