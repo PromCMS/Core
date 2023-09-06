@@ -9,18 +9,14 @@ jobs:
     name: Validate PR title
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repo
+        # https://github.com/actions/checkout
+        uses: actions/checkout@v2
+
+      - name: "Setup release rules"
+        run: node scripts/set-release-rules.mjs
+
       - uses: amannn/action-semantic-pull-request@v4
-        with:
-          types: |
-            fix
-            hotfix
-            pre-feature
-            feature
-            chore
-            breaking
-            break
-            ci
-            deps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
