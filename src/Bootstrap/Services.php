@@ -6,7 +6,9 @@ use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
 use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\LocalizationService;
+use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\PasswordService;
+use PromCMS\Core\Services\SchemaService;
 
 class Services implements AppModuleInterface
 {
@@ -20,5 +22,8 @@ class Services implements AppModuleInterface
       LocalizationService::class,
       new LocalizationService($container),
     );
+
+    $container->set(ModulesService::class, new ModulesService($container));
+    $container->set(SchemaService::class, new SchemaService($container));
   }
 }

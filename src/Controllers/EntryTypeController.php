@@ -6,9 +6,9 @@ use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Config;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Services\EntryTypeService;
-use PromCMS\Core\Utils;
+use PromCMS\Core\Utils\ModelUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -81,7 +81,7 @@ class EntryTypeController
             array_merge(
               [['id', '=', intval($args['itemId'])]],
               $request->getAttribute('permission-only-own', false) === true
-                ? Utils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance)
+                ? ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance)
                 : [],
             ),
           )

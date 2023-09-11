@@ -1,27 +1,32 @@
 <?php
 
 namespace PromCMS\Core;
+use JsonSchema\Validator;
+use PromCMS\Core\Exceptions\ValidateSchemaException;
 
 class Schema {
+  private object $schema;
+  private Validator $validator;
 
-  
-  function create() {
-
+  public function __construct(object $schema) {
+    $this->schema = $schema;
+    $this->validator = new Validator();
   }
 
-
   /**
-   * @param string $fileLocation Location to the json file. 
-   *                             This can be relative or absolute file path to filesystem, or location on the internet. 
-   *                             This can also be a path with @modules:<module name> prefix to resolve into module right away
+   * Validates data with current schema
+   * 
+   * @return true
+   * @throws ValidateSchemaException
    */
-  function load (string $fileLocation) {
-    $json = "";
+  public function validate(&$data, int $checkMode) {
+    $this->validator->reset();
+    $this->validator->validate($data, $this->schema);
 
-    if (str_starts_with($fileLocation, "@modules:")) {
-      
+    if (!$this->validator->isValid()) {
+      throw new ValidateSchemaException($this->validator->getErrors());
     }
 
-    return json_decode($json);
+    return true;
   }
 }

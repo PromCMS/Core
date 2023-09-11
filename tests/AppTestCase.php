@@ -3,7 +3,9 @@
 namespace PromCMS\Tests;
 
 use PHPUnit\Framework\TestCase;
+use PromCMS\Core\Module;
 use PromCMS\Core\Path;
+use PromCMS\Core\Utils\FsUtils;
 use PromCMS\Tests\TestUtils;
 
 abstract class AppTestCase extends TestCase
@@ -23,5 +25,20 @@ abstract class AppTestCase extends TestCase
   public static function tearDownAfterClass(): void
   {
     TestUtils::generalCleanup(static::$testProjectRoot);
+  }
+
+  function createModule (String $moduleName, Array $otherData = null) {
+    $moduleRoot = Path::join(Module::$modulesRoot, $moduleName);
+    mkdir($moduleRoot);
+
+    file_put_contents(Path::join($moduleRoot, Module::$moduleInfoFileName),json_encode(array_merge([
+      "name" => $moduleName
+    ], $otherData ?? [])));
+  }
+
+  function deleteAllModules () {
+    FsUtils::rrmdir(Module::$modulesRoot);
+
+    mkdir(Module::$modulesRoot);
   }
 }

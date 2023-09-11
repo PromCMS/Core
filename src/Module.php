@@ -4,6 +4,7 @@ namespace PromCMS\Core;
 
 // TODO: in feature we want every instance of each loaded module accessible on app instance
 class Module {
+  static string $modulesRoot = '';
   static $moduleInfoFileName  = 'module-info.json';
   static $frontRoutesFileName  = 'front.routes.php';
   static $apiRoutesFileName  = 'api.routes.php';
@@ -14,7 +15,13 @@ class Module {
   private $config;
   private $path;
 
-  function __construct($modulePath) {
+  function __construct($moduleRootPath) {
+    $modulePath = $moduleRootPath;
+
+    if (str_contains($modulePath, '@modules:')) {
+      $modulePath = Path::join(static::$modulesRoot, str_replace('@modules:', '', $modulePath));
+    }
+
     $moduleInfoPath = Path::join($modulePath, static::$moduleInfoFileName);
 
     if (!file_exists($moduleInfoPath)) {
@@ -31,6 +38,11 @@ class Module {
     if (!isset($this->config["name"])) {
       throw new \Exception("Please define your module name in ".static::$moduleInfoFileName);
     }
+  }
+
+  // TODO: Is this really necessary? Should we honour name field instead?
+  public function getFolderName() {
+    return basename($this->getPath());
   }
 
   public function getName() {
