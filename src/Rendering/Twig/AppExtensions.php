@@ -5,11 +5,12 @@ namespace PromCMS\Core\Rendering\Twig;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
+use PromCMS\Core\Exceptions\ValidateSchemaException;
 use PromCMS\Core\Path;
+use PromCMS\Core\Schema;
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
 use Twig\Extension\AbstractExtension;
-use Rakit\Validation\Validator;
 use Slim\Views\Twig;
 use Twig\TwigFunction;
 
@@ -18,8 +19,8 @@ class AppExtensions extends AbstractExtension
   private ImageService $imageService;
   private FileService $fileService;
   private $twigService;
-  private Validator $validator;
   private Config $config;
+  private Schema $viteAssetsConfigSchema;
 
   public function __construct(Container $container)
   {
@@ -27,7 +28,44 @@ class AppExtensions extends AbstractExtension
     $this->twigService = $container->get(Twig::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
-    $this->validator = new Validator();
+    $this->viteAssetsConfigSchema = new Schema((object) [
+      "type" => "object", 
+      "properties" => (object) [
+        "manifestFileName" => (object) [
+          "type" => "string", 
+          "default" => "manifest.json" 
+        ], 
+        "distFolderPath" => (object) [
+          "type" => "string", 
+          "required" => true 
+        ], 
+        "assets" => (object) [
+          "type" => "array", 
+          "required" => true, 
+          "items" => (object) [
+            "type" => "object", 
+            "properties" => (object) [
+              "path" => (object) [
+                "type" => "string", 
+                "required" => true 
+              ], 
+              "type" => (object) [
+                "type" => "string", 
+                "required" => true, 
+                "enum" => [
+                  "stylesheet", 
+                  "script" 
+                ] 
+              ], 
+              "scriptType" => (object) [
+                "type" => "string", 
+                "default" => "module" 
+              ] 
+            ] 
+          ] 
+        ] 
+      ] 
+    ]);
   }
 
   public function getFunctions()
@@ -67,36 +105,30 @@ class AppExtensions extends AbstractExtension
     }
   }
 
-  private function validateGetViteAssetsConfig(array $config)
+  /**
+   * @return array|ValidateSchemaException|Exception
+   */
+  private function validateGetViteAssetsConfig(object $config)
   {
-    $assetsTypes = ['stylesheet', 'script'];
-    $validator = $this->validator;
-
-    $validationResult = $this->validator->validate($config, [
-      'manifestFileName' => 'default:manifest.json',
-      'distFolderPath' => 'required',
-      'assets' => 'required|array',
-      'assets.*.path' => 'required',
-      'assets.*.type' => [
-        'required',
-        $validator('in', $assetsTypes)->strict(),
-      ],
-      'assets.*.scriptType' => 'default:module',
-    ]);
-
-    if ($validationResult->fails()) {
-      return false;
+    try {
+      return (array) $this->viteAssetsConfigSchema->validate($config);
+    } catch (\Exception $exception) {
+      return $exception;
     }
-
-    return $validationResult->getValidatedData();
   }
 
   public function getViteAssets(array $config = []): string
   {
-    if (!($config = $this->validateGetViteAssetsConfig($config))) {
-      return "<script>alert('Invalid assets array in getViteAssets twig function');</script>";
-    }
+    $config = $this->validateGetViteAssetsConfig($this->viteAssetsConfigSchema->arrayToObjectRecursive($config));
 
+    if ($config instanceof ValidateSchemaException) {
+      $formattedErrors = implode(', ', array_map(fn ($key) => "$key(".$config->exceptions[$key].")", array_keys($config->exceptions)));
+
+      return "<script>alert('Invalid assets array in getViteAssets twig function, because: $formattedErrors');</script>";
+    } else if ($config instanceof Exception) {
+      throw $config;
+    }
+    
     $assets = $config['assets'];
     $composedAssets = '';
     $distFolderPath = $config['distFolderPath'];
@@ -129,15 +161,15 @@ class AppExtensions extends AbstractExtension
       }
     }
 
-    foreach ($assets as $assetInfo) {
-      $src = $assetInfo['path'];
+    foreach ($assets as  $assetInfo) {
+      $src = $assetInfo->path;
 
-      switch ($assetInfo['type']) {
+      switch ($assetInfo->type) {
         case 'stylesheet':
           $composedAssets .= "\n <link rel=\"stylesheet\" href=\"$src\">";
           break;
         case 'script':
-          $scriptType = $assetInfo['scriptType'];
+          $scriptType = $assetInfo->scriptType;
           $composedAssets .= "\n <script type=\"$scriptType\" crossorigin src=\"$src\"></script>";
           break;
       }

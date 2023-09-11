@@ -1,6 +1,7 @@
 <?php
 
 namespace PromCMS\Core;
+use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
 use PromCMS\Core\Exceptions\ValidateSchemaException;
 
@@ -16,17 +17,24 @@ class Schema {
   /**
    * Validates data with current schema
    * 
-   * @return true
+   * @return object
    * @throws ValidateSchemaException
    */
-  public function validate(&$data, int $checkMode) {
+  public function validate(&$data, int $checkMode = Constraint::CHECK_MODE_APPLY_DEFAULTS) {
     $this->validator->reset();
-    $this->validator->validate($data, $this->schema);
+    $this->validator->validate($data, $this->schema, $checkMode);
 
     if (!$this->validator->isValid()) {
       throw new ValidateSchemaException($this->validator->getErrors());
     }
 
-    return true;
+    return $data;
+  }
+
+  /**
+   * Recursively cast an associative array to an object
+   */
+  public function arrayToObjectRecursive(array $value) {
+    return $this->validator->arrayToObjectRecursive($value);
   }
 }
