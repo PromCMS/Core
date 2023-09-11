@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core;
+namespace PromCMS\Core\Utils;
 
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use Psr\Http\Message\ResponseInterface;

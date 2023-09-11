@@ -2,11 +2,13 @@
 
 namespace PromCMS\Core\Bootstrap;
 
+use DI\Container;
+use PromCMS\Core\Services\ModulesService;
+use PromCMS\Core\Utils\FsUtils;
+use Slim\App;
 use PromCMS\Core\Module;
 use Slim\Views\Twig as TwigViews;
-use Twig\Loader\FilesystemLoader;
 use PromCMS\Core\Path;
-use PromCMS\Core\Utils;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\Routes\ApiRoutes;
 use PromCMS\Core\Http\Routes\FrontRoutes;
@@ -18,19 +20,15 @@ use PromCMS\Core\Models\Users;
 
 class Modules implements AppModuleInterface
 {
-  public function run($app, $container)
+  public function run(App $app, Container $container)
   {
     $appRoot = $container->get('app.root');
 
-    // Make sure that 'Core' module is loaded first
-    $moduleNames = Utils::getValidModuleNames($appRoot);
-    /** @var Utils */
-    $utils = $container->get(Utils::class);
-    /** @var Config */
+    Module::$modulesRoot = Path::join($appRoot, 'modules');
+
+    $modules = $container->get(ModulesService::class)->getAll();
     $config = $container->get(Config::class);
-    /** @var TwigViews */
     $twig = $container->get(TwigViews::class);
-    /** @var FilesystemLoader */
     $twigFileLoader = $twig->getLoader();
 
     $filePathsToApiRoutes = [];
@@ -47,14 +45,14 @@ class Modules implements AppModuleInterface
     $loadedModels = $coreModels;
 
     // Simple autoload load module logic
-    foreach ($moduleNames as $dirname) {
-      $moduleRoot = Utils::getModuleRoot($appRoot, $dirname);
+    foreach ($modules as $module) {
+
       // Make sure that plugin has valid info file
-      $bootstrapFilepath = Path::join($moduleRoot, Module::$bootstrapFileName);
-      $bootstrapAfter = Path::join($moduleRoot, Module::$afterBootstrapFileName);
-      $apiRoutesFilepath = Path::join($moduleRoot, Module::$apiRoutesFileName);
-      $frontRoutesFilepath = Path::join($moduleRoot, Module::$frontRoutesFileName);
-      $viewsFolderPath = Path::join($moduleRoot, Module::$viewsFolderName);
+      $bootstrapFilepath = Path::join($module->getPath(), Module::$bootstrapFileName);
+      $bootstrapAfter = Path::join($module->getPath(), Module::$afterBootstrapFileName);
+      $apiRoutesFilepath = Path::join($module->getPath(), Module::$apiRoutesFileName);
+      $frontRoutesFilepath = Path::join($module->getPath(), Module::$frontRoutesFileName);
+      $viewsFolderPath = Path::join($module->getPath(), Module::$viewsFolderName);
 
       // Load bootstrap for that module
       if (file_exists($bootstrapFilepath)) {
@@ -64,18 +62,18 @@ class Modules implements AppModuleInterface
       }
 
       // Load models beforehand and save these models to array
-      $loadedModuleModels = $utils->autoloadModels($moduleRoot);
+      $loadedModuleModels = FsUtils::autoloadModels($module->getPath());
       if ($loadedModuleModels) {
         $loadedModels = array_merge($loadedModels, $loadedModuleModels);
       }
 
       // If we have folder of views then we add another view namespace
       if (is_dir($viewsFolderPath)) {
-        $twigFileLoader->addPath($viewsFolderPath, "modules:" . $dirname);
+        $twigFileLoader->addPath($viewsFolderPath, 'modules:' . $dirname);
       }
 
       // Loads controllers beforehand
-      $utils->autoloadControllers($moduleRoot);
+      FsUtils::autoloadControllers($module->getPath());
 
       // TODO: add try catch here
       if (file_exists($bootstrapAfter)) {

@@ -26,9 +26,10 @@ final class AppExtensionsTest extends AppTestCase
     $res = static::$extensionInstance->getViteAssets([
       "distFolderPath" => "dist",
     ]);
+
     echo $res;
 
-    $this->expectOutputString("<script>alert('Invalid assets array in getViteAssets twig function');</script>");
+    $this->expectOutputString("<script>alert('Invalid assets array in getViteAssets twig function, because: assets(The property assets is required)');</script>");
   }
 
   public function testTwigFunctionGetViteAssetsShouldReturnRightOnCorrectConfig()
