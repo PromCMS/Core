@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PromCMS\Tests;
 
 use PromCMS\Core\Path;
+use Symfony\Component\Dotenv\Dotenv;
 
 class TestUtils
 {
@@ -20,8 +21,7 @@ class TestUtils
       APP_KEY=
       APP_DEBUG=true
       APP_URL=http://localhost:3004
-      LANGUAGE=\"en\"
-      MORE_LANG=\"cs,fr\"
+      MORE_LANG=\"en,cs,fr\"
       
       MAIL_HOST=\"test\"
       MAIL_PORT=2525
@@ -33,6 +33,8 @@ class TestUtils
       SECURITY_TOKEN_LIFETIME=86400 #1 day
       SECURITY_SESSION_LIFETIME=3600 #1 hour
     ");
+    $dotenv = new Dotenv();
+    $dotenv->load(Path::join($root, '.env'));
   }
 
   public static function generalCleanup(string $root)
