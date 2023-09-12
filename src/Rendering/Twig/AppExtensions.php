@@ -28,28 +28,28 @@ class AppExtensions extends AbstractExtension
     $this->twigService = $container->get(Twig::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
-    $this->viteAssetsConfigSchema = new Schema((object) [
+    $this->viteAssetsConfigSchema = new Schema([
       "type" => "object", 
-      "properties" => (object) [
-        "manifestFileName" => (object) [
+      "properties" => [
+        "manifestFileName" => [
           "type" => "string", 
           "default" => "manifest.json" 
         ], 
-        "distFolderPath" => (object) [
+        "distFolderPath" => [
           "type" => "string", 
           "required" => true 
         ], 
-        "assets" => (object) [
+        "assets" => [
           "type" => "array", 
           "required" => true, 
-          "items" => (object) [
+          "items" => [
             "type" => "object", 
-            "properties" => (object) [
-              "path" => (object) [
+            "properties" => [
+              "path" => [
                 "type" => "string", 
                 "required" => true 
               ], 
-              "type" => (object) [
+              "type" => [
                 "type" => "string", 
                 "required" => true, 
                 "enum" => [
@@ -57,7 +57,7 @@ class AppExtensions extends AbstractExtension
                   "script" 
                 ] 
               ], 
-              "scriptType" => (object) [
+              "scriptType" => [
                 "type" => "string", 
                 "default" => "module" 
               ] 
@@ -108,7 +108,7 @@ class AppExtensions extends AbstractExtension
   /**
    * @return array|ValidateSchemaException|Exception
    */
-  private function validateGetViteAssetsConfig(object $config)
+  private function validateGetViteAssetsConfig(array $config)
   {
     try {
       return (array) $this->viteAssetsConfigSchema->validate($config);
@@ -119,7 +119,7 @@ class AppExtensions extends AbstractExtension
 
   public function getViteAssets(array $config = []): string
   {
-    $config = $this->validateGetViteAssetsConfig($this->viteAssetsConfigSchema->arrayToObjectRecursive($config));
+    $config = $this->validateGetViteAssetsConfig($config);
 
     if ($config instanceof ValidateSchemaException) {
       $formattedErrors = implode(', ', array_map(fn ($key) => "$key(".$config->exceptions[$key].")", array_keys($config->exceptions)));
@@ -161,15 +161,15 @@ class AppExtensions extends AbstractExtension
       }
     }
 
-    foreach ($assets as  $assetInfo) {
-      $src = $assetInfo->path;
+    foreach ($assets as $assetInfo) {
+      $src = $assetInfo["path"];
 
-      switch ($assetInfo->type) {
+      switch ($assetInfo["type"]) {
         case 'stylesheet':
           $composedAssets .= "\n <link rel=\"stylesheet\" href=\"$src\">";
           break;
         case 'script':
-          $scriptType = $assetInfo->scriptType;
+          $scriptType = $assetInfo["scriptType"];
           $composedAssets .= "\n <script type=\"$scriptType\" crossorigin src=\"$src\"></script>";
           break;
       }
