@@ -54,11 +54,12 @@ class Modules implements AppModuleInterface
       $frontRoutesFilepath = Path::join($module->getPath(), Module::$frontRoutesFileName);
       $viewsFolderPath = Path::join($module->getPath(), Module::$viewsFolderName);
 
+      // TODO: add test
       // Load bootstrap for that module
       if (file_exists($bootstrapFilepath)) {
-        $module = require_once $bootstrapFilepath;
+        $bootstrapClosure = require_once $bootstrapFilepath;
 
-        $module($app);
+        $bootstrapClosure($app);
       }
 
       // Load models beforehand and save these models to array
