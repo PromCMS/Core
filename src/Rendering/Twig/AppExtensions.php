@@ -10,8 +10,8 @@ use PromCMS\Core\Path;
 use PromCMS\Core\Schema;
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
+use PromCMS\Core\Services\RenderingService;
 use Twig\Extension\AbstractExtension;
-use Slim\Views\Twig;
 use Twig\TwigFunction;
 
 class AppExtensions extends AbstractExtension
@@ -25,7 +25,7 @@ class AppExtensions extends AbstractExtension
   public function __construct(Container $container)
   {
     $this->fileService = $container->get(FileService::class);
-    $this->twigService = $container->get(Twig::class);
+    $this->twigService = $container->get(RenderingService::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
     $this->viteAssetsConfigSchema = new Schema([

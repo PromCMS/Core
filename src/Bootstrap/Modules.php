@@ -4,10 +4,10 @@ namespace PromCMS\Core\Bootstrap;
 
 use DI\Container;
 use PromCMS\Core\Services\ModulesService;
+use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\FsUtils;
 use Slim\App;
 use PromCMS\Core\Module;
-use Slim\Views\Twig as TwigViews;
 use PromCMS\Core\Path;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\Routes\ApiRoutes;
@@ -28,7 +28,7 @@ class Modules implements AppModuleInterface
 
     $modules = $container->get(ModulesService::class)->getAll();
     $config = $container->get(Config::class);
-    $twig = $container->get(TwigViews::class);
+    $twig = $container->get(RenderingService::class);
     $twigFileLoader = $twig->getLoader();
 
     $filePathsToApiRoutes = [];

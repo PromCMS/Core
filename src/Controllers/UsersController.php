@@ -5,6 +5,7 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
+use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
@@ -13,7 +14,6 @@ use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\PasswordService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Slim\Views\Twig;
 
 class UsersController
 {
@@ -130,7 +130,7 @@ class UsersController
     $parsedBody = $request->getParsedBody();
     $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get(Mailer::class);
-    $twigService = $this->container->get(Twig::class);
+    $twigService = $this->container->get(RenderingService::class);
 
     if (isset($parsedBody['data']['password'])) {
       unset($parsedBody['data']['password']);

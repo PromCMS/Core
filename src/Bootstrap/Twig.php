@@ -5,7 +5,7 @@ namespace PromCMS\Core\Bootstrap;
 use PromCMS\Core\Config;
 use PromCMS\Core\Path;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
-use Slim\Views\Twig as TwigViews;
+use PromCMS\Core\Services\RenderingService;
 use Slim\Views\TwigMiddleware;
 use Twig\Extra\Html\HtmlExtension;
 
@@ -28,12 +28,13 @@ class Twig implements AppModuleInterface
       }
     }
 
-    $twig = TwigViews::create([$defaultViewsPath], [
+    $twig = RenderingService::create([$defaultViewsPath], [
       'cache' => !$isDebug && !$isDevelopment ? $cachePath : false,
     ]);
 
-    $container->set(TwigViews::class, $twig);
-
+    $container->set(RenderingService::class, $twig);
+    
+    // Default Twig utils provided by slim team
     $app->add(TwigMiddleware::createFromContainer($app, TwigViews::class));
 
     // Add twig app extension
