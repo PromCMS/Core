@@ -15,6 +15,7 @@ use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
 use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
 use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
 use PromCMS\Core\Bootstrap\Services as ServicesBootstrap;
+use PromCMS\Core\Bootstrap\Middlewares as MiddlewaresBootstrap;
 
 /**
  * PromCMS App object
@@ -28,8 +29,9 @@ class App
     DatabaseBootstrap::class,
     FlySystemBootstrap::class,
     MailerBootstrap::class,
-    TwigBootstrap::class,
     ServicesBootstrap::class,
+    TwigBootstrap::class,
+    MiddlewaresBootstrap::class
   ];
 
   function __construct(string $root)

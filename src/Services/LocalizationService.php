@@ -12,16 +12,18 @@ class LocalizationService
   private Container $container;
   private array $supportedLanguages;
   private string $defaultLanguage;
+  private string $currentLanguage;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->supportedLanguages = $this->container->get(
+    $config = $this->container->get(
       Config::class,
-    )->i18n->languages;
-    $this->defaultLanguage = $this->container->get(
-      Config::class,
-    )->i18n->default;
+    );
+
+    $this->supportedLanguages = $config->i18n->languages;
+    $this->defaultLanguage = $config->i18n->default;
+    $this->currentLanguage = $this->defaultLanguage;
   }
 
   function languageIsSupported($lang)
@@ -99,5 +101,26 @@ class LocalizationService
     GeneralTranslations::where(["key", '=', $key])->delete();
 
     return true;
+  }
+
+  function getCurrentLanguage() {
+    return $this->currentLanguage;
+  }
+
+  function getSupportedLanguages()
+  {
+    return $this->supportedLanguages;
+  }
+
+  function setCurrentLanguage(string $nextLanguage) {
+    if (!$this->languageIsSupported($nextLanguage)) {
+      throw new \Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+    }
+
+    $this->currentLanguage = $nextLanguage;
+  }
+
+  function getDefaultLanguage() {
+    return $this->defaultLanguage;
   }
 }
