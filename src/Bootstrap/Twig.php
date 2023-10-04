@@ -9,6 +9,7 @@ use PromCMS\Core\Rendering\Twig\Extensions\LocalizationExtension;
 use PromCMS\Core\Services\RenderingService;
 use Slim\Views\TwigMiddleware;
 use Twig\Extra\Html\HtmlExtension;
+use Twig\Loader\FilesystemLoader;
 
 class Twig implements AppModuleInterface
 {
@@ -19,17 +20,19 @@ class Twig implements AppModuleInterface
     $appRoot = $config->app->root;
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
-
-    $defaultViewsPath = Path::join($appRoot, 'Views');
     $cachePath        = Path::join($appRoot, 'cache', 'twig');
 
-    if (!file_exists($defaultViewsPath)) {
-      if (!mkdir($defaultViewsPath, 0777)) {
-        throw new \Exception('Failed to create templates directory');
-      }
-    }
+    $loader = new FilesystemLoader();
 
-    $twig = RenderingService::create([$defaultViewsPath], [
+        // foreach ($paths as $namespace => $path) {
+        //     if (is_string($namespace)) {
+        //         $loader->setPaths($path, $namespace);
+        //     } else {
+        //         $loader->addPath($path);
+        //     }
+        // }
+
+    $twig = new RenderingService($loader, [
       'cache' => !$isDebug && !$isDevelopment ? $cachePath : false,
     ]);
 
