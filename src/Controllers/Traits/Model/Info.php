@@ -2,7 +2,7 @@
 
 namespace PromCMS\Core\Controllers\Traits\Model;
 
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

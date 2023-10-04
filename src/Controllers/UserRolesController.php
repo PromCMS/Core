@@ -5,7 +5,7 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Models\UserRoles;
 use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Services\PasswordService;

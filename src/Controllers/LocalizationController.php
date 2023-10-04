@@ -4,7 +4,7 @@ namespace PromCMS\Core\Controllers;
 
 use PromCMS\Core\Services\LocalizationService;
 use DI\Container;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

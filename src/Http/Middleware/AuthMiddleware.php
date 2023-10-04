@@ -5,7 +5,7 @@ namespace PromCMS\Core\Http\Middleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Models\Users;
 
 class AuthMiddleware

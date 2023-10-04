@@ -3,7 +3,7 @@
 namespace PromCMS\Core\Controllers;
 
 use DI\Container;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\JWTService;

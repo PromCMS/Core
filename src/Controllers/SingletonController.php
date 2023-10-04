@@ -4,7 +4,7 @@ namespace PromCMS\Core\Controllers;
 
 use DI\Container;
 use PromCMS\Core\Config;
-use PromCMS\Core\HttpUtils;
+use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Services\SingletonService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
