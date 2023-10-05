@@ -8,6 +8,7 @@ use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Services\RenderingService;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 class LocalizationExtension extends AbstractExtension
 {
@@ -32,6 +33,13 @@ class LocalizationExtension extends AbstractExtension
     ];
   }
 
+  public function getFunctions()
+  {
+    return [
+      new TwigFunction('getCurrentLanguage', [$this, 'getCurrentLanguage']),
+    ];
+  }
+
   public function translate($value) {
     $currentLanguage = $this->localizationService->getCurrentLanguage();
 
@@ -43,5 +51,9 @@ class LocalizationExtension extends AbstractExtension
     return isset($cachedTranslations[$currentLanguage][$value]) 
       ? $cachedTranslations[$currentLanguage][$value] 
       : $value;
+  }
+
+  public function getCurrentLanguage() {
+    return $this->localizationService->getCurrentLanguage();
   }
 }
