@@ -4,6 +4,7 @@ namespace PromCMS\Core;
 use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
 use PromCMS\Core\Exceptions\ValidateSchemaException;
+use PromCMS\Core\Utils\ObjectUtils;
 
 class Schema {
   private object $schema;
@@ -40,15 +41,10 @@ class Schema {
     return $this->validator->arrayToObjectRecursive($value);
   }
 
+  /**
+   * @deprecated use ObjectUtils::objectToArrayRecursive instead
+   */
   public function objectToArrayRecursive(mixed $value) {
-      if(is_object($value) || is_array($value)) {
-          $ret = (array) $value;
-          foreach ($ret as &$item) {
-              $item = $this->objectToArrayRecursive($item);
-          }
-          return $ret;
-      } else {
-          return $value;
-      }
+    return ObjectUtils::objectToArrayRecursive($value);
   }
 }
