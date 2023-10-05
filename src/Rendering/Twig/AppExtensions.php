@@ -71,10 +71,21 @@ class AppExtensions extends AbstractExtension
   public function getFunctions()
   {
     return [
+      new TwigFunction('getConfig', [$this, 'getConfig']),
       new TwigFunction('image', [$this, 'getImage']),
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
     ];
+  }
+  
+  public function getConfig(): array {
+    $config = $this->config->__toArray();
+    
+    // TODO: add functionality that hides specific secrets from return of this function (for example session secrets)
+    // This is kind of complete, but this should be more granular
+    unset($config["security"]);
+
+    return $config;
   }
 
   public function getImage(

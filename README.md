@@ -52,3 +52,31 @@ PromCMS exposes variety of services and objects that help you with creating your
 - [`SchemaService::class`](./src/Services/SchemaService.php)
 - [`RenderingService::class`](./src/Services/RenderingService.php)
 
+## What possible .env options can I set, how can I access them and what they control?
+
+Every PromCMS should have secrets stored in .env. PromCMS stores known configuration in PromCMS\Core\Config which is accessible through PSR Container (see [this section](#how-can-i-access-services-or-other-objects-provided-by-promcms) for more)
+
+### Known keys
+
+#### `APP_PREFIX`
+#### `APP_ENV`
+#### `LANGUAGES`
+
+Describes available languages in application. First language in list is taken as default one.
+
+- type: `array<string>`
+- default: `'en'`
+- example: 
+    - one language: `'cs'` (isn't really necessary, default one is for case when you decide your application needs more languages)
+    - more languages: `'cs,en,de,sk'`
+
+#### `APP_NAME`
+#### `APP_URL`
+#### `SECURITY_SESSION_LIFETIME`
+#### `SECURITY_TOKEN_LIFETIME`
+#### `APP_DEBUG`
+#### `MAIL_HOST`
+#### `MAIL_PORT`
+#### `MAIL_USER`
+#### `MAIL_PASS`
+#### `MAIL_ADDRESS`
