@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\LocalizationService;
 use DI\Container;
 use PromCMS\Core\Utils\HttpUtils;;
@@ -10,6 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class LocalizationController
 {
+  private Container $container;
   private LocalizationService $localizationService;
 
   public function __construct(Container $container)
@@ -93,10 +95,9 @@ class LocalizationController
     if (!isset($args['lang'])) {
       return $response->withStatus(400);
     }
+
     $locales = $this->localizationService->getTranslations($args['lang']);
 
-    $response->getBody()->write(json_encode($locales));
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $locales)->getResponse();
   }
 }

@@ -5,6 +5,7 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Models\UserRoles;
 use PromCMS\Core\Services\EntryTypeService;
@@ -55,9 +56,7 @@ class UserRolesController
       );
     }
 
-    $response->getBody()->write(json_encode($responseData));
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $responseData)->getResponse();
   }
 
   public function update(

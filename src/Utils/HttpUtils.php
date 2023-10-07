@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Utils;
 
 use PromCMS\Core\Exceptions\EntityDuplicateException;
+use PromCMS\Core\Http\Enums\HttpContentType;
 use Psr\Http\Message\ResponseInterface;
 
 class HttpUtils
@@ -20,18 +21,22 @@ class HttpUtils
   }
 
   static function prepareJsonResponse(
-    ResponseInterface $response,
+    ResponseInterface &$response,
     array $data,
     string $message = '',
     $code = false
-  ) {
-    return $response->getBody()->write(
+  ) { 
+    $response = $response->withHeader("Content-Type", HttpContentType::JSON->asHeaderValue());
+
+    $response->getBody()->write(
       json_encode([
         'data' => $data,
         'message' => $message,
         'code' => $code,
       ]),
     );
+
+    return $response;
   }
 
   static function normalizeWhereQueryParam($filterParam)

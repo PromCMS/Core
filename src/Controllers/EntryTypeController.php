@@ -6,6 +6,7 @@ use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Config;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Utils\ModelUtils;
@@ -123,11 +124,7 @@ class EntryTypeController
       $orderBy["created_at"] = $queryParams['orderBy_created_at'];
     }
 
-    $response
-      ->getBody()
-      ->write(json_encode($service->getMany($where, $page, $limit, $orderBy)));
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $service->getMany($where, $page, $limit, $orderBy))->getResponse();
   }
 
   public function update(

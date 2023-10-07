@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
 use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Models\Files;
 use PromCMS\Core\Services\EntryTypeService;
@@ -90,11 +91,7 @@ class FilesController
       };
     }
 
-    $response
-      ->getBody()
-      ->write(json_encode($service->getMany($where, $page, $limit)));
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $service->getMany($where, $page, $limit))->getResponse();
   }
 
   public function getFile(

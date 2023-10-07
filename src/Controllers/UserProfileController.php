@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Controllers;
 
 use DI\Container;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Mailer;
@@ -101,9 +102,7 @@ class UserProfileController
       }
     }
 
-    $response->getBody()->write(json_encode($responseAry));
-
-    return $response->withStatus($code);
+    return ResponseHelper::withServerResponse($response, $responseAry, $code)->getResponse();
   }
 
   public function update(

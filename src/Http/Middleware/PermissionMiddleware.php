@@ -2,10 +2,11 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use GuzzleHttp\Psr7\Response;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Models\UserRoles;
 
 class PermissionMiddleware
@@ -53,7 +54,7 @@ class PermissionMiddleware
    *
    * @return \Psr\Http\Message\ResponseInterface
    */
-  public function __invoke(Request $request, RequestHandler $handler): Response
+  public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
   {
     $user = $this->container->get('session')->get('user', false);
     $roleId = intval($user->role);
@@ -67,7 +68,7 @@ class PermissionMiddleware
 
       return $response
         ->withStatus(404)
-        ->withHeader('Content-Description', 'model does not exist');
+        ->withHeader('Content-Description', 'Model does not exist');
     }
 
     // TODO we should allow setting permission on files too so it makes sense
@@ -107,7 +108,6 @@ class PermissionMiddleware
             throw new \Exception(
               '[permissionMiddleware]: Unexpected request method',
             );
-            break;
         }
 
         $request = $request->withAttribute(

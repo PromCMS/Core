@@ -5,6 +5,7 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;;
 use PromCMS\Core\Mailer;
@@ -53,11 +54,7 @@ class UsersController
       [$where] = HttpUtils::normalizeWhereQueryParam($queryParams['where']);
     }
 
-    $response
-      ->getBody()
-      ->write(json_encode($service->getMany($where, $page, $limit)));
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $service->getMany($where, $page, $limit))->getResponse();
   }
 
   public function update(

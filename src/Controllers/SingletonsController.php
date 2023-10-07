@@ -4,6 +4,7 @@ namespace PromCMS\Core\Controllers;
 
 use DI\Container;
 use PromCMS\Core\Database\SingletonModel;
+use PromCMS\Core\Http\ResponseHelper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -31,10 +32,6 @@ class SingletonsController
             $collectedModelSummaries[lcfirst($modelName)] = $modelClass->getSummary();
         }
 
-        $response->getBody()->write(json_encode(
-            $collectedModelSummaries
-        ));
-
-        return $response;
+        return ResponseHelper::withServerResponse($response, $collectedModelSummaries)->getResponse();
     }
 }

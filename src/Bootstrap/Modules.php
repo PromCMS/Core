@@ -140,30 +140,6 @@ class Modules implements AppModuleInterface
 
               $importedModules[$filePath]($app, $router);
             }
-          })
-          ->add(function ($request, $handler) use ($config) {
-            $response = $handler->handle($request);
-            $responseHeaders = $response->getHeaders();
-
-            return $response
-              ->withHeader(
-                'Access-Control-Allow-Origin',
-                $config->env->development ? '*' : '',
-              )
-              ->withHeader(
-                'Access-Control-Allow-Headers',
-                'X-Requested-With, Content-Type, Accept, Origin, Authorization',
-              )
-              ->withHeader(
-                'Access-Control-Allow-Methods',
-                'GET, POST, DELETE, PATCH',
-              )
-              ->withHeader(
-                'Content-Type',
-                isset($responseHeaders['Content-Type'])
-                  ? $responseHeaders['Content-Type']
-                  : 'application/json',
-              );
           });
 
         // Load front routes second - same as api
@@ -174,6 +150,22 @@ class Modules implements AppModuleInterface
 
           $importedModules[$filePath]($app, $router);
         }
+      })->add(function ($request, $handler) use ($config) {
+        $response = $handler->handle($request);
+
+        return $response
+          ->withHeader(
+            'Access-Control-Allow-Origin',
+            $config->env->development ? '*' : '',
+          )
+          ->withHeader(
+            'Access-Control-Allow-Headers',
+            'X-Requested-With, Content-Type, Accept, Origin, Authorization',
+          )
+          ->withHeader(
+            'Access-Control-Allow-Methods',
+            'GET, POST, DELETE, PATCH',
+          );
       });
     }
   }
