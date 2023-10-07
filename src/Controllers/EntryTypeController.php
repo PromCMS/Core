@@ -114,7 +114,7 @@ class EntryTypeController
 
     // If current user can view this content
     if ($request->getAttribute('permission-only-own', false) === true) {
-      $filter = Utils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance);
+      $filter = ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance);
       $where = $filter;
     }
 
@@ -148,7 +148,7 @@ class EntryTypeController
       if ($request->getAttribute('permission-only-own', false) === true) {
         $where = array_merge(
           $where,
-          Utils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance),
+          ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance),
         );
       }
 
@@ -191,7 +191,7 @@ class EntryTypeController
     if ($request->getAttribute('permission-only-own', false) === true) {
       $where = array_merge(
         $where,
-        Utils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance),
+        ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance),
       );
     }
 
@@ -229,7 +229,7 @@ class EntryTypeController
     try {
       $ownableQueryFilter =
         $request->getAttribute('permission-only-own', false) === true
-        ? Utils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $classInstance)
+        ? ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $classInstance)
         : [];
 
       $fromEntry = $classInstance
