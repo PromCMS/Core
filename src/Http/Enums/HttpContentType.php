@@ -11,8 +11,8 @@ enum HttpContentType
     {
         return match($this) 
         {
-          ResponseType::JSON => 'json',   
-          ResponseType::HTML => 'html',   
+          HttpContentType::JSON => 'json',   
+          HttpContentType::HTML => 'html',   
         };
     }
 
@@ -20,8 +20,8 @@ enum HttpContentType
     {
         return match($this) 
         {
-          ResponseType::JSON => 'application/json',   
-          ResponseType::HTML => 'text/html',   
+          HttpContentType::JSON => 'application/json',   
+          HttpContentType::HTML => 'text/html',   
         };
     }
 }
