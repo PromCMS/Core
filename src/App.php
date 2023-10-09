@@ -63,17 +63,6 @@ class App
       // Set app root to container
       $container->set('app.root', $this->root);
 
-      if (!$headless) {
-        // Add session to container
-        $container->set('session', new \SlimSession\Helper());
-
-        // Add routing middleware
-        $this->app->addRoutingMiddleware();
-
-        // Add SLIM PHP body parsing middleware
-        $this->app->addBodyParsingMiddleware();
-      }
-
       // Run bootstrap classes
       foreach (static::$appModules as $className) {
         (new $className())->run($this->app, $container);
@@ -83,7 +72,22 @@ class App
       $config = $container->get(Config::class);
       $isDevelopment = $config->env->development;
 
+      // Add session to container
+      
       if (!$headless) {
+        $container->set('session', new \SlimSession\Helper());
+      }
+
+      // Initialize modules
+      (new ModulesBootstrap())->run($this->app, $container);
+      
+      if (!$headless) {
+        // Add routing middleware
+        $this->app->addRoutingMiddleware();
+  
+        // Add SLIM PHP body parsing middleware
+        $this->app->addBodyParsingMiddleware();
+        
         // SLIM PHP error middleware - we need to add this after  
         $this->app->addErrorMiddleware(
           $config->env->debug || $isDevelopment,
@@ -102,9 +106,6 @@ class App
           ]),
         );
       }
-
-      // Initialize modules
-      (new ModulesBootstrap())->run($this->app, $container);
     }
   }
 
