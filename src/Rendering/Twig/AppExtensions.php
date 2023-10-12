@@ -29,42 +29,42 @@ class AppExtensions extends AbstractExtension
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
     $this->viteAssetsConfigSchema = new Schema([
-      "type" => "object", 
+      "type" => "object",
       "properties" => [
         "manifestFileName" => [
-          "type" => "string", 
-          "default" => "manifest.json" 
-        ], 
+          "type" => "string",
+          "default" => "manifest.json"
+        ],
         "distFolderPath" => [
-          "type" => "string", 
-          "required" => true 
-        ], 
+          "type" => "string",
+          "required" => true
+        ],
         "assets" => [
-          "type" => "array", 
-          "required" => true, 
+          "type" => "array",
+          "required" => true,
           "items" => [
-            "type" => "object", 
+            "type" => "object",
             "properties" => [
               "path" => [
-                "type" => "string", 
-                "required" => true 
-              ], 
+                "type" => "string",
+                "required" => true
+              ],
               "type" => [
-                "type" => "string", 
-                "required" => true, 
+                "type" => "string",
+                "required" => true,
                 "enum" => [
-                  "stylesheet", 
-                  "script" 
-                ] 
-              ], 
+                  "stylesheet",
+                  "script"
+                ]
+              ],
               "scriptType" => [
-                "type" => "string", 
-                "default" => "module" 
-              ] 
-            ] 
-          ] 
-        ] 
-      ] 
+                "type" => "string",
+                "default" => "module"
+              ]
+            ]
+          ]
+        ]
+      ]
     ]);
   }
 
@@ -72,15 +72,16 @@ class AppExtensions extends AbstractExtension
   {
     return [
       new TwigFunction('getConfig', [$this, 'getConfig']),
-      new TwigFunction('image', [$this, 'getImage']),
+      new TwigFunction('getImage', [$this, 'getImage']),
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
     ];
   }
-  
-  public function getConfig(): array {
+
+  public function getConfig(): array
+  {
     $config = $this->config->__toArray();
-    
+
     // TODO: add functionality that hides specific secrets from return of this function (for example session secrets)
     // This is kind of complete, but this should be more granular
     unset($config["security"]);
@@ -133,13 +134,13 @@ class AppExtensions extends AbstractExtension
     $config = $this->validateGetViteAssetsConfig($config);
 
     if ($config instanceof ValidateSchemaException) {
-      $formattedErrors = implode(', ', array_map(fn ($key) => "$key(".$config->exceptions[$key].")", array_keys($config->exceptions)));
+      $formattedErrors = implode(', ', array_map(fn ($key) => "$key(" . $config->exceptions[$key] . ")", array_keys($config->exceptions)));
 
       return "<script>alert('Invalid assets array in getViteAssets twig function, because: $formattedErrors');</script>";
     } else if ($config instanceof Exception) {
       throw $config;
     }
-    
+
     $assets = $config['assets'];
     $composedAssets = '';
     $distFolderPath = $config['distFolderPath'];
