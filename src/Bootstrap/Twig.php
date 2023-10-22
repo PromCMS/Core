@@ -5,6 +5,7 @@ namespace PromCMS\Core\Bootstrap;
 use PromCMS\Core\Config;
 use PromCMS\Core\Path;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
+use PromCMS\Core\Rendering\Twig\Extensions\ArrayUtilsExtension;
 use PromCMS\Core\Rendering\Twig\Extensions\LocalizationExtension;
 use PromCMS\Core\Services\RenderingService;
 use Slim\Views\TwigMiddleware;
@@ -24,20 +25,20 @@ class Twig implements AppModuleInterface
 
     $loader = new FilesystemLoader();
 
-        // foreach ($paths as $namespace => $path) {
-        //     if (is_string($namespace)) {
-        //         $loader->setPaths($path, $namespace);
-        //     } else {
-        //         $loader->addPath($path);
-        //     }
-        // }
+    // foreach ($paths as $namespace => $path) {
+    //     if (is_string($namespace)) {
+    //         $loader->setPaths($path, $namespace);
+    //     } else {
+    //         $loader->addPath($path);
+    //     }
+    // }
 
     $twig = new RenderingService($loader, [
       'cache' => !$isDebug && !$isDevelopment ? $cachePath : false,
     ]);
 
     $container->set(RenderingService::class, $twig);
-    
+
     // Default Twig utils provided by slim team
     $app->add(TwigMiddleware::createFromContainer($app, RenderingService::class));
 
@@ -45,5 +46,6 @@ class Twig implements AppModuleInterface
     $twig->addExtension(new AppExtensions($container));
     $twig->addExtension(new HtmlExtension());
     $twig->addExtension(new LocalizationExtension($container));
+    $twig->addExtension(new ArrayUtilsExtension($container));
   }
 }
