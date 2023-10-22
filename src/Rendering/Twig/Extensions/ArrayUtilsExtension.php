@@ -36,6 +36,6 @@ class ArrayUtilsExtension extends AbstractExtension
 
     return array_filter($value, function ($key) use ($keys) {
       return in_array($key, $keys);
-    });
+    }, ARRAY_FILTER_USE_KEY);
   }
 }
