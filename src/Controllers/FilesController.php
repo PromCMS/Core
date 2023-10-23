@@ -11,6 +11,7 @@ use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;;
+
 use PromCMS\Core\Models\Files;
 use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Services\FileService;
@@ -105,6 +106,7 @@ class FilesController
     try {
       $userId = $this->container->get('session')->get('user_id', false);
       $fileInfo = $this->fileService->getById($id);
+      $responseMimeType = $this->fs->mimeType($fileInfo->filepath);
 
       if ($fileInfo->private && !$userId) {
         return $response->withStatus(401);
@@ -116,12 +118,13 @@ class FilesController
           $queryParams,
         );
         $stream = new Stream($imageResource['resource']);
+        $responseMimeType = mime_content_type($imageResource['resource']);
       } else {
         $stream = $this->fileService->getStream($fileInfo->getData());
       }
 
       return $response
-        ->withHeader('Content-Type', $this->fs->mimeType($fileInfo->filepath))
+        ->withHeader('Content-Type', $responseMimeType)
         ->withHeader('Content-Length', $stream->getSize())
         ->withHeader('Cache-Control', 'max-age=31536000')
         ->withBody($stream);
