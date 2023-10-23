@@ -15,6 +15,9 @@ class FrontRoutes implements CoreRoutes
 
   function attachAllHandlers($router)
   {
+    // TODO: Better approach through apache config?
+    $router->redirect("/public/admin", "/admin/");
+    $router->redirect("/public/admin/", "/admin/");
     $router->get('/admin[/{routePiece:.*}]', function (
       ServerRequestInterface $request,
       ResponseInterface $response,
