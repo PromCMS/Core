@@ -10,6 +10,8 @@ use PromCMS\Core\Path;
 
 class ImageService
 {
+  private array $ALLOWED_IMAGE_TYPES = ["jpeg", "jpg", "png", "webp"];
+  private string $DEFAULT_IMAGE_TYPE = "jpeg";
   private Filesystem $cacheFs;
   private Filesystem $fs;
   private Config $config;
@@ -21,31 +23,55 @@ class ImageService
     $this->cacheFs = $container->get('cache-filesystem');
   }
 
-  public function getProcessed(array $fileInfo, $dirtyParams = [])
+  /**
+   * native imagepng has different quality parameter, but we want to keep the functionality the same across formats. This takes care of that
+   */
+  private function formatQualityToPNG(int $input): int
   {
-    $args = [];
-    if (
-      isset($dirtyParams['q']) &&
-      !empty($dirtyParams['q']) &&
-      $dirtyParams['q']
-    ) {
-      $args['q'] = intval($dirtyParams['q']);
-    }
-    if (
-      isset($dirtyParams['h']) &&
-      !empty($dirtyParams['h']) &&
-      $dirtyParams['h']
-    ) {
-      $args['h'] = intval($dirtyParams['h']);
-    }
-    if (
-      isset($dirtyParams['w']) &&
-      !empty($dirtyParams['w']) &&
-      $dirtyParams['w']
-    ) {
-      $args['w'] = intval($dirtyParams['w']);
+    return (min(9, floor($input / 10)) - 9) * -1;
+  }
+
+  private function getFileTypeFromMimeType(string $mimeType): null|string
+  {
+    $sliced = explode('/', $mimeType);
+    if (!in_array($sliced[1] ?? "", $this->ALLOWED_IMAGE_TYPES)) {
+      return null;
     }
 
+    return $sliced[1];
+  }
+
+  private function parseDirtyParamsToGetProcessed(array $dirtyParams): array
+  {
+    $keysToParser = [
+      "q" => fn ($value) => !empty($value) ? max(0, min(100, intval($value))) : null,
+      "w" => fn ($value) => !empty($value) ? intval($value) : null,
+      "h" => fn ($value) => !empty($value) ? intval($value) : null,
+      "f" => fn ($value) => !empty($value) && in_array($value, $this->ALLOWED_IMAGE_TYPES) ? $value : null,
+    ];
+
+    $result = [];
+
+    foreach ($dirtyParams as $key => $value) {
+      if (in_array($key, array_keys($keysToParser))) {
+        $resultFromParser = $keysToParser[$key]($value);
+
+        if (!empty($resultFromParser)) {
+          $result[$key] = $resultFromParser;
+        }
+      }
+    }
+
+    if (empty($result["q"])) {
+      $result["q"] = 75;
+    }
+
+    return $result;
+  }
+
+  public function getProcessed(array $fileInfo, $dirtyParams = [])
+  {
+    $args = $this->parseDirtyParamsToGetProcessed($dirtyParams);
     $file = $this->fs->readStream($fileInfo['filepath']);
     $fileStream = $file;
 
@@ -65,25 +91,54 @@ class ImageService
         ),
         $fileName,
       ]);
-      $fileBasenameWithArgs = "$fileNameWithArgs.jpeg";
+      $transformToType = $args["f"] ?? $this->getFileTypeFromMimeType($fileInfo["mimeType"]) ?? $this->DEFAULT_IMAGE_TYPE;
+      $fileBasenameWithArgs = "$fileNameWithArgs.$transformToType";
 
       if (!$this->cacheFs->fileExists($fileBasenameWithArgs)) {
         $gdImageSource = \imagecreatefromstring(stream_get_contents($file));
 
-        if (isset($args['w']) && !isset($args['h'])) {
-          $gdImageSource = imagescale($gdImageSource, $args['w']);
-        } elseif (isset($args['w']) && isset($args['h'])) {
-          $gdImageSource = imagescale($gdImageSource, $args['w'], $args['h']);
+        if (isset($args['w'])) {
+          if (isset($args['h'])) {
+            $gdImageSource = imagescale($gdImageSource, $args['w'], $args['h']);
+          } else {
+            $gdImageSource = imagescale($gdImageSource, $args['w']);
+          }
         }
 
-        $imageConverted = \imagejpeg(
-          $gdImageSource,
-          Path::join($this->config->fs->cachePath, $fileBasenameWithArgs),
-          $args['q'] ?? 90,
-        );
+        $saveToPath = Path::join($this->config->fs->cachePath, $fileBasenameWithArgs);
+        switch ($transformToType) {
+          case 'jpeg':
+          case 'jpg':
+            $imageConverted = \imagejpeg(
+              $gdImageSource,
+              $saveToPath,
+              $args['q'],
+            );
+            break;
+          case 'png':
+            //                        imagealphablending($gdImageSource, false);
+            imagesavealpha($gdImageSource, true);
+            $imageConverted = \imagepng(
+              $gdImageSource,
+              $saveToPath,
+              $this->formatQualityToPNG($args['q']),
+              PNG_ALL_FILTERS
+            );
+            break;
+          case 'webp':
+            imagesavealpha($gdImageSource, true);
+            $imageConverted = \imagewebp(
+              $gdImageSource,
+              $saveToPath,
+              $args['q'],
+            );
+            break;
+          default:
+            throw new \Exception("Cannot transform image as $transformToType is not supported type");
+        }
 
         if (!$imageConverted) {
-          throw new Exception('New image cannot be created');
+          throw new Exception('Failed to format image in ImageService');
         }
       }
 
@@ -98,6 +153,7 @@ class ImageService
       '&',
       array_map(function ($key) use ($args) {
         $arg = $args[$key];
+
         return "$key=$arg";
       }, array_keys($args)),
     );
