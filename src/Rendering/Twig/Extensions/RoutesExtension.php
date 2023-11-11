@@ -11,17 +11,17 @@ use Twig\TwigFunction;
 
 class RoutesExtension extends AbstractExtension
 {
-  private RouteCollectorService $routeCollector;
   private Config $config;
+  private Container $container;
   private LocalizationService $localizationService;
   private string $currentLanguage;
   private array $cachedTranslations;
 
   public function __construct(Container $container)
   {
-    $this->routeCollector = $container->get(RouteCollectorService::class);
-    $this->config = $container->get(Config::class);
-    $this->localizationService = $container->get(LocalizationService::class);
+    $this->container = $container;
+    $this->config = $this->container->get(Config::class);
+    $this->localizationService = $this->container->get(LocalizationService::class);
     $this->cachedTranslations = [];
   }
 
@@ -38,7 +38,10 @@ class RoutesExtension extends AbstractExtension
     {
         $currentLanguage = $this->localizationService->getCurrentLanguage();
         $defaultLanguage = $this->config->i18n->default;
-        $finalRoute = $this->routeCollector->getRouteParser()->urlFor($routeName, $data, $queryParams);
+        $finalRoute = $this->container
+          ->get(RouteCollectorService::class)
+          ->getRouteParser()
+          ->urlFor($routeName, $data, $queryParams);
 
         // if current language is not the same as default one then we prepend current language
         if ($currentLanguage !== $defaultLanguage) {
