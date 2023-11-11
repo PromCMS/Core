@@ -27,6 +27,9 @@ class SettingsController
       'app' => array_diff_key((array) $this->config->app, [
         'root' => null,
       ]),
+      'php' => [
+        'upload_max_filesize' => ini_get('upload_max_filesize')
+      ]
     ]);
 
     return $response;
