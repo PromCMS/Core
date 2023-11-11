@@ -161,12 +161,15 @@ class FilesController
 
     // If theres an error on upload
     if ($file->getError() !== UPLOAD_ERR_OK) {
-      return $response
-        ->withStatus(500)
-        ->withHeader(
-          'Content-Description',
-          'Upload failed ' . $file->getError(),
-        );
+      switch ($file->getError()) {
+        case UPLOAD_ERR_NO_FILE:
+        case UPLOAD_ERR_FORM_SIZE:
+          return $response->withStatus(413);
+        case UPLOAD_ERR_EXTENSION:
+          return $response->withStatus(415);
+        default:
+          return $response->withStatus(500);
+      }
     }
 
     if (!isset($data['root'])) {
