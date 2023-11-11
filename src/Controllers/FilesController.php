@@ -162,7 +162,7 @@ class FilesController
     // If theres an error on upload
     if ($file->getError() !== UPLOAD_ERR_OK) {
       switch ($file->getError()) {
-        case UPLOAD_ERR_NO_FILE:
+        case UPLOAD_ERR_INI_SIZE:
         case UPLOAD_ERR_FORM_SIZE:
           return $response->withStatus(413);
         case UPLOAD_ERR_EXTENSION:
