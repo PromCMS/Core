@@ -7,6 +7,7 @@ use PromCMS\Core\Path;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
 use PromCMS\Core\Rendering\Twig\Extensions\ArrayUtilsExtension;
 use PromCMS\Core\Rendering\Twig\Extensions\LocalizationExtension;
+use PromCMS\Core\Rendering\Twig\Extensions\RoutesExtension;
 use PromCMS\Core\Services\RenderingService;
 use Slim\Views\TwigMiddleware;
 use Twig\Extra\Html\HtmlExtension;
@@ -47,5 +48,6 @@ class Twig implements AppModuleInterface
     $twig->addExtension(new HtmlExtension());
     $twig->addExtension(new LocalizationExtension($container));
     $twig->addExtension(new ArrayUtilsExtension($container));
+    $twig->addExtension(new RoutesExtension($container));
   }
 }
