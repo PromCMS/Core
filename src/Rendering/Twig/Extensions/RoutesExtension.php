@@ -28,7 +28,6 @@ class RoutesExtension extends AbstractExtension
   public function getFunctions()
   {
     return [
-      new TwigFunction('getCurrentLanguage', [$this, 'getCurrentLanguage']),
       new TwigFunction('url_for', [$this, 'urlFor']),
     ];
   }
