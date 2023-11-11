@@ -8,6 +8,7 @@ use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\PasswordService;
+use PromCMS\Core\Services\RouteCollectorService;
 use PromCMS\Core\Services\SchemaService;
 
 class Services implements AppModuleInterface
@@ -23,6 +24,7 @@ class Services implements AppModuleInterface
       new LocalizationService($container),
     );
 
+    $container->set(RouteCollectorService::class, $app->getRouteCollector());
     $container->set(ModulesService::class, new ModulesService($container));
     $container->set(SchemaService::class, new SchemaService($container));
   }
