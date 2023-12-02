@@ -101,72 +101,80 @@ class Modules implements AppModuleInterface
 
     $routePrefix = $config->app->prefix;
     $supportedLanguages = $config->i18n->languages;
-    $importedModules = [];
-    $intlRoutePrefix =
-      $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}';
-
     $coreFrontRoutes = new FrontRoutes($container);
     $coreApiRoutes = new ApiRoutes($container);
 
-    foreach ([$routePrefix, $intlRoutePrefix] as $routePrefixPart) {
-      // Every module should have been bootstrapped by now so we can continue to including custom routes
-      $app->group($routePrefixPart, function ($router) use (
-        $filePathsToApiRoutes,
-        $filePathsToFrontRoutes,
-        $app,
-        $coreFrontRoutes,
-        $coreApiRoutes,
-        &$importedModules,
-        $config
-      ) {
-        // attach core front routes
-        $coreFrontRoutes->attachAllHandlers($router);
+    // Every module should have been bootstrapped by now so we can continue to including custom routes
+    $app->group($routePrefix, function ($router) use ($filePathsToApiRoutes, $filePathsToFrontRoutes, $app, $coreFrontRoutes, $coreApiRoutes, $config) {
+      // attach core front routes
+      $coreFrontRoutes->attachAllHandlers($router);
 
-        // Load api routes first from prepared set
-        $router
-          ->group('/api', function ($router) use (
-            $filePathsToApiRoutes,
-            $app,
-            $coreApiRoutes,
-            &$importedModules
-          ) {
-            // attach core api routes
-            $coreApiRoutes->attachAllHandlers($router);
+      // Load api routes first from prepared set
+      $router
+        ->group('/api', function ($router) use ($filePathsToApiRoutes, $app, $coreApiRoutes, ) {
+          // attach core api routes
+          $coreApiRoutes->attachAllHandlers($router);
 
-            foreach ($filePathsToApiRoutes as $filePath) {
-              if (!isset($importedModules[$filePath])) {
-                $importedModules[$filePath] = require_once $filePath;
-              }
+          foreach ($filePathsToApiRoutes as $filePath) {
+            $imported = require_once $filePath;
 
-              $importedModules[$filePath]($app, $router);
+            if (!is_callable($imported)) {
+              throw new \Exception("Route file return at $filePath is not callable");
             }
-          });
 
-        // Load front routes second - same as api
-        foreach ($filePathsToFrontRoutes as $filePath) {
-          if (!isset($importedModules[$filePath])) {
-            $importedModules[$filePath] = require_once $filePath;
+            $imported($app, $router);
           }
+        });
 
-          $importedModules[$filePath]($app, $router);
+      // Load front routes second - same as api
+      foreach ($filePathsToFrontRoutes as $filePath) {
+        $imported = require_once $filePath;
+
+        if (!is_callable($imported)) {
+          throw new \Exception("Route file return at $filePath is not callable");
         }
-      })->add(function ($request, $handler) use ($config) {
-        $response = $handler->handle($request);
 
-        return $response
-          ->withHeader(
-            'Access-Control-Allow-Origin',
-            $config->env->development ? '*' : '',
-          )
-          ->withHeader(
-            'Access-Control-Allow-Headers',
-            'X-Requested-With, Content-Type, Accept, Origin, Authorization',
-          )
-          ->withHeader(
-            'Access-Control-Allow-Methods',
-            'GET, POST, DELETE, PATCH',
-          );
-      });
+        $imported($app, $router);
+      }
+    })->add(function ($request, $handler) use ($config) {
+      $response = $handler->handle($request);
+
+      return $response
+        ->withHeader(
+          'Access-Control-Allow-Origin',
+          $config->env->development ? '*' : '',
+        )
+        ->withHeader(
+          'Access-Control-Allow-Headers',
+          'X-Requested-With, Content-Type, Accept, Origin, Authorization',
+        )
+        ->withHeader(
+          'Access-Control-Allow-Methods',
+          'GET, POST, DELETE, PATCH',
+        );
+    });
+
+    $hasPrefix = !empty($routePrefix);
+    $intlRoutePrefix =
+      $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}';
+
+    // Attach localized routes on already created routes
+    foreach ($app->getRouteCollector()->getRoutes() as $route) {
+      $pattern = $route->getPattern();
+      // Ignore public files, they are not localized of course
+      if (str_starts_with($pattern, "/public")) {
+        continue;
+      }
+
+      // If has prefix then we remove it
+      if ($hasPrefix) {
+        $pos = strpos($pattern, $routePrefix);
+        if ($pos !== false) {
+          $pattern = substr_replace($pattern, "", $pos, strlen($routePrefix));
+        }
+      }
+
+      $app->map($route->getMethods(), $intlRoutePrefix . $pattern, $route->getCallable());
     }
   }
 }
