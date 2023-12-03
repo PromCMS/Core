@@ -2,9 +2,10 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Session;
 use DI\Container;
 use PromCMS\Core\Config;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Services\SingletonService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,7 +20,7 @@ class SingletonController
 
   public function __construct(Container $container)
   {
-    $this->currentUser = $container->get('session')->get('user', false);
+    $this->currentUser = $container->get(Session::class)->get('user', false);
     $this->languageConfig = $container->get(Config::class)->i18n;
   }
 

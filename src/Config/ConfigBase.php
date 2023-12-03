@@ -1,13 +1,14 @@
 <?php
 namespace PromCMS\Core\Config;
 
-class ConfigBase {
+class ConfigBase
+{
   function __construct(array $config)
   {
     $keys = array_keys(get_class_vars(static::class));
 
     foreach ($keys as $key) {
-      if (isset($config[$key])) {
+      if (!empty($config[$key])) {
         $this->{$key} = $config[$key];
       }
     }
@@ -16,7 +17,8 @@ class ConfigBase {
   /**
    * Converts properties to array recursively
    */
-  function __toArray(): array {
+  function __toArray(): array
+  {
     $properties = get_object_vars($this);
 
     foreach ($properties as $propertyName => $propertyValue) {

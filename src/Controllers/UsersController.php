@@ -2,12 +2,13 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\EntryTypeService;
@@ -26,7 +27,7 @@ class UsersController
   {
     $this->container = $container;
     $this->passwordService = $container->get(PasswordService::class);
-    $this->currentUser = $container->get('session')->get('user', false);
+    $this->currentUser = $container->get(Session::class)->get('user', false);
   }
 
   public function getInfo(
@@ -63,7 +64,7 @@ class UsersController
     array $args
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
-    $currentUser = $this->container->get('session')->get('user');
+    $currentUser = $this->container->get(Session::class)->get('user');
 
     if ($currentUser->id === $args['itemId']) {
       return $response
@@ -172,7 +173,7 @@ class UsersController
     } catch (\Exception $e) {
       $loader = new \Twig\Loader\ArrayLoader([
         'index' =>
-        'Welcome, {{ name }}! Please continue with your registration <a href="{{ app_url }}/admin/finalize-registration?token={{ token }}">here</a>!',
+          'Welcome, {{ name }}! Please continue with your registration <a href="{{ app_url }}/admin/finalize-registration?token={{ token }}">here</a>!',
       ]);
       $twig = new \Twig\Environment($loader);
 
@@ -268,7 +269,7 @@ class UsersController
     } catch (\Exception $e) {
       $loader = new \Twig\Loader\ArrayLoader([
         'index' =>
-        'Hey, {{ name }}! We noticed that you requested a password reset. Please continue <a href="{{ app_url }}/admin/reset-password?token={{ token }}">here</a>!',
+          'Hey, {{ name }}! We noticed that you requested a password reset. Please continue <a href="{{ app_url }}/admin/reset-password?token={{ token }}">here</a>!',
       ]);
       $twig = new \Twig\Environment($loader);
 

@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
@@ -21,7 +22,7 @@ class EntryTypeController
 
   public function __construct(Container $container)
   {
-    $this->currentUser = $container->get('session')->get('user', false);
+    $this->currentUser = $container->get(Session::class)->get('user', false);
     $this->languageConfig = $container->get(Config::class)->i18n;
   }
 
@@ -82,8 +83,8 @@ class EntryTypeController
             array_merge(
               [['id', '=', intval($args['itemId'])]],
               $request->getAttribute('permission-only-own', false) === true
-                ? ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance)
-                : [],
+              ? ModelUtils::getOnlyOwnersOrEditorsFilter($this->currentUser->id, $modelInstance)
+              : [],
             ),
           )
           ->getData(),

@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use GuzzleHttp\Psr7\MimeType;
@@ -10,7 +11,7 @@ use GuzzleHttp\Psr7\UploadedFile;
 use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 
 use PromCMS\Core\Models\Files;
 use PromCMS\Core\Services\EntryTypeService;
@@ -104,7 +105,7 @@ class FilesController
     $queryParams = $request->getQueryParams();
 
     try {
-      $userId = $this->container->get('session')->get('user_id', false);
+      $userId = $this->container->get(Session::class)->get('user_id', false);
       $fileInfo = $this->fileService->getById($id);
       $responseMimeType = $this->fs->mimeType($fileInfo->filepath);
 

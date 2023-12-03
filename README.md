@@ -51,6 +51,7 @@ PromCMS exposes variety of services and objects that help you with creating your
 - [`ModulesService::class`](./src/Services/ModulesService.php)
 - [`SchemaService::class`](./src/Services/SchemaService.php)
 - [`RenderingService::class`](./src/Services/RenderingService.php)
+- [`Session::class`](./src/Session.php)
 
 ## What possible .env options can I set, how can I access them and what they control?
 

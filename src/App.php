@@ -6,7 +6,7 @@ use DI\Container;
 use PromCMS\Core\Exceptions\AppException;
 use Slim\App as SlimApp;
 use Slim\Factory\AppFactory;
-use Slim\Middleware\Session;
+use Slim\Middleware\Session as SessionMiddleware;
 
 use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
 use PromCMS\Core\Bootstrap\Database as DatabaseBootstrap;
@@ -73,21 +73,20 @@ class App
       $isDevelopment = $config->env->development;
 
       // Add session to container
-      
       if (!$headless) {
-        $container->set('session', new \SlimSession\Helper());
+        $container->set(Session::class, new Session());
       }
 
       // Initialize modules
       (new ModulesBootstrap())->run($this->app, $container);
-      
+
       if (!$headless) {
         // Add routing middleware
         $this->app->addRoutingMiddleware();
-  
+
         // Add SLIM PHP body parsing middleware
         $this->app->addBodyParsingMiddleware();
-        
+
         // SLIM PHP error middleware - we need to add this after  
         $this->app->addErrorMiddleware(
           $config->env->debug || $isDevelopment,
@@ -97,10 +96,10 @@ class App
 
         // Add session middleware
         $this->app->add(
-          new Session([
-            'name' => 'prom_session',
+          new SessionMiddleware([
             'autorefresh' => true,
-            'lifetime' => '1 hour',
+            'name' => $config->security->session->name,
+            'lifetime' => $config->security->session->lifetime,
             'httponly' => !$isDevelopment,
             'secure' => !$isDevelopment,
           ]),

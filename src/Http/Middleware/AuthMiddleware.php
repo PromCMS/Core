@@ -2,10 +2,11 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use PromCMS\Core\Session;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Models\Users;
 
 class AuthMiddleware
@@ -28,7 +29,7 @@ class AuthMiddleware
    */
   public function __invoke(Request $request, RequestHandler $handler): Response
   {
-    $userId = $this->container->get('session')->get('user_id', false);
+    $userId = $this->container->get(Session::class)->get('user_id', false);
     if (!$userId) {
       $response = new Response();
 
@@ -45,12 +46,12 @@ class AuthMiddleware
     } else {
       try {
         $this->container
-          ->get('session')
+          ->get(Session::class)
           ->set('user', Users::where(['id', '=', intval($userId)])->getOne());
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
-        $this->container->get('session')::destroy();
+        $this->container->get(Session::class)::destroy();
 
         HttpUtils::prepareJsonResponse(
           $response,

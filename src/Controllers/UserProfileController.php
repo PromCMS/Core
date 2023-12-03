@@ -2,10 +2,12 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Session;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
+
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\JWTService;
@@ -30,7 +32,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $user = $this->container->get('session')->get('user');
+    $user = $this->container->get(Session::class)->get('user');
 
     HttpUtils::prepareJsonResponse($response, $user->getData());
 
@@ -41,7 +43,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $userId = $this->container->get('session')->get('user_id', false);
+    $userId = $this->container->get(Session::class)->get('user_id', false);
     $args = $request->getParsedBody();
     $code = 200;
     $responseAry = [
@@ -82,7 +84,7 @@ class UserProfileController
           throw new \Exception("user-state-$userState");
         }
 
-        $this->container->get('session')->set('user_id', $user->id);
+        $this->container->get(Session::class)->set('user_id', $user->id);
         $responseAry['data'] = $user->getData();
         $responseAry['result'] = 'success';
         $responseAry['message'] = 'successfully logged in';
@@ -109,7 +111,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $user = $this->container->get('session')->get('user');
+    $user = $this->container->get(Session::class)->get('user');
     $parsedBody = $request->getParsedBody();
 
     if (!$parsedBody['data']) {
@@ -145,7 +147,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $this->container->get('session')::destroy();
+    $this->container->get(Session::class)::destroy();
 
     HttpUtils::prepareJsonResponse($response, [], '', 'success');
 
@@ -195,7 +197,7 @@ class UserProfileController
     } catch (\Exception $e) {
       $loader = new \Twig\Loader\ArrayLoader([
         'index' =>
-        'Hey, {{ name }}! We noticed that you requested a password reset. Please continue <a href="{{ app_url }}/admin/reset-password?token={{ token }}">here</a>!',
+          'Hey, {{ name }}! We noticed that you requested a password reset. Please continue <a href="{{ app_url }}/admin/reset-password?token={{ token }}">here</a>!',
       ]);
       $twig = new \Twig\Environment($loader);
 
@@ -225,7 +227,7 @@ class UserProfileController
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getParsedBody();
-    $user = $this->container->get('session')->get('user');
+    $user = $this->container->get(Session::class)->get('user');
 
     // Check that we atleast have something
     if (!isset($params['newPassword']) || !isset($params['oldPassword'])) {

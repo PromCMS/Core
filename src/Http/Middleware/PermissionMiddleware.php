@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use PromCMS\Core\Session;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -56,7 +57,7 @@ class PermissionMiddleware
    */
   public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
   {
-    $user = $this->container->get('session')->get('user', false);
+    $user = $this->container->get(Session::class)->get('user', false);
     $roleId = intval($user->role);
     $requestPath = $request->getUri()->getPath();
     $modelFromUrl = explode('/', $requestPath)[3];

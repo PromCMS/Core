@@ -24,15 +24,17 @@ final class ConfigTest extends AppTestCase
 
         $this->assertEqualsCanonicalizing($container->get(AppConfig::class)->__toArray(), [
             'app' => [
+                'prefix' => '',
                 'name' => 'PromCMS Test Project',
                 'root' => static::$testProjectRoot,
                 'url' => 'http://localhost:3004',
-                'prefix' => '',
                 'baseUrl' => 'http://localhost:3004',
             ],
             'security' => [
                 'session' => [
-                    'lifetime' => 3600,
+                    // These are the defaults
+                    "name" => "prom_session",
+                    "lifetime" => "1 hour"
                 ],
                 'token' => [
                     'lifetime' => 86400,

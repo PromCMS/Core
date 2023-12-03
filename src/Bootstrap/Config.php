@@ -20,6 +20,15 @@ use PromCMS\Core\Config\SystemModules as ConfigPart__System__Modules;
 
 class Config implements AppModuleInterface
 {
+  private function getEnvSafely(string $key): string|null
+  {
+    if (!isset($_ENV[$key])) {
+      return null;
+    }
+
+    return $_ENV[$key];
+  }
+
   public function run($app, $container)
   {
     $dotenv = new Dotenv();
@@ -30,7 +39,7 @@ class Config implements AppModuleInterface
     $PROM_LOCALES_ROOT = Path::join($appRoot, 'locales');
     $PROM_FILE_CACHE_ROOT = Path::join($appRoot, 'cache', 'files');
 
-    $APP_PREFIX = $_ENV['APP_PREFIX'] ? '/' . $_ENV['APP_PREFIX'] : '';
+    $APP_PREFIX = !empty($_ENV['APP_PREFIX']) ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
     $IS_DEV_ENV = $APP_ENV == 'development';
     $LANGUAGES = array_filter(
@@ -42,20 +51,21 @@ class Config implements AppModuleInterface
 
     $config = new AppConfig([
       'app' => new ConfigPart__App([
-        'name' => $_ENV['APP_NAME'] ?? 'PromCMS Project',
+        'name' => $_ENV['APP_NAME'],
         'root' => $appRoot,
         'url' => $_ENV['APP_URL'],
         'prefix' => $APP_PREFIX,
-        'baseUrl' => $_ENV['APP_PREFIX']
+        'baseUrl' => !empty($APP_PREFIX)
           ? $_ENV['APP_URL'] . $APP_PREFIX
           : $_ENV['APP_URL'],
       ]),
       'security' => new ConfigPart__Security([
         'session' => new ConfigPart__Security__Session([
-          'lifetime' => $_ENV['SECURITY_SESSION_LIFETIME'] ?? 3600,
+          'lifetime' => $this->getEnvSafely('SECURITY_SESSION_LIFETIME'),
+          'name' => $this->getEnvSafely('SECURITY_SESSION_NAME')
         ]),
         'token' => new ConfigPart__Security__Token([
-          'lifetime' => $_ENV['SECURITY_TOKEN_LIFETIME'] ?? 86400,
+          'lifetime' => $this->getEnvSafely('SECURITY_TOKEN_LIFETIME'),
         ]),
       ]),
       'db' => new ConfigPart__Database([
