@@ -41,7 +41,8 @@ class Config implements AppModuleInterface
 
     $APP_PREFIX = !empty($_ENV['APP_PREFIX']) ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
-    $IS_DEV_ENV = $APP_ENV == 'development';
+    $IS_DEV_ENV = $APP_ENV == 'development' || $APP_ENV == 'develop';
+    $DEBUG_ENABLED = $IS_DEV_ENV ? true : ($this->getEnvSafely('APP_DEBUG') ?? "false" === "true");
     $LANGUAGES = array_filter(
       explode(',', $_ENV['LANGUAGES'] ?? 'en'),
       function ($item) {
@@ -85,7 +86,7 @@ class Config implements AppModuleInterface
       ]),
       'env' => new ConfigPart__Environment([
         'development' => $IS_DEV_ENV,
-        'debug' => $_ENV['APP_DEBUG'],
+        'debug' => $DEBUG_ENABLED,
         'env' => $APP_ENV,
       ]),
       'fs' => new ConfigPart__Filesystem([
