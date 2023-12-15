@@ -57,7 +57,7 @@
       prom.title="Created by"
       prom.type="relationship"
       prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
-      prom.adminMetadata.hide="true"
+      prom.adminMetadata.isHidden="true"
     />
     <foreign-key name="file_to_users_created_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
       <reference local="created_by" foreign="id" />
@@ -72,7 +72,7 @@
       prom.title="Updated by"
       prom.type="relationship"
       prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
-      prom.adminMetadata.hide="true"
+      prom.adminMetadata.isHidden="true"
     />
     <foreign-key name="file_to_users_updated_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
       <reference local="updated_by" foreign="id" />
@@ -157,7 +157,7 @@
       prom.title="Role"
       prom.type="relationship"
       prom.labelConstructor="{{label}}"
-      prom.adminMetadata.hide="true"
+      prom.adminMetadata.isHidden="true"
     />
     <foreign-key name="users_to_user_roles_role_id" foreignTable="prom__user_roles" onDelete="SETNULL" onUpdate="cascade">
       <reference local="role_id" foreign="id" />
@@ -255,7 +255,7 @@
       prom.title="Created by"
       prom.type="relationship"
       prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
-      prom.adminMetadata.hide="true"
+      prom.adminMetadata.isHidden="true"
     />
     <foreign-key 
       name="settings_to_users_created_by" 
@@ -275,7 +275,7 @@
       prom.title="Updated by"
       prom.type="relationship"
       prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
-      prom.adminMetadata.hide="true"
+      prom.adminMetadata.isHidden="true"
     />
     <foreign-key name="settings_to_users_updated_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
       <reference local="updated_by" foreign="id" />
