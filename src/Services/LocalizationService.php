@@ -5,7 +5,12 @@ namespace PromCMS\Core\Services;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
+use PromCMS\Core\Exceptions\EntityNotFoundException;
+use PromCMS\Core\Models\Base\GeneralTranslationQuery;
+use PromCMS\Core\Models\GeneralTranslation;
 use PromCMS\Core\Models\GeneralTranslations;
+use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\Map\TableMap;
 
 class LocalizationService
 {
@@ -36,17 +41,24 @@ class LocalizationService
    */
   function getTranslations($language, $includeUnknown = false)
   {
-    $languageTranslations = GeneralTranslations::where(['lang', '=', $language])->orderBy(["key" => "desc"])->getMany();
+
+    $localizations = GeneralTranslationQuery::create()
+      ->filterBy('lang', $language, Criteria::EQUAL)
+      ->orderBy("key", Criteria::DESC)
+      ->find();
 
     $items = [];
-    foreach ($languageTranslations as $item) {
-      $items[$item["key"]] = $item["value"];
+    foreach ($localizations as $item) {
+      $items[$item->getKey()] = $item->getValue();
     }
 
     if ($includeUnknown) {
-      $otherTranslations = GeneralTranslations::where(['key', 'NOT IN', array_keys($items)])->getMany();
+      $otherTranslations = GeneralTranslationQuery::create()
+        ->filterBy("key", array_keys($items), Criteria::NOT_IN)
+        ->find();
+
       foreach ($otherTranslations as $item) {
-        $items[$item["key"]] = "";
+        $items[$item->getKey()] = "";
       }
     }
 
@@ -56,16 +68,28 @@ class LocalizationService
   function getTranslation($lang, $key)
   {
     try {
-      return GeneralTranslations::where([['lang', '=', $lang], ['key', '=', $key]])->getOne();
-    } catch (\Exception $e) {
-      return false;
+      $result = GeneralTranslationQuery::create()
+        ->filterByLang($lang, Criteria::EQUAL)
+        ->filterByKey($key, Criteria::EQUAL)
+        ->findOne();
+
+      if (!$result) {
+        throw new EntityNotFoundException();
+      }
+
+      return $result;
+    } catch (Exception $e) {
+      return null;
     }
   }
 
 
   function translationExists($countryCode, $key): bool
   {
-    return GeneralTranslations::exists([['lang', '=', $countryCode], ['key', '=', $key]]);
+    return GeneralTranslationQuery::create()
+      ->filterByLang($countryCode, Criteria::EQUAL)
+      ->filterByKey($key, Criteria::EQUAL)
+      ->exists();
   }
 
   function updateTranslation($language, $key, $value)
@@ -80,30 +104,37 @@ class LocalizationService
 
     if ($translation = $this->getTranslation($language, $key)) {
       if (strlen($value) > 0) {
-        $item = $translation->update(['value' => $value]);
+        $item = $translation->fromArray(['value' => $value]);
+        $item->save();
       } else {
-        $item = $translation->delete();
+        $item = $translation;
+        $translation->delete();
       }
     } else {
-      $item = GeneralTranslations::create([
+      $item = new GeneralTranslation();
+
+      $item->fromArray([
         'lang' => $language,
         'key' => $key,
         'value' => $value
       ]);
+
+      $item->save();
     }
 
-    return $item->getData();
+    return $item->toArray(TableMap::TYPE_CAMELNAME);
   }
 
   function deleteTranslationKey($key)
   {
     // TODO - delete many and return deleted
-    GeneralTranslations::where(["key", '=', $key])->delete();
+    GeneralTranslationQuery::create()->filterByKey($key)->delete();
 
     return true;
   }
 
-  function getCurrentLanguage() {
+  function getCurrentLanguage()
+  {
     return $this->currentLanguage;
   }
 
@@ -112,15 +143,17 @@ class LocalizationService
     return $this->supportedLanguages;
   }
 
-  function setCurrentLanguage(string $nextLanguage) {
+  function setCurrentLanguage(string $nextLanguage)
+  {
     if (!$this->languageIsSupported($nextLanguage)) {
-      throw new \Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+      throw new Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
     }
 
     $this->currentLanguage = $nextLanguage;
   }
 
-  function getDefaultLanguage() {
+  function getDefaultLanguage()
+  {
     return $this->defaultLanguage;
   }
 }

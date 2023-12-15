@@ -1,2 +1,6 @@
 vendor
+.DS_Store
+propel/*
+!propel/propel.php
+!propel/prom-core.schema.xml
 .test

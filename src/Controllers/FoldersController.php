@@ -6,7 +6,7 @@ use DI\Container;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemException;
 use PromCMS\Core\Config;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

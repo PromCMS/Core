@@ -2,6 +2,9 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Models\UserState;
+use PromCMS\Core\Password;
+use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
@@ -9,9 +12,9 @@ use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;
 
 use PromCMS\Core\Mailer;
-use PromCMS\Core\Models\Users;
 use PromCMS\Core\Services\JWTService;
-use PromCMS\Core\Services\PasswordService;
+use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -19,13 +22,13 @@ class UserProfileController
 {
   private $container;
   private $jwt;
-  private PasswordService $passService;
+  private UserService $userService;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
     $this->jwt = $container->get(JWTService::class);
-    $this->passService = $container->get(PasswordService::class);
+    $this->userService = $container->get(UserService::class);
   }
 
   public function getCurrent(
@@ -34,7 +37,7 @@ class UserProfileController
   ): ResponseInterface {
     $user = $this->container->get(Session::class)->get('user');
 
-    HttpUtils::prepareJsonResponse($response, $user->getData());
+    HttpUtils::prepareJsonResponse($response, $user->toArray());
 
     return $response;
   }
@@ -64,14 +67,10 @@ class UserProfileController
       $userCannotLoginBecauseOfState = false;
 
       try {
-        $user = Users::where(['email', '=', $args['email']])->getOne();
-        $userState = $user->state;
-        $passwordIsValid = $this->passService->validate(
-          $args['password'],
-          $user->password,
-        );
+        $user = $this->userService->getOneBy("email", $args['email']);
+        $userState = $user->getState();
 
-        if (!$passwordIsValid) {
+        if (!$user->checkPassword($args['password'])) {
           throw new \Exception('Wrong password');
         }
 
@@ -84,8 +83,8 @@ class UserProfileController
           throw new \Exception("user-state-$userState");
         }
 
-        $this->container->get(Session::class)->set('user_id', $user->id);
-        $responseAry['data'] = $user->getData();
+        $this->container->get(Session::class)->set('user_id', $user->getId());
+        $responseAry['data'] = $user->toArray(TableMap::TYPE_CAMELNAME);
         $responseAry['result'] = 'success';
         $responseAry['message'] = 'successfully logged in';
         $code = 200;
@@ -136,9 +135,10 @@ class UserProfileController
       unset($data['state']);
     }
 
-    $user->update($data);
+    $user->fromArray($data);
+    $user->save();
 
-    HttpUtils::prepareJsonResponse($response, $user->getData());
+    HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
 
     return $response;
   }
@@ -170,11 +170,10 @@ class UserProfileController
     }
 
     try {
-      $user = Users::where([
-        ['email', '=', $params['email']],
-        'AND',
-        ['state', '!=', 'blocked'],
-      ])->getOne();
+      $user = $this->userService->findOneBy([
+        'email' => [$params['email'], Criteria::EQUAL],
+        'state' => ['blocked', Criteria::NOT_EQUAL]
+      ]);
     } catch (\Exception $e) {
       // We did not find user on provided email, but we do not want to let user know about it since we do not want to expose anything to public
       return $response;
@@ -182,7 +181,7 @@ class UserProfileController
 
     $generatedJwt = $this->jwt->generate(['id' => $user->id]);
     $themePayload = [
-      'name' => $user->name,
+      'name' => $user->getName(),
       'email' => $user->email,
       'id' => $user->id,
       'token' => $generatedJwt,
@@ -191,6 +190,7 @@ class UserProfileController
 
     try {
       $generatedEmailContent = $twigService->getEnvironment()->render(
+        // TODO: resolve this value from rendering service and let user choose it
         'email/password-reset.twig',
         $themePayload,
       );
@@ -205,13 +205,13 @@ class UserProfileController
     }
 
     $emailService->isHtml();
-    $emailService->addAddress($user->email, $user->name);
+    $emailService->addAddress($user->email, $user->getName());
     $emailService->Subject = 'Password reset';
     $emailService->Body = $generatedEmailContent;
 
     // User should be supposed to be in this state
     $user->update([
-      'state' => 'password-reset',
+      'state' => UserState::$PASSWORD_RESET,
     ]);
 
     $emailService->send();
@@ -240,20 +240,20 @@ class UserProfileController
     $oldPassword = $params['oldPassword'];
 
     // Validate old password
-    if (!$this->passService->validate($oldPassword, $user->password)) {
+    if (!Password::check($oldPassword, $user->password)) {
       HttpUtils::prepareJsonResponse($response, [], "Old password invalid", 'old-password-invalid');
       return $response->withStatus(401);
     }
 
     // Validate new password input
-    if (!$this->passService->validateInput($newPassword)) {
+    if (!Password::validateNew($newPassword)) {
       HttpUtils::prepareJsonResponse($response, [], "New password invalid", 'new-password-invalid');
       return $response->withStatus(401);
     }
 
     // Now everything is ok and we can update user password
     $user->update([
-      'password' => $this->passService->generate($newPassword),
+      'password' => Password::hash($newPassword),
     ]);
 
     // TODO: Send email that notifies about password change
@@ -280,14 +280,14 @@ class UserProfileController
     $decodedArray = (array) $decodedPayload;
 
     try {
-      $user = Users::getOneById($decodedArray['id']);
+      $user = $this->userService->getOneById($decodedArray['id']);
     } catch (\Exception $e) {
       return $response->withStatus(404);
     }
 
     $user->update([
-      'password' => $this->passService->generate($newPassword),
-      'state' => 'active',
+      'password' => Password::hash($newPassword),
+      'state' => UserState::$ACTIVE,
     ]);
 
     return $response;

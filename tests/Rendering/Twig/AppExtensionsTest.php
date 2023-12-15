@@ -7,15 +7,12 @@ use PromCMS\Tests\AppTestCase;
 final class AppExtensionsTest extends AppTestCase
 {
   static AppExtensions $extensionInstance;
-  static String $testProjectRoot;
+  static string $testProjectRoot;
   static App $app;
 
   public static function setUpBeforeClass(): void
   {
     parent::setUpBeforeClass();
-
-    static::$app = new App(static::$testProjectRoot);
-    static::$app->init(true);
 
     static::$extensionInstance = new AppExtensions(static::$app->getSlimApp()->getContainer());
   }

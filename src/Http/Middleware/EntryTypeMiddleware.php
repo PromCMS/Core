@@ -4,48 +4,26 @@ namespace PromCMS\Core\Http\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use GuzzleHttp\Psr7\Response;
-use PromCMS\Core\Database\SingletonModel;
+use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
 
 class EntryTypeMiddleware
 {
     private $loadedModels;
     private bool $singletonsOnly;
+    private array $modelSlugToModelReference = [];
 
     public function __construct($container, $singletonsOnly = true)
     {
         $this->loadedModels = $container->get('sysinfo')['loadedModels'];
         $this->singletonsOnly = $singletonsOnly;
-    }
 
-    /**
-     * Checks if model is loaded/exists and returns the real, usable model name
-     */
-    private function getModelFromArg(string $modelName)
-    {
-        $modelIndex = array_search(
-            strtolower($modelName),
-            // filter out those files we wanted to opt out
-            array_filter(
-                // format all model names to be all in lowercase
-                array_map(function ($modelName) {
-                    $slicedModelName = explode('\\', $modelName);
+        foreach ($this->loadedModels as $loadedModelClassReference) {
+            $tableMap = ($loadedModelClassReference)::TABLE_MAP;
 
-                    return strtolower(end($slicedModelName));
-                }, $this->loadedModels),
-                function ($modelName) {
-                    return !in_array($modelName, ['files', 'users', 'userroles', 'generaltranslations']);
-                },
-            ),
-        );
-        if ($modelIndex === false) {
-            return false;
+
+            $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
         }
-
-        $modelName = $this->loadedModels[$modelIndex];
-
-        return "\\$modelName";
     }
 
     /**
@@ -61,29 +39,39 @@ class EntryTypeMiddleware
     {
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();
-        $modelInstancePath = $this->getModelFromArg($route->getArgument('modelId'));
+        $modelId = $route->getArgument('modelId');
+        $SINGLETON_PREFIX = "singleton_";
 
-        if ($modelInstancePath === false) {
-            $response = new Response();
-
-            return $response->withStatus(404)->withHeader('Content-Description', 'model does not exist');
+        if ($this->singletonsOnly && !str_starts_with($modelId, $SINGLETON_PREFIX)) {
+            $modelId = $SINGLETON_PREFIX . $modelId;
         }
 
-        $modelInstance = new $modelInstancePath();
+        if (empty($modelInstancePath = $this->modelSlugToModelReference[$modelId])) {
+            // TODO: this should be dropped
+            if ($modelId === "user-roles" || strtolower($modelId) === 'userroles') {
+                $modelId = 'user_roles';
+            } else if ($modelId === "generalTranslations") {
+                $modelId = 'general_translations';
+            }
 
-        if (
-          ($this->singletonsOnly && $modelInstance instanceof SingletonModel == false) || 
-          (!$this->singletonsOnly && $modelInstance instanceof SingletonModel) || 
-          (isset($modelInstance->getSummary()->enabled) && !$modelInstance->getSummary()->enabled)
-        ) {
-            $response = new Response();
+            // TODO: remove this after you have ensured that everything works correctly as we probably dont want this check to be here and take models from url as is
+            $modelId = "prom__$modelId";
 
-            return $response->withStatus(404)->withHeader('Content-Description', 'model does not exist or is not enabled for use through api');
+            if (empty($modelInstancePath = $this->modelSlugToModelReference[$modelId])) {
+                $response = new Response();
+
+                return $response
+                    ->withStatus(404)
+                    ->withHeader('Content-Description', 'Model does not exist');
+            }
         }
 
         // Attach on request to pass the model instance info
-        $request = $request->withAttribute('model-instance', $modelInstance);
-        $request = $request->withAttribute('model-instance-path', $modelInstancePath);
+        $request = $request->withAttribute('model', (object) [
+            "entry" => $modelInstancePath,
+            "map" => ($modelInstancePath)::TABLE_MAP,
+            "query" => $modelInstancePath . "Query"
+        ]);
 
         return $handler->handle($request);
     }

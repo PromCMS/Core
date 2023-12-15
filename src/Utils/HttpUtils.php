@@ -25,7 +25,7 @@ class HttpUtils
     array $data,
     string $message = '',
     $code = false
-  ) { 
+  ) {
     $response = $response->withHeader("Content-Type", HttpContentType::JSON->asHeaderValue());
 
     $response->getBody()->write(
@@ -57,12 +57,11 @@ class HttpUtils
 
       if (isset($pieces[0]) && isset($pieces[1]) && isset($pieces[2])) {
         if ($pieces[1] === 'IN') {
-          $whereQuery[] = [$pieces[0], 'IN', json_decode("[$pieces[2]]")];
+          $whereQuery[$pieces[0]] = [json_decode("[$pieces[2]]"), 'IN'];
         } else {
-          $whereQuery[] = [
-            $pieces[0],
-            $pieces[1],
+          $whereQuery[$pieces[0]] = [
             str_replace('/', '\/', $pieces[2]),
+            $pieces[1]
           ];
         }
       }

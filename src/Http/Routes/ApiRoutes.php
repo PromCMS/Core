@@ -34,7 +34,6 @@ class ApiRoutes implements CoreRoutes
     $singletonMiddleware = new EntryTypeMiddleware($this->container, true);
     $permissionMiddleware = new PermissionMiddleware($this->container);
 
-
     // Languages
     $router->get(
       '/locales/{lang}.json',
@@ -42,7 +41,7 @@ class ApiRoutes implements CoreRoutes
     );
 
     $router->group('/settings', function (Router $innerRouter) {
-      $innerRouter->get('',  ApiRoutes::getControllerPath('Settings', 'get'));
+      $innerRouter->get('', ApiRoutes::getControllerPath('Settings', 'get'));
     });
 
     // Profile
@@ -79,45 +78,34 @@ class ApiRoutes implements CoreRoutes
     });
 
     // Singletons
-    $router->group('/singletons', function (Router $innerRouter) use (
-      $auth,
-      $permissionMiddleware,
-      $singletonMiddleware
-    ) {
+    $router->group('/singletons', function (Router $innerRouter) use ($auth, $permissionMiddleware, $singletonMiddleware, $entryTypeMiddleware) {
       // get info about all of singleton models
       $innerRouter->get('', ApiRoutes::getControllerPath('Singletons', 'getInfo'))->add($auth);
 
       // Other
-      $innerRouter->group('/{modelId}', function (Router $innerRouter) use (
-        $permissionMiddleware
-      ) {
-        $innerRouter->get('', ApiRoutes::getControllerPath('Singleton', 'getOne'))->add($permissionMiddleware);
-        $innerRouter->patch('', ApiRoutes::getControllerPath('Singleton', 'update'))->add($permissionMiddleware);
-        $innerRouter->delete('', ApiRoutes::getControllerPath('Singleton', 'delete'))->add($permissionMiddleware);
-        $innerRouter->get('/info', ApiRoutes::getControllerPath('Singleton', 'getInfo'));
+      $innerRouter->group('/{modelId}', function (Router $innerRouter) use ($permissionMiddleware) {
+        $innerRouter->get('', ApiRoutes::getControllerPath('EntryType', 'getOne'))->add($permissionMiddleware);
+        $innerRouter->patch('', ApiRoutes::getControllerPath('EntryType', 'update'))->add($permissionMiddleware);
+        $innerRouter->delete('', ApiRoutes::getControllerPath('EntryType', 'delete'))->add($permissionMiddleware);
+        $innerRouter->get('/info', ApiRoutes::getControllerPath('Singletons', 'getInfo'));
       })
         ->add($singletonMiddleware)
+        ->add($entryTypeMiddleware)
         ->add($auth);
     });
 
-    $router->group('/entry-types', function (Router $innerRouter) use (
-      $auth,
-      $permissionMiddleware,
-      $entryTypeMiddleware
-    ) {
+    $router->group('/entry-types', function (Router $innerRouter) use ($auth, $permissionMiddleware, $entryTypeMiddleware) {
       // get info about all of models
       $innerRouter->get('', ApiRoutes::getControllerPath('EntryTypes', 'getInfo'))->add($auth);
 
-      $innerRouter->group('/generalTranslations/items', function (
-        Router $innerRouter
-      ) use ($auth) {
+      $innerRouter->group('/{modelId:generalTranslations|prom__general_translations}/items', function (Router $innerRouter) use ($auth) {
         $innerRouter->get('', ApiRoutes::getControllerPath('Localization', 'getMany'));
         $innerRouter->delete('/delete', ApiRoutes::getControllerPath('Localization', 'delete'))->add($auth);
         $innerRouter->post(
           '/update',
           ApiRoutes::getControllerPath('Localization', 'updateTranslation'),
         )->add($auth);
-      });
+      })->add($entryTypeMiddleware);
 
       // Folders
       $innerRouter
@@ -130,7 +118,7 @@ class ApiRoutes implements CoreRoutes
 
       // Files
       $innerRouter
-        ->group('/files', function (Router $innerRouter) {
+        ->group('/{modelId:files|prom__files}', function (Router $innerRouter) {
           $innerRouter->get('/paged-items', ApiRoutes::getControllerPath('Files', 'getMany'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
@@ -145,15 +133,17 @@ class ApiRoutes implements CoreRoutes
           });
         })
         ->add($permissionMiddleware)
+        ->add($entryTypeMiddleware)
         ->add($auth);
+
       $innerRouter->get(
-        '/files/items/{itemId}/raw',
+        '/files/{modelId:files|prom__files}/{itemId}/raw',
         ApiRoutes::getControllerPath('Files', 'getFile'),
-      );
+      )->add($entryTypeMiddleware);
 
       // Users
       $innerRouter
-        ->group('/users', function (Router $innerRouter) {
+        ->group('/{modelId:users|prom__users}', function (Router $innerRouter) {
           $innerRouter->get('', ApiRoutes::getControllerPath('Users', 'getInfo'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
@@ -174,14 +164,18 @@ class ApiRoutes implements CoreRoutes
           });
         })
         ->add($permissionMiddleware)
-        ->add($auth);
-      $innerRouter
-        ->get('/users/items/{itemId}', ApiRoutes::getControllerPath('Users', 'getOne'))
+        ->add($entryTypeMiddleware)
         ->add($auth);
 
+      $innerRouter
+        ->get('/{modelId:users|prom__users}/items/{itemId}', ApiRoutes::getControllerPath('Users', 'getOne'))
+        ->add($entryTypeMiddleware)
+        ->add($auth);
+
+      // TODO - prom__user_roles is only valid
       // User roles
       $innerRouter
-        ->group('/{route:user-roles|userRoles}', function (Router $innerRouter) {
+        ->group('/{modelId:user-roles|userRoles|prom__user_roles}', function (Router $innerRouter) {
           $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getInfo'));
 
           $innerRouter->group('/items', function (Router $innerRouter) {
@@ -195,20 +189,19 @@ class ApiRoutes implements CoreRoutes
           });
         })
         ->add($permissionMiddleware)
+        ->add($entryTypeMiddleware)
         ->add($auth);
+
       $innerRouter
         ->get(
-          '/{route:user-roles|userRoles}/items/{itemId}',
+          '/{modelId:user-roles|userRoles|prom__user_roles}/items/{itemId}',
           ApiRoutes::getControllerPath('UserRoles', 'getOne'),
         )
+        ->add($entryTypeMiddleware)
         ->add($auth);
 
       // Other
-      $innerRouter->group('/{modelId}', function (Router $innerRouter) use (
-        $auth,
-        $permissionMiddleware,
-        $entryTypeMiddleware
-      ) {
+      $innerRouter->group('/{modelId}', function (Router $innerRouter) use ($auth, $permissionMiddleware, $entryTypeMiddleware) {
         $innerRouter
           ->get('', ApiRoutes::getControllerPath('EntryType', 'getInfo'))
           ->add($entryTypeMiddleware)

@@ -3,13 +3,13 @@
 namespace PromCMS\Core\Bootstrap;
 
 use PromCMS\Core\Config;
-use PromCMS\Core\Path;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
 use PromCMS\Core\Rendering\Twig\Extensions\ArrayUtilsExtension;
 use PromCMS\Core\Rendering\Twig\Extensions\LocalizationExtension;
 use PromCMS\Core\Rendering\Twig\Extensions\RoutesExtension;
 use PromCMS\Core\Services\RenderingService;
 use Slim\Views\TwigMiddleware;
+use Symfony\Component\Filesystem\Path;
 use Twig\Extra\Html\HtmlExtension;
 use Twig\Loader\FilesystemLoader;
 
@@ -22,7 +22,7 @@ class Twig implements AppModuleInterface
     $appRoot = $config->app->root;
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
-    $cachePath        = Path::join($appRoot, 'cache', 'twig');
+    $cachePath = Path::join($appRoot, 'cache', 'twig');
 
     $loader = new FilesystemLoader();
 

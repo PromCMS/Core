@@ -2,6 +2,9 @@
 
 namespace PromCMS\Core;
 
+/**
+ * @deprec Use Symfony Path instead 
+ */
 class Path
 {
 

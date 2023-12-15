@@ -11,19 +11,18 @@ final class FsUtilsTest extends AppTestCase
 {
   static App $app;
   static ModulesService $modulesService;
-  static String $testProjectRoot;
+  static string $testProjectRoot;
 
   public static function setUpBeforeClass(): void
   {
     parent::setUpBeforeClass();
-    static::$app = new App(static::$testProjectRoot);
-    static::$app->init(true);
     static::$modulesService = static::$app->getSlimApp()->getContainer()->get(ModulesService::class);
 
     mkdir(Module::$modulesRoot);
   }
 
-  public function test_that_readFile_works_correctly_with_shorthand () {
+  public function test_that_readFile_works_correctly_with_shorthand()
+  {
     $moduleName = 'TestTest';
     $moduleRoot = Path::join(static::$testProjectRoot, 'modules', $moduleName);
     $this->createModule($moduleName);
@@ -33,5 +32,5 @@ final class FsUtilsTest extends AppTestCase
       'true',
       FsUtils::readFile('@modules:TestTest/test.json')
     );
-  } 
+  }
 }

@@ -2,48 +2,37 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use PromCMS\Core\Models\Map\FileTableMap;
+use PromCMS\Core\Models\Map\UserRoleTableMap;
+use PromCMS\Core\Models\Map\UserTableMap;
+use PromCMS\Core\Models\UserRoleQuery;
+use PromCMS\Core\Models\User;
 use PromCMS\Core\Session;
 use GuzzleHttp\Psr7\Response;
+use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use PromCMS\Core\Utils\HttpUtils;
-use PromCMS\Core\Models\UserRoles;
 
 class PermissionMiddleware
 {
   private $container;
   private $loadedModels;
-  private $adminOnlyModels;
+  private $adminOnlyModels = [UserTableMap::TABLE_NAME, UserRoleTableMap::TABLE_NAME];
+  private array $modelSlugToModelReference = [];
 
   public function __construct($container)
   {
-    $this->adminOnlyModels = ['users', 'userroles'];
     $this->container = $container;
     $this->loadedModels = $container->get('sysinfo')['loadedModels'];
-  }
 
-  /**
-   * Checks if model is loaded/exists and returns the real, usable model name
-   */
-  private function getModelFromArg(string $modelName)
-  {
-    $modelIndex = array_search(
-      strtolower($modelName),
-      // format all model names to be all in lowercase
-      array_map(function ($modelName) {
-        $slicedModelName = explode("\\", $modelName);
+    foreach ($this->loadedModels as $loadedModelClassReference) {
+      $tableMap = ($loadedModelClassReference)::TABLE_MAP;
 
-        return strtolower(end($slicedModelName));
-      }, $this->loadedModels),
-    );
-    if ($modelIndex === false) {
-      return false;
+
+      $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
     }
-
-    $modelName = $this->loadedModels[$modelIndex];
-
-    return "\\$modelName";
   }
 
   /**
@@ -57,25 +46,24 @@ class PermissionMiddleware
    */
   public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
   {
+    /**
+     * @var User
+     */
     $user = $this->container->get(Session::class)->get('user', false);
-    $roleId = intval($user->role);
-    $requestPath = $request->getUri()->getPath();
-    $modelFromUrl = explode('/', $requestPath)[3];
-    $modelInstancePath = $this->getModelFromArg($modelFromUrl);
+    $roleId = intval($user->getRoleId());
+    $model = $request->getAttribute('model');
 
-    // Make sure that provided model is there
-    if ($modelInstancePath === false) {
-      $response = new Response();
-
-      return $response
-        ->withStatus(404)
-        ->withHeader('Content-Description', 'Model does not exist');
+    if (!$model) {
+      throw new \Exception('Cannot run permission middleware before entry type middleware');
     }
+
 
     // TODO we should allow setting permission on files too so it makes sense
     // Handle any other than admin and allow manipulate files on any user
-    if ($roleId !== 0 && strtolower($modelFromUrl) !== 'files') {
-      if (in_array(strtolower($modelFromUrl), $this->adminOnlyModels)) {
+    if ($roleId !== 0) {
+      $modelTableName = $model->map::TABLE_NAME;
+
+      if (in_array($modelTableName, $this->adminOnlyModels)) {
         $response = new Response();
 
         return $response
@@ -84,9 +72,11 @@ class PermissionMiddleware
       }
 
       $response = new Response();
-      $role = UserRoles::getOneById($roleId)->getData();
+
+      $role = UserRoleQuery::create()->findOneById($roleId)->toArray(TableMap::TYPE_CAMELNAME);
       $role = json_decode(json_encode($role), true);
-      $modelPermissions = $role['permissions']['models'][$modelFromUrl];
+      $modelPermissions = $role['permissions']['models'][$modelTableName];
+
       $requestMethod = $request->getMethod();
       // 'allow-everything' | 'allow-own' | false
       $requestPermissionValue = false;

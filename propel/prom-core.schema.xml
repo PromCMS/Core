@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database name="core" defaultIdMethod="native" namespace="PromCMS\Core\Models">
+  <!-- Files -->
+  <table name="prom__files" phpName="File" prom.adminMetadata.icon="Folder" prom.ignoreSeeding="true">
+    <column name="id" type="INTEGER" required="true" primaryKey="true" autoIncrement="true"
+      prom.editable="false"
+      prom.hide="false"
+      prom.title="ID"
+      prom.type="number"
+    />
+    <column name="filename" type="VARCHAR" size="255" required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Filename"
+      prom.type="string"
+    />
+    <column name="mime_type" type="VARCHAR" size="255" required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Mime type"
+      prom.type="string"
+    />
+    <column name="filepath" type="VARCHAR" required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Filepath"
+      prom.type="string"
+    />
+
+    <!-- Optional -->
+    <column name="private" type="BOOLEAN" required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Private"
+      prom.type="boolean"
+    />
+    <column name="description" type="LONGVARCHAR" required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Description"
+      prom.type="longText"
+    />
+
+    <!-- Behaviors -->
+    <behavior name="timestampable">
+      <parameter name="created_at" value="my_create_date" />
+      <parameter name="updated_at" value="my_update_date" />
+    </behavior>
+
+    <!-- Relations -->
+    <column 
+      name="created_by" 
+      type="INTEGER" 
+      required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Created by"
+      prom.type="relationship"
+      prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
+      prom.adminMetadata.hide="true"
+    />
+    <foreign-key name="file_to_users_created_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
+      <reference local="created_by" foreign="id" />
+    </foreign-key>
+    
+    <column 
+      name="updated_by" 
+      type="INTEGER" 
+      required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Updated by"
+      prom.type="relationship"
+      prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
+      prom.adminMetadata.hide="true"
+    />
+    <foreign-key name="file_to_users_updated_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
+      <reference local="updated_by" foreign="id" />
+    </foreign-key>
+
+    <behavior name="prom_model" />
+  </table>
+
+  <!-- Users -->
+  <table name="prom__users" phpName="User" prom.adminMetadata.icon="Users" prom.ignoreSeeding="false">
+    <column name="id" type="INTEGER" required="true" primaryKey="true" autoIncrement="true"
+      prom.editable="false"
+      prom.hide="false"
+      prom.title="ID"
+      prom.type="number"
+    />
+    <column name="email" type="VARCHAR" size="255" required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Email"
+      prom.type="string"
+      prom.adminMetadata.isHidden="false"
+      prom.adminMetadata.editor.placement="main"
+    />
+    <column name="password" type="LONGVARCHAR" required="true" 
+      prom.editable="false"
+      prom.hide="true"
+      prom.title="Password"
+      prom.type="password"
+      prom.adminMetadata.isHidden="true"
+      prom.adminMetadata.editor.placement="main"
+    />
+    
+    <column name="firstname" type="VARCHAR" size="255" required="true"
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="First name"
+      prom.type="string"
+      prom.adminMetadata.editor.placement="main"
+     />
+    <column 
+      name="lastname" 
+      type="VARCHAR" 
+      size="255" 
+      required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Last name"
+      prom.type="string"
+      prom.adminMetadata.editor.placement="main"
+    />
+
+    <!-- Optional -->
+    <column 
+      name="state" 
+      type="ENUM" 
+      valueSet="active,invited,blocked,password-reset" 
+      required="false" 
+      defaultValue="invited" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="State"
+      prom.type="enum"
+      prom.adminMetadata.editor.placement="main"
+    />
+
+    <!-- Relations -->
+    <column name="avatar_id" type="INTEGER" required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Avatar"
+      prom.type="file"
+      prom.labelConstructor="{{id}}"
+    />
+    <foreign-key name="users_to_files_avatar_id" foreignTable="prom__files" onDelete="SETNULL" onUpdate="cascade">
+      <reference local="avatar_id" foreign="id" />
+    </foreign-key>
+
+    <column name="role_id" type="INTEGER" required="false"
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Role"
+      prom.type="relationship"
+      prom.labelConstructor="{{label}}"
+      prom.adminMetadata.hide="true"
+    />
+    <foreign-key name="users_to_user_roles_role_id" foreignTable="prom__user_roles" onDelete="SETNULL" onUpdate="cascade">
+      <reference local="role_id" foreign="id" />
+    </foreign-key>
+
+    <behavior name="prom_model" />
+  </table>
+
+  <!-- User Roles -->
+  <table name="prom__user_roles" phpName="UserRole" prom.adminMetadata.icon="UserExclamation" prom.ignoreSeeding="false">
+    <column name="id" type="INTEGER" required="true" primaryKey="true" autoIncrement="true"
+      prom.editable="false"
+      prom.hide="false"
+      prom.title="ID"
+      prom.type="number"
+    />
+    <column name="label" type="VARCHAR" size="255" required="true" primaryString="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Label"
+      prom.type="string"
+    />
+
+    <!-- Optional -->
+    <column name="description" type="LONGVARCHAR" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Description"
+      prom.type="string"
+    />
+    <column name="permissions" type="ARRAY" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Permissions"
+      prom.type="json"
+    />
+
+    <!-- Behaviors -->
+    <behavior name="sluggable" />
+    <behavior name="prom_model" />
+  </table>
+
+   <!-- Settings -->
+  <table 
+    name="prom__settings" 
+    phpName="Setting" 
+    prom.adminMetadata.icon="Settings" 
+    prom.ignoreSeeding="false"
+  >
+    <column name="id" type="INTEGER" required="true" primaryKey="true" autoIncrement="true"
+      prom.editable="false"
+      prom.hide="false"
+      prom.title="ID"
+      prom.type="number"
+    />
+    <column name="name" type="VARCHAR" size="255" required="true" primaryString="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Name"
+      prom.type="string"
+    />
+
+    <!-- Optional -->
+    <column name="description" type="LONGVARCHAR" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Description"
+      prom.type="longText"
+    />
+    <column name="content" type="ARRAY" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Content"
+      prom.type="json"
+    />
+
+    <!-- Behaviors -->
+    <behavior name="sluggable" />
+    <behavior name="i18n">
+      <parameter name="i18n_columns" value="content,name" />
+    </behavior>
+    <behavior name="timestampable">
+      <parameter name="created_at" value="my_create_date" />
+      <parameter name="updated_at" value="my_update_date" />
+    </behavior>
+    <behavior name="prom_model" />
+
+    <!-- Relations -->
+    <column 
+      name="created_by" 
+      type="INTEGER" 
+      required="false" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Created by"
+      prom.type="relationship"
+      prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
+      prom.adminMetadata.hide="true"
+    />
+    <foreign-key 
+      name="settings_to_users_created_by" 
+      foreignTable="prom__users" 
+      onDelete="cascade" 
+      onUpdate="cascade"
+    >
+      <reference local="created_by" foreign="id" />
+    </foreign-key>
+    
+    <column 
+      name="updated_by" 
+      type="INTEGER" 
+      required="false"
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Updated by"
+      prom.type="relationship"
+      prom.labelConstructor="#{{id}} {{firstname}} {{lastname}}"
+      prom.adminMetadata.hide="true"
+    />
+    <foreign-key name="settings_to_users_updated_by" foreignTable="prom__users" onDelete="cascade" onUpdate="cascade">
+      <reference local="updated_by" foreign="id" />
+    </foreign-key>
+  </table>
+
+  <!-- User Roles -->
+  <table 
+    name="prom__general_translations" 
+    phpName="GeneralTranslation" 
+    prom.adminMetadata.icon="LanguageHiragana" 
+    prom.ignoreSeeding="false"
+  >
+    <column 
+      name="id" 
+      type="INTEGER" 
+      required="true" 
+      primaryKey="true" 
+      autoIncrement="true"
+      prom.editable="false"
+      prom.hide="false"
+      prom.title="ID"
+      prom.type="number"
+    />
+    <column name="lang" type="VARCHAR" size="20" required="true" 
+       prom.editable="true"
+      prom.hide="false"
+      prom.title="Language"
+      prom.type="string"
+    />
+    <column name="key" type="VARCHAR" size="255" required="true" primaryString="true"
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Key"
+      prom.type="string"
+     />
+    <column name="value" type="VARCHAR" required="true" 
+      prom.editable="true"
+      prom.hide="false"
+      prom.title="Value"
+      prom.type="string"
+    />
+
+    <behavior name="prom_model" />
+  </table>
+</database>

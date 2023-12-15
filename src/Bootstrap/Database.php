@@ -3,7 +3,8 @@
 namespace PromCMS\Core\Bootstrap;
 
 use PromCMS\Core\Config;
-use PromCMS\Core\Database\Model;
+
+// use PromCMS\Core\Database\Model;
 
 class Database implements AppModuleInterface
 {
@@ -12,11 +13,11 @@ class Database implements AppModuleInterface
     /** @var Config */
     $config = $container->get(Config::class);
 
-    Model::setStoreConfig(
-      $config->db->root,
-      $config->db->storeConfig,
-    );
+    // Model::setStoreConfig(
+    //   $config->db->root,
+    //   $config->db->storeConfig,
+    // );
 
-    Model::$defaultLanguage = $config->i18n->default;
+    // Model::$defaultLanguage = $config->i18n->default;
   }
 }

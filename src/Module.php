@@ -1,21 +1,25 @@
-<?php 
+<?php
 
 namespace PromCMS\Core;
 
+use Symfony\Component\Filesystem\Path;
+
 // TODO: in feature we want every instance of each loaded module accessible on app instance
-class Module {
+class Module
+{
   static string $modulesRoot = '';
-  static $moduleInfoFileName  = 'module-info.json';
-  static $frontRoutesFileName  = 'front.routes.php';
-  static $apiRoutesFileName  = 'api.routes.php';
-  static $viewsFolderName  = 'Views';
-  static $bootstrapFileName  = 'bootstrap.php';
-  static $afterBootstrapFileName  = 'bootstrap.after.php';
-  
+  static $moduleInfoFileName = 'module-info.json';
+  static $frontRoutesFileName = 'front.routes.php';
+  static $apiRoutesFileName = 'api.routes.php';
+  static $viewsFolderName = 'Views';
+  static $bootstrapFileName = 'bootstrap.php';
+  static $afterBootstrapFileName = 'bootstrap.after.php';
+
   private $config;
   private $path;
 
-  function __construct($moduleRootPath) {
+  function __construct($moduleRootPath)
+  {
     $modulePath = $moduleRootPath;
 
     if (str_contains($modulePath, '@modules:')) {
@@ -25,27 +29,39 @@ class Module {
     $moduleInfoPath = Path::join($modulePath, static::$moduleInfoFileName);
 
     if (!file_exists($moduleInfoPath)) {
-      throw new \Exception("Module must have ".static::$moduleInfoFileName." file created");
+      throw new \Exception("Module must have " . static::$moduleInfoFileName . " file created");
     }
 
     $this->config = (array) json_decode(file_get_contents($moduleInfoPath));
     $this->path = $modulePath;
 
     if (!$this->config) {
-      throw new \Exception("Not a valid module info in ".static::$moduleInfoFileName);
+      throw new \Exception("Not a valid module info in " . static::$moduleInfoFileName);
     }
 
     if (!isset($this->config["name"])) {
-      throw new \Exception("Please define your module name in ".static::$moduleInfoFileName);
+      throw new \Exception("Please define your module name in " . static::$moduleInfoFileName);
     }
   }
 
   // TODO: Is this really necessary? Should we honour name field instead?
-  public function getFolderName() {
+  public function getFolderName()
+  {
     return basename($this->getPath());
   }
 
-  public function getName() {
+  public function getDeclaredModels(): array
+  {
+    $moduleFolderName = basename($this->path);
+    $moduleNamespace = "PromCMS\\Modules\\$moduleFolderName\\Modules";
+
+    $declaredClasses = array_filter(get_declared_classes(), fn($item) => str_contains($item, $moduleNamespace));
+
+    return $declaredClasses;
+  }
+
+  public function getName()
+  {
     return $this->config["name"];
   }
 
@@ -54,7 +70,8 @@ class Module {
    * 
    * @return number|null
    */
-  public function getOrder() {
+  public function getOrder()
+  {
     return isset($this->config["order"]) ? $this->config["order"] : null;
   }
 
@@ -63,7 +80,8 @@ class Module {
    * 
    * @return string
    */
-  public function getPath() {
+  public function getPath()
+  {
     return $this->path;
   }
 
@@ -72,7 +90,8 @@ class Module {
    * 
    * @return boolean
    */
-  public function isEnabled() {
+  public function isEnabled()
+  {
     return isset($this->config["enabled"]) ? $this->config["enabled"] : true;
   }
 }

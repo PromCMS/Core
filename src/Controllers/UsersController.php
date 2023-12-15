@@ -2,6 +2,10 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Models\User;
+use PromCMS\Core\Models\UserState;
+use PromCMS\Core\Password;
+use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -10,23 +14,21 @@ use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Mailer;
-use PromCMS\Core\Models\Users;
-use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Services\JWTService;
-use PromCMS\Core\Services\PasswordService;
+use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class UsersController
 {
   private $container;
-  private PasswordService $passwordService;
+  private UserService $userService;
   private $currentUser;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->passwordService = $container->get(PasswordService::class);
+    $this->userService = $container->get(UserService::class);
     $this->currentUser = $container->get(Session::class)->get('user', false);
   }
 
@@ -34,9 +36,7 @@ class UsersController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $instance = new Users();
-
-    HttpUtils::prepareJsonResponse($response, (array) $instance->getSummary());
+    HttpUtils::prepareJsonResponse($response, User::getPromCMSMetadata());
 
     return $response;
   }
@@ -45,7 +45,6 @@ class UsersController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $service = new EntryTypeService(new Users());
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
@@ -55,7 +54,7 @@ class UsersController
       [$where] = HttpUtils::normalizeWhereQueryParam($queryParams['where']);
     }
 
-    return ResponseHelper::withServerResponse($response, $service->getMany($where, $page, $limit))->getResponse();
+    return ResponseHelper::withServerPagedResponse($response, $this->userService->getManyPaged($page, $limit, $where))->getResponse();
   }
 
   public function update(
@@ -66,7 +65,7 @@ class UsersController
     $parsedBody = $request->getParsedBody();
     $currentUser = $this->container->get(Session::class)->get('user');
 
-    if ($currentUser->id === $args['itemId']) {
+    if ($currentUser->getId() === intval($args['itemId'])) {
       return $response
         ->withStatus(400)
         ->withHeader('Content-Description', 'cannot change self by this route');
@@ -77,10 +76,10 @@ class UsersController
     }
 
     try {
-      $user = Users::getOneById($args['itemId']);
-      $updatedUser = $user->update($parsedBody['data']);
+      $user = $this->userService->getOneById($args['itemId']);
+      $user->fromArray($parsedBody['data']);
 
-      HttpUtils::prepareJsonResponse($response, $updatedUser->getData());
+      HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
 
       return $response;
     } catch (\Exception $ex) {
@@ -107,13 +106,10 @@ class UsersController
   ): ResponseInterface {
     try {
       // If is not admin then we will return just id and name for safety reasons
-      if (strval($this->currentUser->role) === '0') {
-        $item = Users::getOneById($args['itemId']);
-      } else {
-        $item = Users::select(['id', 'name'])->getOneById($args['itemId']);
-      }
+      $currentUserIsAdmin = strval($this->currentUser->role) === '0';
+      $item = $this->userService->getOneById($args['itemId'], $currentUserIsAdmin ? [] : ['Id', 'Name']);
 
-      HttpUtils::prepareJsonResponse($response, $item->getData());
+      HttpUtils::prepareJsonResponse($response, $item->toArray(TableMap::TYPE_CAMELNAME));
 
       return $response;
     } catch (\Exception $e) {
@@ -133,15 +129,15 @@ class UsersController
     if (isset($parsedBody['data']['password'])) {
       unset($parsedBody['data']['password']);
     }
-    $parsedBody['data']['state'] = 'invited';
+    $parsedBody['data']['state'] = UserState::$INVITED;
 
     // Generate random password, because user will choose their password by themselves
-    $parsedBody['data']['password'] = $this->passwordService->generate(
+    $parsedBody['data']['password'] = Password::hash(
       base64_encode(random_bytes(10)),
     );
 
     try {
-      $user = Users::create($parsedBody['data']);
+      $user = $this->userService->create($parsedBody['data']);
     } catch (\Exception $ex) {
       $response = $response->withHeader(
         'Content-Description',
@@ -158,15 +154,16 @@ class UsersController
       }
     }
 
-    $generatedJwt = $jwtService->generate(['id' => $user->id]);
+    $generatedJwt = $jwtService->generate(['id' => $user->getId()]);
 
-    $themePayload = array_merge($user->getData(), [
+    $themePayload = array_merge($user->toArray(TableMap::TYPE_CAMELNAME), [
       'token' => $generatedJwt,
       'app_url' => $_ENV['APP_URL'],
     ]);
 
     try {
       $generatedEmailContent = $twigService->render(
+        // TODO: resolve this value from rendering service and let user choose it
         'email/invite-user.twig',
         $themePayload,
       );
@@ -181,12 +178,14 @@ class UsersController
     }
 
     $emailService->isHtml();
-    $emailService->addAddress($user->email, $user->name);
+    $emailService->addAddress($user->email, $user->getName());
     $emailService->Subject = 'Finalize registration';
     $emailService->Body = $generatedEmailContent;
     $emailService->send();
 
-    HttpUtils::prepareJsonResponse($response, $user->getData());
+    $userAsArray = $user->toArray(TableMap::TYPE_CAMELNAME);
+
+    HttpUtils::prepareJsonResponse($response, $userAsArray);
 
     return $response;
   }
@@ -196,9 +195,10 @@ class UsersController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
+    $this->userService->getOneById($args['itemId'])->delete();
+
     HttpUtils::prepareJsonResponse(
-      $response,
-      Users::getOneById($args['itemId'])->delete(),
+      $response, []
     );
 
     return $response;
@@ -209,11 +209,13 @@ class UsersController
     ResponseInterface $response,
     $args
   ) {
-    $updatedUser = Users::updateById(intval($args['itemId']), [
-      'state' => 'blocked',
+    $updatedUser = $this->userService->updateById(intval($args['itemId']), [
+      'state' => UserState::$BLOCKED,
     ]);
 
-    HttpUtils::prepareJsonResponse($response, $updatedUser->getData());
+    $userAsArray = $updatedUser->toArray(TableMap::TYPE_CAMELNAME);
+
+    HttpUtils::prepareJsonResponse($response, $userAsArray);
 
     return $response;
   }
@@ -223,15 +225,16 @@ class UsersController
     ResponseInterface $response,
     $args
   ) {
-    $user = Users::where(['id', '=', intval($args['itemId'])])->getOne();
+    $user = $this->userService->getOneById($args['itemId']);
 
-    if ($user->state !== 'blocked') {
+    if (!$user->isBlocked()) {
       return $response->withStatus(400);
     }
 
-    $updatedUser = $user->update([
-      'state' => 'active',
+    $updatedUser = $user->fromArray([
+      'state' => UserState::$ACTIVE,
     ]);
+    $updatedUser->save();
 
     HttpUtils::prepareJsonResponse($response, $updatedUser->getData());
 
@@ -245,24 +248,26 @@ class UsersController
   ) {
     $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get(Mailer::class);
-    $twigService = $this->container->get(Twig::class);
+    $twigService = $this->container->get(RenderingService::class);
 
-    $user = Users::getOneById($args['itemId']);
-    if ($user->state === 'blocked') {
+    $user = $this->userService->getOneById($args['itemId']);
+
+    if ($user->isBlocked()) {
       return $response->withStatus(400);
     }
 
-    $generatedJwt = $jwtService->generate(['id' => $user->id]);
+    $generatedJwt = $jwtService->generate(['id' => $user->getId()]);
     $themePayload = [
-      'name' => $user->name,
-      'email' => $user->email,
-      'id' => $user->id,
+      'name' => $user->getName(),
+      'email' => $user->getEmail(),
+      'id' => $user->getId(),
       'token' => $generatedJwt,
       'app_url' => $_ENV['APP_URL'],
     ];
 
     try {
       $generatedEmailContent = $twigService->render(
+        // TODO: resolve this value from rendering service and let user choose it
         'email/password-reset',
         $themePayload,
       );
@@ -277,22 +282,22 @@ class UsersController
     }
 
     $emailService->isHtml();
-    $emailService->addAddress($user->email, $user->name);
+    $emailService->addAddress($user->email, $user->getName());
     $emailService->Subject = 'Password reset';
     $emailService->Body = $generatedEmailContent;
 
     // If user is invited the this whole function is for resending whole token
     if ($user->state !== 'invited') {
-      $userData = $user
-        ->update([
-          'state' => 'password-reset',
+      $user
+        ->fromArray([
+          'state' => UserState::$PASSWORD_RESET,
         ])
-        ->getData();
+        ->save();
     }
 
     $emailService->send();
 
-    HttpUtils::prepareJsonResponse($response, $userData);
+    HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
 
     return $response;
   }

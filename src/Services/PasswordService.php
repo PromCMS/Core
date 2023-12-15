@@ -2,16 +2,17 @@
 
 namespace PromCMS\Core\Services;
 
+use PromCMS\Core\Password;
+
+// TODO Remove
+/**
+ * @deprec User PromCMS\Core\Password instead
+ */
 class PasswordService
 {
 
   public function __construct()
   {
-  }
-
-  private function removeSpaces(string $text)
-  {
-    return preg_replace('/\s+/', '', $text);
   }
 
   /**
@@ -28,17 +29,11 @@ class PasswordService
 
   public function generate(string $password)
   {
-    $spacelessPassword = $this->removeSpaces($password);
-
-    return password_hash($spacelessPassword, PASSWORD_DEFAULT, [
-      'cost' => 12
-    ]);
+    return Password::hash($password);
   }
 
   public function validate(string $newPassword, string $hashedPassword)
   {
-    $spacelessPassword = $this->removeSpaces($newPassword);
-
-    return password_verify($spacelessPassword, $hashedPassword);
+    return Password::check($newPassword, $hashedPassword);
   }
 }

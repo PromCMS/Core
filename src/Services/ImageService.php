@@ -6,7 +6,8 @@ use DI\Container;
 use Exception;
 use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
-use PromCMS\Core\Path;
+use PromCMS\Core\Models\Map\FileTableMap;
+use Symfony\Component\Filesystem\Path;
 
 class ImageService
 {
@@ -44,10 +45,10 @@ class ImageService
   private function parseDirtyParamsToGetProcessed(array $dirtyParams): array
   {
     $keysToParser = [
-      "q" => fn ($value) => !empty($value) ? max(0, min(100, intval($value))) : null,
-      "w" => fn ($value) => !empty($value) ? intval($value) : null,
-      "h" => fn ($value) => !empty($value) ? intval($value) : null,
-      "f" => fn ($value) => !empty($value) && in_array($value, $this->ALLOWED_IMAGE_TYPES) ? $value : null,
+      "q" => fn($value) => !empty($value) ? max(0, min(100, intval($value))) : null,
+      "w" => fn($value) => !empty($value) ? intval($value) : null,
+      "h" => fn($value) => !empty($value) ? intval($value) : null,
+      "f" => fn($value) => !empty($value) && in_array($value, $this->ALLOWED_IMAGE_TYPES) ? $value : null,
     ];
 
     $result = [];
@@ -73,6 +74,7 @@ class ImageService
   {
     $args = $this->parseDirtyParamsToGetProcessed($dirtyParams);
     $file = $this->fs->readStream($fileInfo['filepath']);
+
     $fileStream = $file;
 
     if (count($args)) {
@@ -134,7 +136,7 @@ class ImageService
             );
             break;
           default:
-            throw new \Exception("Cannot transform image as $transformToType is not supported type");
+            throw new Exception("Cannot transform image as $transformToType is not supported type");
         }
 
         if (!$imageConverted) {
@@ -161,7 +163,7 @@ class ImageService
     return [
       'resource' => $fileStream,
       'src' =>
-      $this->config->app->baseUrl .
+        $this->config->app->baseUrl .
         "/api/entry-types/files/items/$fileId/raw?$joinedArgs",
       'width' => $imageWidth,
       'height' => $imageHeight,

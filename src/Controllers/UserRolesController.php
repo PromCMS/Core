@@ -6,28 +6,26 @@ use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
-use PromCMS\Core\Utils\HttpUtils;;
-use PromCMS\Core\Models\UserRoles;
-use PromCMS\Core\Services\EntryTypeService;
-use PromCMS\Core\Services\PasswordService;
+use PromCMS\Core\Models\UserRole;
+use PromCMS\Core\Models\UserRoleQuery;
+use PromCMS\Core\Services\UserRoleService;
+use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class UserRolesController
 {
-  private PasswordService $passwordService;
+  private UserRoleService $userRoleService;
   public function __construct(Container $container)
   {
-    $this->passwordService = $container->get(PasswordService::class);
+    $this->userRoleService = $container->get(UserRoleService::class);
   }
 
   public function getInfo(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $instance = new UserRoles();
-
-    HttpUtils::prepareJsonResponse($response, (array) $instance->getSummary());
+    HttpUtils::prepareJsonResponse($response, UserRole::getPromCMSMetadata());
 
     return $response;
   }
@@ -38,19 +36,13 @@ class UserRolesController
   ): ResponseInterface {
     $queryParams = $request->getQueryParams();
     $page = intval(isset($queryParams['page']) ? $queryParams['page'] : 1);
-    $service = new EntryTypeService(new UserRoles());
     $limit = intval($queryParams['limit'] ?? 15);
-    $responseData = $service->getMany([], $page, $limit);
+    $responseData = UserRoleQuery::create()->paginate($page, $limit);
 
     if ($page === 1) {
       $responseData['data'] = array_merge(
         [
-          [
-            'id' => 0,
-            'label' => 'Admin',
-            'slug' => 'admin',
-            'description' => 'Main user role provided by PromCMS Core module',
-          ],
+          $this->userRoleService::getAdminRole()
         ],
         $responseData['data'],
       );
@@ -65,13 +57,18 @@ class UserRolesController
     array $args
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
-    $classInstance = new UserRoles();
 
     try {
-      $item = $classInstance->getOneById($args['itemId']);
-      $item->update($parsedBody['data']);
+      $item = UserRoleQuery::create()->findOneById(intval($args['itemId']));
 
-      HttpUtils::prepareJsonResponse($response, $item->getData());
+      if (!$item) {
+        throw new EntityNotFoundException();
+      }
+
+      $item->fromArray($parsedBody['data']);
+      $item->save();
+
+      HttpUtils::prepareJsonResponse($response, $item->toArray());
 
       return $response;
     } catch (\Exception $ex) {
@@ -99,26 +96,23 @@ class UserRolesController
     array $args
   ): ResponseInterface {
     $itemId = $args['itemId'];
-    $classInstance = new UserRoles();
 
-    // For admin we return few static values
     if ($itemId === '0') {
-      HttpUtils::prepareJsonResponse($response, [
-        'id' => 0,
-        'label' => 'Admin',
-        'slug' => 'admin',
-      ]);
+      HttpUtils::prepareJsonResponse($response, $this->userRoleService::getAdminRole());
 
       return $response;
+    }
+
+    $item = UserRoleQuery::create()->findOneById(intval($itemId));
+
+    if (!$item) {
+      throw new EntityNotFoundException();
     }
 
     try {
       HttpUtils::prepareJsonResponse(
         $response,
-        $classInstance
-          ->where(['id', '=', intval($itemId)])
-          ->getOne()
-          ->getData(),
+        $item->toArray(),
       );
 
       return $response;
@@ -132,12 +126,15 @@ class UserRolesController
     ResponseInterface $response
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
-    $classInstance = new UserRoles();
 
     try {
+      $newItem = new UserRole();
+      $newItem->fromArray($parsedBody['data']);
+      $newItem->save();
+
       HttpUtils::prepareJsonResponse(
         $response,
-        $classInstance->create($parsedBody['data'])->getData(),
+        $newItem->toArray(),
       );
 
       return $response;
@@ -161,14 +158,11 @@ class UserRolesController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
-    $classInstance = new UserRoles();
+    UserRoleQuery::create()->filterById(intval($args['itemId']))->delete();
 
     HttpUtils::prepareJsonResponse(
       $response,
-      $classInstance
-        ->where(['id', '=', intval($args['itemId'])])
-        ->delete()
-        ->getData(),
+      [],
     );
 
     return $response;

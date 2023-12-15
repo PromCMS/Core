@@ -73,20 +73,18 @@ class App
       $isDevelopment = $config->env->development;
 
       // Add session to container
-      if (!$headless) {
-        $container->set(Session::class, new Session());
-      }
+      $container->set(Session::class, new Session());
 
       // Initialize modules
       (new ModulesBootstrap())->run($this->app, $container);
 
+      // Add routing middleware
+      $this->app->addRoutingMiddleware();
+
+      // Add SLIM PHP body parsing middleware
+      $this->app->addBodyParsingMiddleware();
+
       if (!$headless) {
-        // Add routing middleware
-        $this->app->addRoutingMiddleware();
-
-        // Add SLIM PHP body parsing middleware
-        $this->app->addBodyParsingMiddleware();
-
         // SLIM PHP error middleware - we need to add this after  
         $this->app->addErrorMiddleware(
           $config->env->debug || $isDevelopment,

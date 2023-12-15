@@ -4,10 +4,44 @@ declare(strict_types=1);
 
 namespace PromCMS\Tests;
 
-use PromCMS\Core\Path;
+use Symfony\Component\Filesystem\Path;
+
 
 class TestUtils
 {
+
+  public static $propelFolder = "";
+  public static $sqliteInitial = "";
+
+  public static function ensureSession()
+  {
+    if (!isset($_SESSION)) {
+      session_start();
+    }
+  }
+
+  public static function clearSession()
+  {
+    static::ensureSession();
+    session_destroy();
+    $_SESSION = [];
+  }
+
+  public static function ensureEmptyDatabase()
+  {
+    if (empty(static::$sqliteInitial)) {
+      if (file_exists(static::getSqlitePath())) {
+        unlink(static::getSqlitePath());
+      }
+
+      shell_exec("composer run database:migrate");
+
+      static::$sqliteInitial = file_get_contents(static::getSqlitePath());
+    }
+
+    file_put_contents(static::getSqlitePath(), static::$sqliteInitial);
+  }
+
   public static function prepareSystemForTests(string $root)
   {
     if (is_dir($root)) {
@@ -32,6 +66,11 @@ class TestUtils
     ");
   }
 
+  private static function getSqlitePath()
+  {
+    return Path::join(static::$propelFolder, 'db.sq3');
+  }
+
   public static function generalCleanup(string $root)
   {
     static::rmdir_recursive($root);
@@ -50,3 +89,5 @@ class TestUtils
     rmdir($dir);
   }
 }
+
+TestUtils::$propelFolder = Path::join(__DIR__, "../propel");

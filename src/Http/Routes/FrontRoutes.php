@@ -18,13 +18,10 @@ class FrontRoutes implements CoreRoutes
     // TODO: Better approach through apache config?
     $router->redirect("/public/admin", "/admin/");
     $router->redirect("/public/admin/", "/admin/");
-    $router->get('/admin[/{routePiece:.*}]', function (
-      ServerRequestInterface $request,
-      ResponseInterface $response,
-      $args
-    ) {
+    $router->get('/admin[/{routePiece:.*}]', function (ServerRequestInterface $request, ResponseInterface $response, $args) {
       $config = $this->get(Config::class);
       $routePiece = $args['routePiece'] ?? "";
+      $routePiece = str_replace("..", "", $routePiece);
 
       $adminPath = Path::join($config->app->root, 'public', 'admin');
 

@@ -5,7 +5,6 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
-use GuzzleHttp\Psr7\MimeType;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
 use League\Flysystem\Filesystem;
@@ -13,10 +12,10 @@ use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
 
-use PromCMS\Core\Models\Files;
-use PromCMS\Core\Services\EntryTypeService;
 use PromCMS\Core\Services\FileService;
+use PromCMS\Core\Models\File;
 use PromCMS\Core\Services\ImageService;
+use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -41,7 +40,7 @@ class FilesController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    HttpUtils::prepareJsonResponse($response, (array) (new Files())->getSummary());
+    HttpUtils::prepareJsonResponse($response, File::getPromCMSMetadata());
 
     return $response;
   }
@@ -72,7 +71,6 @@ class FilesController
     ResponseInterface $response
   ): ResponseInterface {
     $queryParams = $request->getQueryParams();
-    $service = new EntryTypeService(new Files());
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
     $where = [];
@@ -81,19 +79,14 @@ class FilesController
       [$where] = HttpUtils::normalizeWhereQueryParam($queryParams['where']);
     }
 
-    if (isset($queryParams['path'])) {
-      $directoryPath = $queryParams['path'];
-      $fixedDirectoryPath =
-        $directoryPath . ($directoryPath !== '/' ? '/' : '');
-      $regexPart = str_replace('/', '\/', $fixedDirectoryPath);
-      $where[] = function ($file) use ($regexPart) {
-        $pattern = '(' . $regexPart . ')[^\/]*(\.).*';
-        $pattern = '/^' . $pattern . "$/m";
-        return !!preg_match($pattern, $file['filepath']);
-      };
+    if (!empty($queryParams['path'])) {
+      $result = $this->fileService->getManyInDirectoryPaged($queryParams['path'], $page, $limit, $where);
+    } else {
+      $result = $this->fileService->getManyPaged($page, $limit, $where);
     }
 
-    return ResponseHelper::withServerResponse($response, $service->getMany($where, $page, $limit))->getResponse();
+    return ResponseHelper::withServerPagedResponse($response, $result)
+      ->getResponse();
   }
 
   public function getFile(
@@ -113,7 +106,7 @@ class FilesController
         return $response->withStatus(401);
       }
 
-      if (preg_match('/image\/.*/', $fileInfo->mimeType)) {
+      if (preg_match('/image\/.*/', $fileInfo->getMimeType())) {
         $imageResource = $this->imageService->getProcessed(
           $fileInfo->getData(),
           $queryParams,
@@ -153,8 +146,6 @@ class FilesController
         ->withHeader('Content-Description', 'No files provided');
     }
 
-    $data = $queryParams ? $queryParams : [];
-
     /**
      * @var UploadedFile
      */
@@ -173,50 +164,12 @@ class FilesController
       }
     }
 
-    if (!isset($data['root'])) {
-      throw new \Exception('root param not provided');
-    }
-
-    $fileRoot = $data['root'];
-
-    $extension = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
-    $newBasename = bin2hex(random_bytes(8)) . '-' . time();
-
-    $oldFilename = $file->getClientFilename();
-    $newFilename = sprintf('%s.%0.8s', $newBasename, $extension);
-
-    $filepath = trim(($fileRoot === '/' ? '' : $fileRoot) . '/' . $newFilename);
-    $mimeType = MimeType::fromFilename($newFilename);
-
     try {
-      // TODO: Transactions
-      //DB::beginTransaction();
+      $data = $queryParams ? $queryParams : [];
+      $createdFile = $this->fileService->create($file, $data);
 
-      $fileArgs = [
-        'filepath' => $filepath,
-        'filename' => $oldFilename,
-        'mimeType' => $mimeType,
-      ];
-
-      if (isset($data['description'])) {
-        $fileArgs['description'] = $data['description'];
-      }
-
-      if (isset($data['private'])) {
-        $fileArgs['private'] = $data['private'];
-      } else {
-        $fileArgs['private'] = false;
-      }
-
-      $createdFile = Files::create($fileArgs);
-      $file->moveTo($this->config->fs->uploadsPath . $filepath);
-
-      //DB::commit();
-
-      HttpUtils::prepareJsonResponse($response, $createdFile->getData());
+      HttpUtils::prepareJsonResponse($response, $createdFile->toArray(TableMap::TYPE_CAMELNAME));
     } catch (\Exception $e) {
-      //DB::rollback();
-
       return $response
         ->withStatus(500)
         ->withHeader('Content-Description', $e->getMessage());
@@ -231,11 +184,9 @@ class FilesController
     array $args
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
+    $updatedFile = $this->fileService->updateById($args['itemId'], $parsedBody['data']);
 
-    $file = Files::getOneById($args['itemId']);
-    $file->update($parsedBody['data']);
-
-    HttpUtils::prepareJsonResponse($response, $file->getData());
+    HttpUtils::prepareJsonResponse($response, $updatedFile->toArray(TableMap::TYPE_CAMELNAME));
 
     return $response;
   }

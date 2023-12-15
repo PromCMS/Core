@@ -3,20 +3,20 @@
 namespace PromCMS\Core\Bootstrap;
 
 use DI\Container;
+use PromCMS\Core\Models\User;
+use PromCMS\Core\Models\UserRole;
+use PromCMS\Core\Models\File;
+use PromCMS\Core\Models\GeneralTranslation;
+use PromCMS\Core\Models\Setting;
 use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\FsUtils;
 use Slim\App;
 use PromCMS\Core\Module;
-use PromCMS\Core\Path;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\Routes\ApiRoutes;
 use PromCMS\Core\Http\Routes\FrontRoutes;
-use PromCMS\Core\Models\GeneralTranslations;
-use PromCMS\Core\Models\Settings;
-use PromCMS\Core\Models\UserRoles;
-use PromCMS\Core\Models\Files;
-use PromCMS\Core\Models\Users;
+use Symfony\Component\Filesystem\Path;
 
 class Modules implements AppModuleInterface
 {
@@ -36,11 +36,11 @@ class Modules implements AppModuleInterface
 
     // array of loaded model names (names of classes)
     $coreModels = [
-      Users::class,
-      UserRoles::class,
-      Files::class,
-      GeneralTranslations::class,
-      Settings::class
+      User::class,
+      UserRole::class,
+      File::class,
+      GeneralTranslation::class,
+      Setting::class
     ];
     $loadedModels = $coreModels;
 
@@ -63,7 +63,7 @@ class Modules implements AppModuleInterface
       }
 
       // Load models beforehand and save these models to array
-      $loadedModuleModels = FsUtils::autoloadModels($module->getPath());
+      $loadedModuleModels = $module->getDeclaredModels();
       if ($loadedModuleModels) {
         $loadedModels = array_merge($loadedModels, $loadedModuleModels);
       }

@@ -14,22 +14,21 @@ class SingletonsController
 
     public function __construct(Container $container)
     {
-        $this->loadedModelNames = $container->get('sysinfo')["loadedModels"];
+        $this->loadedModelNames = $container->get('sysinfo')['loadedModels'];
     }
 
     public function getInfo(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $collectedModelSummaries = [];
 
-        foreach ($this->loadedModelNames as $modelClassName) {
-            $modelClass = new $modelClassName();
-            if (($modelClass instanceof SingletonModel) == FALSE) {
+        foreach ($this->loadedModelNames as $modelClassPath) {
+            if (!$modelClassPath::isSingleton()) {
                 continue;
             }
 
-            $slicedName = explode('\\', $modelClassName);
-            $modelName = end($slicedName);
-            $collectedModelSummaries[lcfirst($modelName)] = $modelClass->getSummary();
+            $metadata = $modelClassPath::getPromCmsMetadata();
+
+            $collectedModelSummaries[$metadata['tableName']] = $metadata;
         }
 
         return ResponseHelper::withServerResponse($response, $collectedModelSummaries)->getResponse();

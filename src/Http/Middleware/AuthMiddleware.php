@@ -2,18 +2,19 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use DI\Container;
+use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
 use PromCMS\Core\Utils\HttpUtils;
-use PromCMS\Core\Models\Users;
 
 class AuthMiddleware
 {
-  private $container;
+  private Container $container;
 
-  public function __construct($container)
+  public function __construct(Container $container)
   {
     $this->container = $container;
   }
@@ -27,9 +28,11 @@ class AuthMiddleware
    *
    * @return \Psr\Http\Message\ResponseInterface
    */
-  public function __invoke(Request $request, RequestHandler $handler): Response
+  public function __invoke(Request $request, RequestHandler $handler)
   {
     $userId = $this->container->get(Session::class)->get('user_id', false);
+    $userService = $this->container->get(UserService::class);
+
     if (!$userId) {
       $response = new Response();
 
@@ -47,11 +50,13 @@ class AuthMiddleware
       try {
         $this->container
           ->get(Session::class)
-          ->set('user', Users::where(['id', '=', intval($userId)])->getOne());
+          ->set('user', $userService->getOneById($userId));
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
         $this->container->get(Session::class)::destroy();
+
+        echo $e;
 
         HttpUtils::prepareJsonResponse(
           $response,
@@ -61,6 +66,7 @@ class AuthMiddleware
         );
 
         return $response
+          // TODO here should be different status code
           ->withStatus(500)
           ->withHeader('Content-Description', 'logged in user does not exist');
       }
