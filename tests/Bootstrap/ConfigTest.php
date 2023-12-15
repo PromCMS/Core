@@ -74,6 +74,9 @@ final class ConfigTest extends AppTestCase
                     'modelsFolderName' => 'Models',
                     'controllersFolderName' => 'Controllers',
                 ],
+                'logging' => [
+                    'logFilepath' => null
+                ]
             ],
         ]);
     }

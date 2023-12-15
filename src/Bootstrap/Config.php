@@ -3,7 +3,6 @@
 namespace PromCMS\Core\Bootstrap;
 
 use SleekDB\Query;
-use PromCMS\Core\Path;
 use Symfony\Component\Dotenv\Dotenv;
 
 use PromCMS\Core\Config as AppConfig;
@@ -17,6 +16,8 @@ use PromCMS\Core\Config\Filesystem as ConfigPart__Filesystem;
 use PromCMS\Core\Config\i18n as ConfigPart__i18n;
 use PromCMS\Core\Config\System as ConfigPart__System;
 use PromCMS\Core\Config\SystemModules as ConfigPart__System__Modules;
+use PromCMS\Core\Config\SystemLogging as ConfigPart__System__Logging;
+use Symfony\Component\Filesystem\Path;
 
 class Config implements AppModuleInterface
 {
@@ -41,6 +42,7 @@ class Config implements AppModuleInterface
 
     $APP_PREFIX = !empty($_ENV['APP_PREFIX']) ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
+    $RELATIVE_LOGGING_FILEPATH = $_ENV['SYSTEM_LOGGING_PATHNAME'] ?? null;
     $IS_DEV_ENV = $APP_ENV == 'development' || $APP_ENV == 'develop';
     $DEBUG_ENABLED = $IS_DEV_ENV ? true : ($this->getEnvSafely('APP_DEBUG') ?? "false" === "true");
     $LANGUAGES = array_filter(
@@ -103,6 +105,9 @@ class Config implements AppModuleInterface
           'modelsFolderName' => 'Models',
           'controllersFolderName' => 'Controllers',
         ]),
+        'logging' => new ConfigPart__System__Logging([
+          'logFilepath' => !empty($RELATIVE_LOGGING_FILEPATH) ? Path::join($appRoot, $RELATIVE_LOGGING_FILEPATH) : null
+        ])
       ])
     ]);
 
