@@ -10,7 +10,7 @@ class Mailer implements AppModuleInterface
   public function run($app, $container)
   {
     // Create mailer instance
-    $mailer = new PHPMailer(true);
+    $mailer = new MailerClass(true);
 
     // We only talk in SMTP
     $mailer->isSMTP();
@@ -30,11 +30,13 @@ class Mailer implements AppModuleInterface
     $mailer->Username = $_ENV['MAIL_USER'];
     $mailer->Password = $_ENV['MAIL_PASS'];
 
-    // Set from to header
-    $mailer->setFrom(
-      isset($_ENV['MAIL_ADDRESS']) ? $_ENV['MAIL_ADDRESS'] : $_ENV['MAIL_USER'],
-      $_ENV['APP_NAME'] ? $_ENV['APP_NAME'] : 'PROM Mailer',
-    );
+    if (!empty($fromEmailAddress = isset($_ENV['MAIL_ADDRESS']) ? $_ENV['MAIL_ADDRESS'] : $_ENV['MAIL_USER'])) {
+      // Set from to header
+      $mailer->setFrom(
+        $fromEmailAddress,
+        $_ENV['APP_NAME'] ? $_ENV['APP_NAME'] : 'PROM Mailer',
+      );
+    }
 
     $container->set(MailerClass::class, $mailer);
   }
