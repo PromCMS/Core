@@ -95,4 +95,15 @@ class UserService
 
     return $create;
   }
+
+  public function deleteBy(array $where): void
+  {
+    $userQuery = UserQuery::create();
+
+    $deletedUsers = $userQuery->filterByArray($where)->delete();
+
+    if ($deletedUsers === 0) {
+      throw new EntityNotFoundException();
+    }
+  }
 }
