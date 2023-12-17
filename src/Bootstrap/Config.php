@@ -34,7 +34,11 @@ class Config implements AppModuleInterface
   {
     $dotenv = new Dotenv();
     $appRoot = $container->get('app.root');
-    $dotenv->load(Path::join($appRoot, '.env'));
+    $dotenvFilepath = Path::join($appRoot, '.env');
+
+    if (file_exists($dotenvFilepath)) {
+      $dotenv->load($dotenvFilepath);
+    }
 
     $PROM_UPLOADS_ROOT = Path::join($appRoot, 'uploads');
     $PROM_LOCALES_ROOT = Path::join($appRoot, 'locales');
