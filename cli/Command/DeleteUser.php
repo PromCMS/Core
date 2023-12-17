@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Deletes an user.',
     hidden: false,
 )]
-abstract class DeleteUser extends AbstractCommand
+class DeleteUser extends AbstractCommand
 {
     /**
      * {@inheritDoc}

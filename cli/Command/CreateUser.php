@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Creates a new user.',
     hidden: false,
 )]
-abstract class CreateUser extends AbstractCommand
+class CreateUser extends AbstractCommand
 {
     /**
      * {@inheritDoc}

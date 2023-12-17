@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Changes password of an user.',
     hidden: false,
 )]
-abstract class ChangePasswordUser extends AbstractCommand
+class ChangePasswordUser extends AbstractCommand
 {
     /**
      * {@inheritDoc}

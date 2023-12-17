@@ -10,18 +10,6 @@ abstract class AbstractCommand extends Command
 {
   private App|null $promApp = null;
 
-  /**
-   * {@inheritDoc}
-   *
-   * @return void
-   */
-  public function __construct(string $name = null, App $app)
-  {
-    parent::__construct($name);
-
-    $this->promApp = $app;
-  }
-
   public function getPromApp(string $cwd)
   {
     if (!$this->promApp) {
