@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PromCMS\Tests;
 
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
 
@@ -64,6 +65,9 @@ class TestUtils
       SECURITY_SECRET=\"somesecret\"
       SECURITY_TOKEN_LIFETIME=86400 #1 day
     ");
+
+    $fileSystem = new Filesystem();
+    $fileSystem->mirror(Path::join(__DIR__, '..', '.prom-cms'), Path::join($root, '.prom-cms'));
   }
 
   private static function getSqlitePath()

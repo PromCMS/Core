@@ -14,10 +14,8 @@ class Database implements AppModuleInterface
     /** @var Config */
     $config = $container->get(Config::class);
     $appRoot = $container->get('app.root');
-    $propelConfigPath = Path::join($appRoot, '.prom-cms', 'propel', 'config.php');
+    $propelConfigPath = Path::join($appRoot, '.prom-cms', 'propel', 'config', 'config.php');
 
-
-    echo $propelConfigPath . "\n";
     if (!file_exists($propelConfigPath)) {
       throw new \Exception("Missing Propel config at '$propelConfigPath', let Propel create config first");
     }

@@ -37,8 +37,6 @@ abstract class AppTestCase extends TestCase
     TestUtils::ensureSession();
     TestUtils::ensureEmptyDatabase();
 
-    require_once(Path::join(TestUtils::$propelFolder, "/config/config.php"));
-
     static::$app = new App(static::$testProjectRoot);
     static::$app->init(true);
     static::$faker = Factory::create();
