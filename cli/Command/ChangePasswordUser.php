@@ -23,6 +23,8 @@ class ChangePasswordUser extends AbstractCommand
      */
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->addOption('email', null, InputOption::VALUE_REQUIRED, 'Email of user')
             ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Password of user');
