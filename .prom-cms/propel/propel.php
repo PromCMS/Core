@@ -9,11 +9,11 @@ return [
       'project' => 'PromCMS Core'
     ],
     'paths' => [
-      'schemaDir' => "./propel",
+      'schemaDir' => "./.prom-cms/propel",
       'phpDir' => "./src/Models",
-      'phpConfDir' => "./propel/config",
-      'migrationDir' => "./propel/migrations",
-      'sqlDir' => "./propel/sql"
+      'phpConfDir' => "./.prom-cms/propel/config",
+      'migrationDir' => "./.prom-cms/propel/migrations",
+      'sqlDir' => "./.prom-cms/propel/sql"
     ],
     'generator' => [
       'namespaceAutoPackage' => false,

@@ -90,4 +90,4 @@ class TestUtils
   }
 }
 
-TestUtils::$propelFolder = Path::join(__DIR__, "../propel");
+TestUtils::$propelFolder = Path::join(__DIR__, "../.prom-cms/propel");

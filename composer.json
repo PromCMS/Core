@@ -59,7 +59,7 @@
     ],
     "post-install-cmd": ["composer run propel:sync"],
     "propel:sync": ["composer run build:propel", "composer run database:migrate"],
-    "build:propel": ["vendor/bin/propel model:build --config-dir=\"./propel\"", "vendor/bin/propel config:convert --config-dir=\"./propel\""],
-    "database:migrate": ["vendor/bin/propel sql:build --config-dir=\"./propel\"", "vendor/bin/propel sql:insert --config-dir=\"./propel\""]
+    "build:propel": ["vendor/bin/propel model:build --config-dir=\"./.prom-cms/propel\"", "vendor/bin/propel config:convert --config-dir=\"./.prom-cms/propel\""],
+    "database:migrate": ["vendor/bin/propel sql:build --config-dir=\"./.prom-cms/propel\"", "vendor/bin/propel sql:insert --config-dir=\"./.prom-cms/propel\""]
   }
 }
