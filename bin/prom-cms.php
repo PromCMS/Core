@@ -2,7 +2,7 @@
 
 if (!class_exists(\Symfony\Component\Console\Application::class)) {
     $autoloadFileCandidates = [
-        __DIR__ . '/../../../vendor/autoload.php',
+        __DIR__ . '/../../../autoload.php',
         __DIR__ . '/../vendor/autoload.php',
         __DIR__ . '/../vendor/autoload.php.dist',
     ];
