@@ -22,12 +22,5 @@ class Database implements AppModuleInterface
 
     require_once($propelConfigPath);
     $container->set('propel.root', dirname($propelConfigPath));
-
-    // Model::setStoreConfig(
-    //   $config->db->root,
-    //   $config->db->storeConfig,
-    // );
-
-    // Model::$defaultLanguage = $config->i18n->default;
   }
 }

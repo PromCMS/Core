@@ -10,7 +10,6 @@ use PromCMS\Core\Config\App as ConfigPart__App;
 use PromCMS\Core\Config\Security as ConfigPart__Security;
 use PromCMS\Core\Config\SecuritySession as ConfigPart__Security__Session;
 use PromCMS\Core\Config\SecurityToken as ConfigPart__Security__Token;
-use PromCMS\Core\Config\Database as ConfigPart__Database;
 use PromCMS\Core\Config\Environment as ConfigPart__Environment;
 use PromCMS\Core\Config\Filesystem as ConfigPart__Filesystem;
 use PromCMS\Core\Config\i18n as ConfigPart__i18n;
@@ -74,21 +73,6 @@ class Config implements AppModuleInterface
         'token' => new ConfigPart__Security__Token([
           'lifetime' => $this->getEnvSafely('SECURITY_TOKEN_LIFETIME'),
         ]),
-      ]),
-      'db' => new ConfigPart__Database([
-        'root' => Path::join($appRoot, '.database'),
-        'storeConfig' => [
-          'auto_cache' => !$IS_DEV_ENV,
-          'cache_lifetime' => $IS_DEV_ENV ? null : 180, // Three minutes
-          'timeout' => false,
-          'primary_key' => 'id',
-          'search' => [
-            'min_length' => 2,
-            'mode' => 'or',
-            'score_key' => 'scoreKey',
-            'algorithm' => Query::SEARCH_ALGORITHM['hits'],
-          ],
-        ],
       ]),
       'env' => new ConfigPart__Environment([
         'development' => $IS_DEV_ENV,
