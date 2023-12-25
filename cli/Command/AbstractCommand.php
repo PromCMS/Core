@@ -5,6 +5,7 @@ namespace PromCMS\Cli\Command;
 use PromCMS\Core\App;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Filesystem\Path;
 
 abstract class AbstractCommand extends Command
 {
@@ -18,6 +19,18 @@ abstract class AbstractCommand extends Command
     }
 
     return $this->promApp;
+  }
+
+  public function getPromCoreRoot()
+  {
+    return Path::join(__DIR__, '..', '..');
+  }
+
+  public function isBeingRunInsideApp()
+  {
+    $filePath = __FILE__;
+
+    return strpos($filePath, 'vendor') !== false;
   }
 
   /**
