@@ -17,12 +17,6 @@ return [
     ],
     'generator' => [
       'namespaceAutoPackage' => false,
-      'defaultConnection' => 'core',
-      'connections' => ['core']
-    ],
-    'runtime' => [
-      'defaultConnection' => 'core',
-      'connections' => ['core']
     ],
     'database' => [
       'connections' => [
