@@ -6,10 +6,17 @@ use Propel\Common\Config\ConfigurationManager;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
 class ModelsBuild extends AbstractCommand
 {
+    private Filesystem $fs;
+    private string $CORE_ROOT;
+    private string $PROPEL_CORE_ROOT;
+    private string $PROPEL_APPLICATION_ROOT;
+    private string $PROPEL_TEMP_CONFIG_FILENAME;
+
     /**
      * {@inheritDoc}
      *
@@ -20,22 +27,48 @@ class ModelsBuild extends AbstractCommand
         $this->setName('models:build')->setDescription('Generate model classes');
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return void
-     */
-    // TODO: add validation here
-    // protected function initialize(InputInterface $input, OutputInterface $output)
-    // {
-    //     $email = $input->getOption('email');
-    //     $password = $input->getOption('password');
-    //     $name = $input->getOption('name');
-    // }
-
-    private function getPropelPathFromRoot(string $root): string
+    public function __construct(string $name = null)
     {
-        return Path::join($root, '.prom-cms', 'propel');
+        parent::__construct($name);
+
+        $this->fs = new Filesystem();
+        $this->CORE_ROOT = Path::join(__DIR__, '..', '..');
+        $this->PROPEL_CORE_ROOT = $this->getPropelDirname($this->CORE_ROOT);
+        $this->PROPEL_APPLICATION_ROOT = $this->getPropelDirname(getcwd());
+        $this->PROPEL_TEMP_CONFIG_FILENAME = Path::join($this->PROPEL_CORE_ROOT, '_temp', 'propel.json');
+    }
+
+    private function deleteTempConfig()
+    {
+        return $this->fs->remove(dirname($this->PROPEL_TEMP_CONFIG_FILENAME));
+    }
+
+    private function createTempConfig()
+    {
+        $filepath = $this->PROPEL_TEMP_CONFIG_FILENAME;
+
+        if (!$this->fs->exists($filepathDirname = dirname($filepath))) {
+            $this->fs->mkdir($filepathDirname);
+        }
+
+        $coreConfigManager = new ConfigurationManager($this->PROPEL_CORE_ROOT);
+        $appConfigManager = new ConfigurationManager($this->PROPEL_APPLICATION_ROOT);
+        $applicationConnections = $appConfigManager->getConnectionParametersArray();
+
+        $tempConfig = [
+            'propel' => array_merge($coreConfigManager->get(), [
+                'database' => [
+                    'connections' => $applicationConnections
+                ]
+            ])
+        ];
+
+        unset($tempConfig['propel']['generator']['connections']);
+        unset($tempConfig['propel']['generator']['defaultConnection']);
+        unset($tempConfig['propel']['runtime']['connections']);
+        unset($tempConfig['propel']['runtime']['defaultConnection']);
+
+        $this->fs->dumpFile($filepath, json_encode($tempConfig));
     }
 
     /**
@@ -44,13 +77,12 @@ class ModelsBuild extends AbstractCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // Just run it only when this is used inside app and propel config is defined
         if ($this->isBeingRunInsideApp()) {
-            $cwd = getcwd();
-            $promPropelRoot = $this->getPropelPathFromRoot($this->getPromCoreRoot());
-            $configManager = new ConfigurationManager($promPropelRoot);
-            $applicationConfigManager = new ConfigurationManager($this->getPropelPathFromRoot($cwd));
+            $promPropelSchemaPathname = Path::join($this->PROPEL_CORE_ROOT, 'schema.xml');
 
-            $applicationConnections = $applicationConfigManager->getConnectionParametersArray();
+            $appConfigManager = new ConfigurationManager($this->PROPEL_APPLICATION_ROOT);
+            $applicationConnections = $appConfigManager->getConnectionParametersArray();
             $applicationConnectionsAsKeys = array_keys($applicationConnections);
             [$firstConnectionKey] = $applicationConnectionsAsKeys;
 
@@ -58,30 +90,27 @@ class ModelsBuild extends AbstractCommand
                 throw new \RuntimeException("Please define atleast one connection in your propel config");
             }
 
+            // Make sure that database connection for core models is the same as first connection for 
+            // application that this library is used
             $xmlDoc = new \DOMDocument;
-            $xmlDoc->load(Path::join($promPropelRoot, 'schema.xml'));
-            $databaseElements = $xmlDoc->getElementsByTagName('database');
-            foreach ($databaseElements as $databaseElement) {
+            $xmlDoc->load($promPropelSchemaPathname);
+            foreach ($xmlDoc->getElementsByTagName('database') as $databaseElement) {
                 $databaseElement->setAttribute('name', $firstConnectionKey);
             }
-            $xmlDoc->saveXML();
+            $xmlDoc->save($promPropelSchemaPathname);
 
-            $schemaDir = Path::join($cwd, $configManager->getConfigProperty('paths.schemaDir'));
-            $phpDir = Path::join($cwd, $configManager->getConfigProperty('paths.phpDir'));
+            $coreConfigManager = new ConfigurationManager($this->PROPEL_CORE_ROOT);
+            $phpDir = Path::join($this->CORE_ROOT, $coreConfigManager->getConfigProperty('paths.phpDir'));
+            $this->createTempConfig();
 
-            $sharedOptions = [
-                '--config-dir' => $promPropelRoot,
-                '--output-dir' => $phpDir,
-                '--schema-dir' => $schemaDir,
-            ];
-
-            $this->getApplication()->doRun(new ArrayInput(array_merge([
-                'command' => PropelConfigConvertCommand::COMMAND_NAME,
-            ], $sharedOptions)), $output);
-
-            $this->getApplication()->doRun(new ArrayInput(array_merge([
+            $this->getApplication()->doRun(new ArrayInput([
                 'command' => PropelModelBuildCommand::COMMAND_NAME,
-            ], $sharedOptions)), $output);
+                '--config-dir' => dirname($this->PROPEL_TEMP_CONFIG_FILENAME),
+                '--output-dir' => $phpDir,
+                '--schema-dir' => Path::join($this->CORE_ROOT, $coreConfigManager->getConfigProperty('paths.schemaDir')),
+            ]), $output);
+
+            $this->deleteTempConfig();
         }
 
         $this->getApplication()->doRun(new ArrayInput([
