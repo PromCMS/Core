@@ -26,6 +26,11 @@ abstract class AbstractCommand extends Command
     return Path::join(__DIR__, '..', '..');
   }
 
+  public function getPropelDirname(string $root)
+  {
+    return Path::join($root, '.prom-cms', 'propel');
+  }
+
   public function isBeingRunInsideApp()
   {
     $filePath = __FILE__;
