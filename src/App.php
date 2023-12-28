@@ -16,6 +16,7 @@ use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
 use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
 use PromCMS\Core\Bootstrap\Services as ServicesBootstrap;
 use PromCMS\Core\Bootstrap\Middlewares as MiddlewaresBootstrap;
+use Symfony\Component\Filesystem\Path;
 
 /**
  * PromCMS App object
@@ -62,6 +63,7 @@ class App
 
       // Set app root to container
       $container->set('app.root', $this->root);
+      $container->set('core.root', Path::join(__DIR__, '..'));
 
       // Run bootstrap classes
       foreach (static::$appModules as $className) {

@@ -6,11 +6,11 @@ use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
 use PromCMS\Core\Exceptions\ValidateSchemaException;
-use PromCMS\Core\Path;
 use PromCMS\Core\Schema;
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
 use PromCMS\Core\Services\RenderingService;
+use Symfony\Component\Filesystem\Path;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -20,6 +20,7 @@ class AppExtensions extends AbstractExtension
   private FileService $fileService;
   private $twigService;
   private Config $config;
+  private string $appRoot;
   private Schema $viteAssetsConfigSchema;
 
   public function __construct(Container $container)
@@ -28,6 +29,7 @@ class AppExtensions extends AbstractExtension
     $this->twigService = $container->get(RenderingService::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
+    $this->appRoot = $container->get('app.root');
     $this->viteAssetsConfigSchema = new Schema([
       "type" => "object",
       "properties" => [
@@ -134,7 +136,7 @@ class AppExtensions extends AbstractExtension
     $config = $this->validateGetViteAssetsConfig($config);
 
     if ($config instanceof ValidateSchemaException) {
-      $formattedErrors = implode(', ', array_map(fn ($key) => "$key(" . $config->exceptions[$key] . ")", array_keys($config->exceptions)));
+      $formattedErrors = implode(', ', array_map(fn($key) => "$key(" . $config->exceptions[$key] . ")", array_keys($config->exceptions)));
 
       return "<script>alert('Invalid assets array in getViteAssets twig function, because: $formattedErrors');</script>";
     } else if ($config instanceof Exception) {
@@ -145,7 +147,7 @@ class AppExtensions extends AbstractExtension
     $composedAssets = '';
     $distFolderPath = $config['distFolderPath'];
     $manifestFilePath = Path::join(
-      $this->config->app->root,
+      $this->appRoot,
       'public',
       $distFolderPath,
       $config['manifestFileName'],

@@ -8,6 +8,7 @@ use PromCMS\Core\Models\UserRole;
 use PromCMS\Core\Models\File;
 use PromCMS\Core\Models\GeneralTranslation;
 use PromCMS\Core\Models\Setting;
+use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\FsUtils;
@@ -28,6 +29,7 @@ class Modules implements AppModuleInterface
 
     $modules = $container->get(ModulesService::class)->getAll();
     $config = $container->get(Config::class);
+    $promConfig = $container->get(PromConfig::class);
     $twig = $container->get(RenderingService::class);
     $twigFileLoader = $twig->getLoader();
 
@@ -99,7 +101,7 @@ class Modules implements AppModuleInterface
       'loadedModels' => $loadedModels,
     ]);
 
-    $routePrefix = $config->app->prefix;
+    $routePrefix = $promConfig->getProjectUri()->getPath();
     $supportedLanguages = $config->i18n->languages;
     $coreFrontRoutes = new FrontRoutes($container);
     $coreApiRoutes = new ApiRoutes($container);

@@ -1,7 +1,7 @@
 <?php
 namespace PromCMS\Core\Config;
 
-class SecuritySession extends ConfigBase
+final class SecuritySession extends ConfigBase
 {
   /**
    * Session lifetime. Anything that strtotime() accepts is valid
@@ -11,12 +11,12 @@ class SecuritySession extends ConfigBase
   public string $name = "prom_session";
 }
 
-class SecurityToken extends ConfigBase
+final class SecurityToken extends ConfigBase
 {
   public int $lifetime = 86400;
 }
 
-class Security extends ConfigBase
+final class Security extends ConfigBase
 {
   public SecuritySession $session;
   public SecurityToken $token;

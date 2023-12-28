@@ -34,8 +34,8 @@ return function (App $app) {
   // Now you can access whatever - for example Config! It`s fully "type-safe" ;)
   $config = $container->get(Config::Class);
 
-  // Now you can use it normally (this prints app name which is taken from .env:APP_NAME)
-  echo $config->app->name;
+  // Now you can use it normally (this is boolean which has true if current .env does not have environment specified or has development value)
+  echo $config->env->development;
 }
 ```
 

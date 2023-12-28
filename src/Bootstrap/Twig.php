@@ -19,7 +19,7 @@ class Twig implements AppModuleInterface
   {
     /** @var Config */
     $config = $container->get(Config::class);
-    $appRoot = $config->app->root;
+    $appRoot = $container->get('app.root');
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
     $cachePath = Path::join($appRoot, 'cache', 'twig');

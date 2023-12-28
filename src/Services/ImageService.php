@@ -6,7 +6,7 @@ use DI\Container;
 use Exception;
 use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
-use PromCMS\Core\Models\Map\FileTableMap;
+use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
 
 class ImageService
@@ -16,12 +16,14 @@ class ImageService
   private Filesystem $cacheFs;
   private Filesystem $fs;
   private Config $config;
+  private PromConfig $promConfig;
 
   public function __construct(Container $container)
   {
     $this->fs = $container->get('filesystem');
     $this->config = $container->get(Config::class);
     $this->cacheFs = $container->get('cache-filesystem');
+    $this->promConfig = $container->get(PromConfig::class);
   }
 
   /**
@@ -160,11 +162,18 @@ class ImageService
       }, array_keys($args)),
     );
 
+    $srcPrefix = $this->promConfig->getProjectUri()->__toString();
+    $src = "api/entry-types/files/items/$fileId/raw?$joinedArgs";
+
+    if (!str_ends_with($srcPrefix, "/")) {
+      $src = "/$src";
+    }
+
+    $src = $srcPrefix . $src;
+
     return [
       'resource' => $fileStream,
-      'src' =>
-        $this->config->app->baseUrl .
-        "/api/entry-types/files/items/$fileId/raw?$joinedArgs",
+      'src' => $src,
       'width' => $imageWidth,
       'height' => $imageHeight,
     ];

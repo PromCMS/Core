@@ -2,11 +2,10 @@
 
 namespace PromCMS\Core\Bootstrap;
 
-use SleekDB\Query;
+use PromCMS\Core\PromConfig;
 use Symfony\Component\Dotenv\Dotenv;
 
 use PromCMS\Core\Config as AppConfig;
-use PromCMS\Core\Config\App as ConfigPart__App;
 use PromCMS\Core\Config\Security as ConfigPart__Security;
 use PromCMS\Core\Config\SecuritySession as ConfigPart__Security__Session;
 use PromCMS\Core\Config\SecurityToken as ConfigPart__Security__Token;
@@ -33,6 +32,7 @@ class Config implements AppModuleInterface
   {
     $dotenv = new Dotenv();
     $appRoot = $container->get('app.root');
+    $coreRoot = $container->get('core.root');
     $dotenvFilepath = Path::join($appRoot, '.env');
 
     if (file_exists($dotenvFilepath)) {
@@ -56,15 +56,6 @@ class Config implements AppModuleInterface
     );
 
     $config = new AppConfig([
-      'app' => new ConfigPart__App([
-        'name' => $_ENV['APP_NAME'],
-        'root' => $appRoot,
-        'url' => $_ENV['APP_URL'],
-        'prefix' => $APP_PREFIX,
-        'baseUrl' => !empty($APP_PREFIX)
-          ? $_ENV['APP_URL'] . $APP_PREFIX
-          : $_ENV['APP_URL'],
-      ]),
       'security' => new ConfigPart__Security([
         'session' => new ConfigPart__Security__Session([
           'lifetime' => $this->getEnvSafely('SECURITY_SESSION_LIFETIME'),
@@ -98,7 +89,9 @@ class Config implements AppModuleInterface
         ])
       ])
     ]);
+    $coreIsInVendor = in_array('vendor', explode(DIRECTORY_SEPARATOR, __DIR__));
 
     $container->set(AppConfig::class, $config);
+    $container->set(PromConfig::class, new PromConfig($coreIsInVendor ? $appRoot : $coreRoot));
   }
 }

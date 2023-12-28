@@ -19,11 +19,10 @@ class FrontRoutes implements CoreRoutes
     $router->redirect("/public/admin", "/admin/");
     $router->redirect("/public/admin/", "/admin/");
     $router->get('/admin[/{routePiece:.*}]', function (ServerRequestInterface $request, ResponseInterface $response, $args) {
-      $config = $this->get(Config::class);
       $routePiece = $args['routePiece'] ?? "";
       $routePiece = str_replace("..", "", $routePiece);
 
-      $adminPath = Path::join($config->app->root, 'public', 'admin');
+      $adminPath = Path::join($this->get('app.root'), 'public', 'admin');
 
       if (str_ends_with($routePiece, ".css") || str_ends_with($routePiece, ".js")) {
         $requiredPath = "$adminPath/$routePiece";

@@ -1,7 +1,7 @@
 <?php
 namespace PromCMS\Core\Config;
 
-class Environment extends ConfigBase
+final class Environment extends ConfigBase
 {
   public bool $development = false;
   public bool $debug = false;

@@ -3,8 +3,10 @@ namespace PromCMS\Core\Config;
 
 class ConfigBase
 {
-  function __construct(array $config)
-  {
+  function __construct(
+  #[\SensitiveParameter]
+    array $config
+  ) {
     $keys = array_keys(get_class_vars(static::class));
 
     foreach ($keys as $key) {
