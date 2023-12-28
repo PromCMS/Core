@@ -1,6 +1,4 @@
 vendor
 .DS_Store
-.prom-cms/propel/*
-!.prom-cms/propel/propel.php
-!.prom-cms/propel/schema.xml
 .test
+.prom-cms/parsed/database.sqlite

@@ -2,6 +2,7 @@
 
 namespace PromCMS\Cli\Command;
 
+use PromCMS\Cli\Application;
 use PromCMS\Core\Password;
 use PromCMS\Core\Services\UserService;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -57,7 +58,7 @@ class CreateUser extends AbstractCommand
         /**
          * @var UserService
          */
-        $userService = $this->getPromApp($input->getOption('cwd'))->getSlimApp()->getContainer()->get(UserService::class);
+        $userService = Application::getPromApp($input->getOption('cwd'))->getSlimApp()->getContainer()->get(UserService::class);
         $createdUser = $userService->create([
             'email' => $email,
             'password' => Password::hash($password),
