@@ -9,8 +9,8 @@ use Symfony\Component\Filesystem\Path;
 
 class Filesystem
 {
-  private static final $UPLOADS_KEY = '__prom_uploads';
-  private static final $IMAGE_CACHE_KEY = '__prom_cached_images';
+  private static $UPLOADS_KEY = '__prom_uploads';
+  private static $IMAGE_CACHE_KEY = '__prom_cached_images';
 
   private PromConfig $promConfig;
   private string $appRoot;

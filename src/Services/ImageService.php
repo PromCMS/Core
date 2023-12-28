@@ -21,7 +21,6 @@ class ImageService
   {
     $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
-    $this->cacheFs = $container->get('cache-filesystem');
     $this->promConfig = $container->get(PromConfig::class);
   }
 

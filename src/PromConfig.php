@@ -21,14 +21,14 @@ class PromConfig
     $filename = Path::join($applicationRoot, ...$this->trailingPartOfConfigFilename);
 
     if (!file_exists($filename)) {
-      throw new \Exception("Could not find parsed Prom config, please make sure that it\'s present at ${filename}");
+      throw new \Exception("Could not find parsed Prom config, please make sure that it\'s present at {$filename}");
     }
 
     $configurationFromFile = require_once $filename;
     $this->configuration = array_merge_recursive($this->configuration, $configurationFromFile);
 
     if (empty($this->configuration['database']['connections'])) {
-      throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one at ${filename}");
+      throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one at {$filename}");
     }
   }
 
