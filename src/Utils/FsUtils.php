@@ -96,31 +96,6 @@ class FsUtils
     return $importedFilePaths;
   }
 
-  // TODO: make a better solution to this class search
-  /**
-   * Auto-loads models for specified module root. This is primarily used by modules.
-   * @return string[]|false An array of module names or
-   */
-  public static function autoloadModels(string $moduleRoot)
-  {
-    // Save previously declared classes in memory
-    $classes = get_declared_classes();
-
-    // Autoload files and save imported filepaths to an array
-    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, "Models"));
-
-    if (!$importedFilepaths) {
-      return false;
-    }
-
-    // Should have all of loaded model names in array
-    $diff = array_values(array_diff(get_declared_classes(), $classes));
-
-    return array_filter($diff, function ($importedName) {
-      return !str_ends_with($importedName, 'SingletonModel');
-    });
-  }
-
   public static function autoloadControllers(string $moduleRoot)
   {
     $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, "Controllers"));
