@@ -7,6 +7,28 @@ use PHPMailer\PHPMailer\PHPMailer;
 class Mailer extends PHPMailer
 {
   private $isSetuped = false;
+  private string $passwordResetTemplatePath = 'email/password-reset.twig';
+  private string $inviteUserTemplatePath = 'email/password-reset.twig';
+
+  function getPasswordResetTemplatePath()
+  {
+    return $this->passwordResetTemplatePath;
+  }
+
+  function getInviteUserTemplatePath()
+  {
+    return $this->inviteUserTemplatePath;
+  }
+
+  function setPasswordResetTemplatePath(string $path)
+  {
+    $this->passwordResetTemplatePath = $path;
+  }
+
+  function setInviteUserTemplatePath(string $path)
+  {
+    $this->inviteUserTemplatePath = $path;
+  }
 
   /**
    * Sets up Mailer with specified config and enables email sending

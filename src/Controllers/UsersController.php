@@ -5,6 +5,7 @@ namespace PromCMS\Core\Controllers;
 use PromCMS\Core\Models\User;
 use PromCMS\Core\Models\UserState;
 use PromCMS\Core\Password;
+use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
@@ -125,6 +126,7 @@ class UsersController
     $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(RenderingService::class);
+    $promConfig = $this->container->get(PromConfig::class);
 
     if (isset($parsedBody['data']['password'])) {
       unset($parsedBody['data']['password']);
@@ -158,13 +160,12 @@ class UsersController
 
     $themePayload = array_merge($user->toArray(TableMap::TYPE_CAMELNAME), [
       'token' => $generatedJwt,
-      'app_url' => $_ENV['APP_URL'],
+      'app_url' => $promConfig->getProjectUri()->__toString(),
     ]);
 
     try {
       $generatedEmailContent = $twigService->getEnvironment()->render(
-        // TODO: resolve this value from rendering service and let user choose it
-        'email/invite-user.twig',
+        $emailService->getInviteUserTemplatePath(),
         $themePayload,
       );
     } catch (\Exception $e) {
@@ -249,6 +250,7 @@ class UsersController
     $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(RenderingService::class);
+    $promConfig = $this->container->get(PromConfig::class);
 
     $user = $this->userService->getOneById($args['itemId']);
 
@@ -262,13 +264,12 @@ class UsersController
       'email' => $user->getEmail(),
       'id' => $user->getId(),
       'token' => $generatedJwt,
-      'app_url' => $_ENV['APP_URL'],
+      'app_url' => $promConfig->getProjectUri()->__toString(),
     ];
 
     try {
       $generatedEmailContent = $twigService->getEnvironment()->render(
-        // TODO: resolve this value from rendering service and let user choose it
-        'email/password-reset',
+        $emailService->getPasswordResetTemplatePath(),
         $themePayload,
       );
     } catch (\Exception $e) {

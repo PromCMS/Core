@@ -4,6 +4,7 @@ namespace PromCMS\Core\Controllers;
 
 use PromCMS\Core\Models\UserState;
 use PromCMS\Core\Password;
+use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use DI\Container;
@@ -164,6 +165,7 @@ class UserProfileController
     $params = $request->getQueryParams();
     $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(RenderingService::class);
+    $promConfig = $this->container->get(PromConfig::class);
 
     if (!$params['email']) {
       return $response->withStatus(400);
@@ -185,13 +187,12 @@ class UserProfileController
       'email' => $user->email,
       'id' => $user->id,
       'token' => $generatedJwt,
-      'app_url' => $_ENV['APP_URL'],
+      'app_url' => $promConfig->getProjectUri()->__toString(),
     ];
 
     try {
       $generatedEmailContent = $twigService->getEnvironment()->render(
-        // TODO: resolve this value from rendering service and let user choose it
-        'email/password-reset.twig',
+        $emailService->getPasswordResetTemplatePath(),
         $themePayload,
       );
     } catch (\Exception $e) {
