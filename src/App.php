@@ -10,7 +10,7 @@ use Slim\Middleware\Session as SessionMiddleware;
 
 use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
 use PromCMS\Core\Bootstrap\Database as DatabaseBootstrap;
-use PromCMS\Core\Bootstrap\FlySystem as FlySystemBootstrap;
+use PromCMS\Core\Bootstrap\FileSystem as FileSystemBootstrap;
 use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
 use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
 use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
@@ -28,7 +28,7 @@ class App
   private static array $appModules = [
     ConfigBootstrap::class,
     DatabaseBootstrap::class,
-    FlySystemBootstrap::class,
+    FileSystemBootstrap::class,
     MailerBootstrap::class,
     ServicesBootstrap::class,
     TwigBootstrap::class,

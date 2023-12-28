@@ -39,11 +39,6 @@ class Config implements AppModuleInterface
       $dotenv->load($dotenvFilepath);
     }
 
-    $PROM_UPLOADS_ROOT = Path::join($appRoot, 'uploads');
-    $PROM_LOCALES_ROOT = Path::join($appRoot, 'locales');
-    $PROM_FILE_CACHE_ROOT = Path::join($appRoot, 'cache', 'files');
-
-    $APP_PREFIX = !empty($_ENV['APP_PREFIX']) ? '/' . $_ENV['APP_PREFIX'] : '';
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
     $RELATIVE_LOGGING_FILEPATH = $_ENV['SYSTEM_LOGGING_PATHNAME'] ?? null;
     $IS_DEV_ENV = $APP_ENV == 'development' || $APP_ENV == 'develop';
@@ -69,11 +64,6 @@ class Config implements AppModuleInterface
         'development' => $IS_DEV_ENV,
         'debug' => $DEBUG_ENABLED,
         'env' => $APP_ENV,
-      ]),
-      'fs' => new ConfigPart__Filesystem([
-        'cachePath' => $PROM_FILE_CACHE_ROOT,
-        'localesPath' => $PROM_LOCALES_ROOT,
-        'uploadsPath' => $PROM_UPLOADS_ROOT,
       ]),
       'i18n' => new ConfigPart__i18n([
         'default' => $LANGUAGES[0],

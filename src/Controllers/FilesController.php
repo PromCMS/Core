@@ -2,12 +2,12 @@
 
 namespace PromCMS\Core\Controllers;
 
+use PromCMS\Core\Filesystem;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
-use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
@@ -30,7 +30,7 @@ class FilesController
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->fs = $container->get('filesystem');
+    $this->fs = $container->get(Filesystem::class);
     $this->fileService = $container->get(FileService::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
@@ -100,7 +100,7 @@ class FilesController
     try {
       $userId = $this->container->get(Session::class)->get('user_id', false);
       $fileInfo = $this->fileService->getById($id);
-      $responseMimeType = $this->fs->mimeType($fileInfo->filepath);
+      $responseMimeType = $this->fs->withUploads()->mimeType($fileInfo->filepath);
 
       if ($fileInfo->private && !$userId) {
         return $response->withStatus(401);

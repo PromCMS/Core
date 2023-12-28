@@ -4,8 +4,8 @@ namespace PromCMS\Core\Services;
 
 use DI\Container;
 use Exception;
-use League\Flysystem\Filesystem;
 use PromCMS\Core\Config;
+use PromCMS\Core\Filesystem;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
 
@@ -13,14 +13,13 @@ class ImageService
 {
   private array $ALLOWED_IMAGE_TYPES = ["jpeg", "jpg", "png", "webp"];
   private string $DEFAULT_IMAGE_TYPE = "jpeg";
-  private Filesystem $cacheFs;
   private Filesystem $fs;
   private Config $config;
   private PromConfig $promConfig;
 
   public function __construct(Container $container)
   {
-    $this->fs = $container->get('filesystem');
+    $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
     $this->cacheFs = $container->get('cache-filesystem');
     $this->promConfig = $container->get(PromConfig::class);
@@ -75,8 +74,8 @@ class ImageService
   public function getProcessed(array $fileInfo, $dirtyParams = [])
   {
     $args = $this->parseDirtyParamsToGetProcessed($dirtyParams);
-    $file = $this->fs->readStream($fileInfo['filepath']);
-
+    $file = $this->fs->withUploads()->readStream($fileInfo['filepath']);
+    $fileInfo['filepath'] = Path::makeAbsolute($fileInfo['filepath'], '');
     $fileStream = $file;
 
     if (count($args)) {
@@ -98,7 +97,7 @@ class ImageService
       $transformToType = $args["f"] ?? $this->getFileTypeFromMimeType($fileInfo["mimeType"]) ?? $this->DEFAULT_IMAGE_TYPE;
       $fileBasenameWithArgs = "$fileNameWithArgs.$transformToType";
 
-      if (!$this->cacheFs->fileExists($fileBasenameWithArgs)) {
+      if (!$this->fs->withCachedImages()->fileExists($fileBasenameWithArgs)) {
         $gdImageSource = \imagecreatefromstring(stream_get_contents($file));
 
         if (isset($args['w'])) {
@@ -109,7 +108,7 @@ class ImageService
           }
         }
 
-        $saveToPath = Path::join($this->config->fs->cachePath, $fileBasenameWithArgs);
+        $saveToPath = Path::join($this->fs->getCachedImagesRoot(), $fileBasenameWithArgs);
         switch ($transformToType) {
           case 'jpeg':
           case 'jpg':
@@ -146,7 +145,7 @@ class ImageService
         }
       }
 
-      $fileStream = $this->cacheFs->readStream($fileBasenameWithArgs);
+      $fileStream = $this->fs->withCachedImages()->readStream($fileBasenameWithArgs);
     }
 
     $fileId = $fileInfo['id'];

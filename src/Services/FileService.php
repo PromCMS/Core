@@ -6,10 +6,10 @@ use DI\Container;
 use GuzzleHttp\Psr7\MimeType;
 use GuzzleHttp\Psr7\UploadedFile;
 use PromCMS\Core\Config;
+use PromCMS\Core\Filesystem;
 use PromCMS\Core\Models\Map\FileTableMap;
 use Propel\Runtime\Propel;
 use GuzzleHttp\Psr7\Stream;
-use League\Flysystem\Filesystem;
 use PromCMS\Core\Models\FileQuery;
 use PromCMS\Core\Models\File;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -22,7 +22,7 @@ class FileService
 
   public function __construct(Container $container)
   {
-    $this->fs = $container->get('filesystem');
+    $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
   }
 
@@ -89,7 +89,7 @@ class FileService
    */
   public function getStream(array $fileInfo): Stream
   {
-    $file = $this->fs->readStream($fileInfo['filepath']);
+    $file = $this->fs->withUploads()->readStream($fileInfo['filepath']);
 
     return new Stream($file);
   }
@@ -132,7 +132,8 @@ class FileService
 
       $createdFile->fromArray($createFileMetadata);
       $createdFile->save($fileConnection);
-      $uploadedFile->moveTo(Path::join($this->config->fs->uploadsPath, $newFilePath));
+
+      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream());
 
       $fileConnection->commit();
     } catch (\Exception $error) {
@@ -179,7 +180,7 @@ class FileService
 
     try {
       $fileInfo->delete($fileTransaction);
-      $this->fs->delete($fileInfo->getFilepath());
+      $this->fs->withUploads()->delete($fileInfo->getFilepath());
 
       $fileTransaction->commit();
     } catch (\Exception $error) {

@@ -6,18 +6,19 @@ use DI\Container;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemException;
 use PromCMS\Core\Config;
+use PromCMS\Core\Filesystem;
 use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class FoldersController
 {
-  private $fs;
+  private Filesystem $fs;
   private Config $config;
 
   public function __construct(Container $container)
   {
-    $this->fs = $container->get('filesystem');
+    $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
   }
 
@@ -25,6 +26,7 @@ class FoldersController
   {
     $hasItems = false;
 
+    // TODO: Why have foreach?
     foreach ($listing as $item) {
       $hasItems = true;
       break;
@@ -38,9 +40,10 @@ class FoldersController
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getQueryParams();
+    $dirname = $params['path'];
 
     try {
-      $listing = $this->fs->listContents($params['path'], false);
+      $listing = $this->fs->withUploads()->listContents($dirname, false);
       $folders = [];
 
       /** @var \League\Flysystem\StorageAttributes $item */
@@ -68,13 +71,14 @@ class FoldersController
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
     $data = $parsedBody['data'];
+    $dirname = $data['path'];
 
     try {
-      if (is_dir($this->config->fs->uploadsPath . $data['path'])) {
+      if ($this->fs->withUploads()->directoryExists($dirname)) {
         return $response->withStatus(409);
       }
 
-      $this->fs->createDirectory($data['path']);
+      $this->fs->withUploads()->createDirectory($dirname);
 
       return $response->withStatus(200);
     } catch (FilesystemException $exception) {
@@ -89,18 +93,18 @@ class FoldersController
     ResponseInterface $response
   ): ResponseInterface {
     $data = $request->getQueryParams();
-    $path = $data['path'];
+    $dirname = $data['path'];
 
     try {
       $hasItems = $this->listingHasContents(
-        $this->fs->listContents($path, false),
+        $this->fs->withUploads()->listContents($dirname, false),
       );
 
       if ($hasItems) {
         return $response->withStatus(400);
       }
 
-      $this->fs->deleteDirectory($path);
+      $this->fs->withUploads()->deleteDirectory($dirname);
 
       return $response->withStatus(200);
     } catch (FilesystemException $exception) {
