@@ -162,7 +162,7 @@ class UsersController
     ]);
 
     try {
-      $generatedEmailContent = $twigService->render(
+      $generatedEmailContent = $twigService->getEnvironment()->render(
         // TODO: resolve this value from rendering service and let user choose it
         'email/invite-user.twig',
         $themePayload,
@@ -266,7 +266,7 @@ class UsersController
     ];
 
     try {
-      $generatedEmailContent = $twigService->render(
+      $generatedEmailContent = $twigService->getEnvironment()->render(
         // TODO: resolve this value from rendering service and let user choose it
         'email/password-reset',
         $themePayload,
