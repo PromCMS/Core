@@ -2,18 +2,23 @@
 
 namespace PromCMS\Core\Models;
 
-use PromCMS\Core\Models\Base\GeneralTranslation as BaseGeneralTranslation;
+use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\Abstract\BaseModel;
 
-/**
- * Skeleton subclass for representing a row from the 'prom__general_translations' table.
- *
- *
- *
- * You should add additional methods to this class to meet the
- * application requirements.  This class will only be generated as
- * long as it does not already exist in the output directory.
- */
-class GeneralTranslation extends BaseGeneralTranslation
+#[ORM\Entity]
+#[ORM\Table(name: 'prom__general_translations')]
+#[Mapping\PromModel(adminMetadataIcon: 'LanguageHiragana')]
+class GeneralTranslation extends BaseModel
 {
+  #[ORM\Column(type: 'string', length: 20)]
+  #[Mapping\PromModelColumn(title: 'Language', type: 'string')]
+  private string $lang;
 
+  #[ORM\Column(type: 'string')]
+  #[Mapping\PromModelColumn(title: 'Key', type: 'string')]
+  private string $key;
+
+  #[ORM\Column(type: 'array')]
+  #[Mapping\PromModelColumn(title: 'Value', type: 'string')]
+  private string $value;
 }

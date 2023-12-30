@@ -2,32 +2,58 @@
 
 namespace PromCMS\Core\Models;
 
-use PromCMS\Core\Models\Base\User as BaseUser;
-use PromCMS\Core\Models\Map\UserTableMap;
+use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\Abstract\BaseModel;
 use PromCMS\Core\Password;
-use Propel\Runtime\Map\TableMap;
 
-/**
- * Skeleton subclass for representing a row from the 'prom__users' table.
- *
- *
- *
- * You should add additional methods to this class to meet the
- * application requirements.  This class will only be generated as
- * long as it does not already exist in the output directory.
- */
-class User extends BaseUser
+#[ORM\Entity]
+#[ORM\Table(name: 'prom__users')]
+#[Mapping\PromModel(adminMetadataIcon: 'Users')]
+class User extends BaseModel
 {
-  private static $privateFields = ["password"];
+  #[ORM\Column(type: 'string', unique: true, updatable: false)]
+  #[Mapping\PromModelColumn(title: 'Email', type: 'string')]
+  private string $email;
 
-  static function getPrivateFields(): array
+  #[ORM\Column(type: 'text')]
+  #[Mapping\PromModelColumn(title: 'Password', type: 'password', editable: false, adminMetadataIsHidden: true, hide: true)]
+  private string $password;
+
+  #[ORM\Column(type: 'string')]
+  #[Mapping\PromModelColumn(title: 'First name', type: 'string')]
+  private string $firstname;
+
+  #[ORM\Column(type: 'string')]
+  #[Mapping\PromModelColumn(title: 'Last name', type: 'string')]
+  private string $lastname;
+
+  #[ORM\Column(type: 'string', enumType: UserState::class)]
+  #[Mapping\PromModelColumn(title: 'State', type: 'enum')]
+  private UserState $state = UserState::INVITED;
+
+  #[ORM\ManyToOne(targetEntity: File::class)]
+  #[ORM\JoinColumn(name: 'avatar_id', referencedColumnName: 'id', nullable: true)]
+  #[Mapping\PromModelColumn(title: 'Avatar', type: 'file')]
+  private File|null $avatar = null;
+
+  #[ORM\ManyToOne(targetEntity: UserRole::class)]
+  #[ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+  #[Mapping\PromModelColumn(title: 'Role', type: 'relationship')]
+  private UserRole|null $role = null;
+
+  // static function getPrivateFields(): array
+  // {
+  //   return array_merge(static::$privateFields, array_map(fn($item) => ucfirst($item), static::$privateFields));
+  // }
+
+  public function getId(): int|null
   {
-    return array_merge(static::$privateFields, array_map(fn($item) => ucfirst($item), static::$privateFields));
+    return $this->id;
   }
 
   public function getName(): string
   {
-    return $this->getFirstname() . " " . $this->getLastname();
+    return $this->firstname . " " . $this->lastname;
   }
 
   public function setName(string $name)
@@ -38,50 +64,20 @@ class User extends BaseUser
       throw new \Exception("Cannot set user name with just one part of name. Name must be in format '<first-name> <last-name>'");
     }
 
-    $this->setFirstname($firstname);
-    $this->setLastname($lastname);
+    $this->firstname = $firstname;
+    $this->lastname = $lastname;
 
     return $this;
   }
 
   public function isBlocked(): bool
   {
-    return $this->state === UserState::$BLOCKED;
-  }
-
-  public function fromArray(array $arr, string $keyType = TableMap::TYPE_PHPNAME): User
-  {
-    $userTableMap = new UserTableMap();
-    $stateFieldKey = UserTableMap::translateFieldName("state", TableMap::TYPE_CAMELNAME, $keyType);
-
-    // We have to format this manually, enums from propel are just tiny ints
-    if (isset($arr[$stateFieldKey]) && is_int($arr[$stateFieldKey])) {
-      $stateColumnEnumValues = $userTableMap->getColumn('state')->getValueSet();
-
-      $arr[$stateFieldKey] = $stateColumnEnumValues[$arr[$stateFieldKey]];
-    }
-
-    return parent::fromArray($arr, $keyType);
-  }
-
-
-  public function toArray(string $keyType = TableMap::TYPE_CAMELNAME, bool $includeLazyLoadColumns = true, array $alreadyDumpedObjects = [], bool $includeForeignObjects = false): array
-  {
-    $result = parent::toArray($keyType, $includeLazyLoadColumns, $alreadyDumpedObjects, $includeForeignObjects);
-
-    $privateFields = static::getPrivateFields();
-    foreach ($privateFields as $privateField) {
-      if (isset($result[$privateField])) {
-        unset($result[$privateField]);
-      }
-    }
-
-    return $result;
+    return $this->state === UserState::BLOCKED;
   }
 
   public function checkPassword(string $checkAgainst)
   {
-    $userPassword = $this->getPassword();
+    $userPassword = $this->password;
 
     if (!$userPassword) {
       throw new \Exception('Cannot check password because user does not have any password');

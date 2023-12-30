@@ -51,4 +51,29 @@ class PromConfig
   {
     return $this->configuration['database']['connections'];
   }
+
+  function getModels(): array
+  {
+    return $this->configuration['database']['models'] ?? [];
+  }
+
+  function getSingletons(): array
+  {
+    return $this->configuration['database']['singletons'] ?? [];
+  }
+
+  public function getTableColumns(string $tableName): array|null
+  {
+    $models = $this->getModels();
+    $singletons = $this->getSingletons();
+    $modelsAndSingletons = array_merge($models, $singletons);
+
+    foreach ($modelsAndSingletons as $entity) {
+      if ($entity['tableName'] === $tableName) {
+        return $entity['columns'] ?? [];
+      }
+    }
+
+    return null;
+  }
 }

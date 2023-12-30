@@ -2,18 +2,23 @@
 
 namespace PromCMS\Core\Models;
 
-use PromCMS\Core\Models\Base\UserRole as BaseUserRole;
+use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\Abstract\BaseModel;
 
-/**
- * Skeleton subclass for representing a row from the 'prom__user_roles' table.
- *
- *
- *
- * You should add additional methods to this class to meet the
- * application requirements.  This class will only be generated as
- * long as it does not already exist in the output directory.
- */
-class UserRole extends BaseUserRole
+#[ORM\Entity]
+#[ORM\Table(name: 'prom__user_roles')]
+#[Mapping\PromModel(adminMetadataIcon: 'UserExclamation')]
+class UserRole extends BaseModel
 {
+  #[ORM\Column(type: 'string', unique: true)]
+  #[Mapping\PromModelColumn(title: 'Label', type: 'string')]
+  private string $label;
 
+  #[ORM\Column(type: 'string', unique: true)]
+  #[Mapping\PromModelColumn(title: 'Label', type: 'string')]
+  private string $description;
+
+  #[ORM\Column(type: 'array')]
+  #[Mapping\PromModelColumn(title: 'Permissions', type: 'json')]
+  private string $permissions;
 }

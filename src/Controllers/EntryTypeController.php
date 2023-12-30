@@ -16,20 +16,41 @@ use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use PromCMS\Core\Config\i18n as I18nConfig;
 
 /**
  * Take care of normal models and singletons!
  */
 class EntryTypeController
 {
-  use \PromCMS\Core\Controllers\Traits\Model\I18n, \PromCMS\Core\Controllers\Traits\Model\Info;
-
   protected $currentUser;
+
+  protected I18nConfig $languageConfig;
 
   public function __construct(Container $container)
   {
     $this->currentUser = $container->get(Session::class)->get('user', false);
     $this->languageConfig = $container->get(Config::class)->i18n;
+  }
+
+  private function getCurrentLanguage($request, $args)
+  {
+    $queryParams = $request->getQueryParams();
+    $nextLanguage = $this->languageConfig->default;
+    $supportedLanguages = $this->languageConfig->languages;
+
+    if (
+      isset($queryParams['lang']) &&
+      in_array($queryParams['lang'], $supportedLanguages)
+    ) {
+      $nextLanguage = $queryParams['lang'];
+    }
+
+    if (isset($args['language'])) {
+      $nextLanguage = $args['language'];
+    }
+
+    return $nextLanguage;
   }
 
   private function isLocalizedModel(TableMap $tableMap)
