@@ -9,7 +9,7 @@ use PromCMS\Core\Models\Trait\Timestamps;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'prom__files')]
-#[Mapping\PromModel(adminMetadataIcon: 'Folder', ignoreSeeding: true)]
+#[Mapping\PromModel(ignoreSeeding: true)]
 class File extends BaseModel
 {
   use Ownable;

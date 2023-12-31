@@ -9,7 +9,7 @@ use PromCMS\Core\Models\Trait\Timestamps;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'prom__settings', indexes: [['name' => 'settings_search_name', 'columns' => ['name']]])]
-#[Mapping\PromModel(adminMetadataIcon: 'Settings', ignoreSeeding: true)]
+#[Mapping\PromModel(ignoreSeeding: true)]
 class Setting extends BaseModel
 {
   use Ownable;

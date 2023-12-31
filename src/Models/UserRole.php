@@ -7,7 +7,7 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'prom__user_roles')]
-#[Mapping\PromModel(adminMetadataIcon: 'UserExclamation')]
+#[Mapping\PromModel()]
 class UserRole extends BaseModel
 {
   #[ORM\Column(type: 'string', unique: true)]

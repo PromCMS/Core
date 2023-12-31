@@ -8,7 +8,7 @@ use PromCMS\Core\Password;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'prom__users')]
-#[Mapping\PromModel(adminMetadataIcon: 'Users')]
+#[Mapping\PromModel()]
 class User extends BaseModel
 {
   #[ORM\Column(type: 'string', unique: true, updatable: false)]
@@ -32,9 +32,13 @@ class User extends BaseModel
   private UserState $state = UserState::INVITED;
 
   #[ORM\ManyToOne(targetEntity: File::class)]
-  #[ORM\JoinColumn(name: 'avatar_id', referencedColumnName: 'id', nullable: true)]
+  #[ORM\JoinColumn(
+    name: 'avatar_id', 
+    referencedColumnName: 'id', 
+    nullable: true
+  )]
   #[Mapping\PromModelColumn(title: 'Avatar', type: 'file')]
-  private File|null $avatar = null;
+  private ?File $avatar = null;
 
   #[ORM\ManyToOne(targetEntity: UserRole::class)]
   #[ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE')]

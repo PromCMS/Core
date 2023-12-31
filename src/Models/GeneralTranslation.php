@@ -7,7 +7,7 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'prom__general_translations')]
-#[Mapping\PromModel(adminMetadataIcon: 'LanguageHiragana')]
+#[Mapping\PromModel()]
 class GeneralTranslation extends BaseModel
 {
   #[ORM\Column(type: 'string', length: 20)]

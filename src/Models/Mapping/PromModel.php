@@ -14,20 +14,13 @@ use Attribute;
 final class PromModel
 {
   /**
-   * @var string
-   * @readonly
-   */
-  public $adminMetadataIcon;
-
-  /**
    * @var boolean
    * @readonly
    */
   public $ignoreSeeding;
 
-  public function __construct(string $adminMetadataIcon, ?bool $ignoreSeeding = false)
+  public function __construct(?bool $ignoreSeeding = false)
   {
-    $this->adminMetadataIcon = $adminMetadataIcon;
     $this->ignoreSeeding = $ignoreSeeding;
   }
 }
