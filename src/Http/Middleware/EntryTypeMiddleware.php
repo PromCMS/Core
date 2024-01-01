@@ -19,10 +19,10 @@ class EntryTypeMiddleware
         $this->singletonsOnly = $singletonsOnly;
 
         foreach ($this->loadedModels as $loadedModelClassReference) {
-            $tableMap = ($loadedModelClassReference)::TABLE_MAP;
+            // $tableMap = ($loadedModelClassReference)::TABLE_MAP;
 
 
-            $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
+            // $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
         }
     }
 

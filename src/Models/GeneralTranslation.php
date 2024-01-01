@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Models;
 
 use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
 #[ORM\Entity]

@@ -28,8 +28,9 @@ $defaultColumn = [
   ]
 ];
 
-$userRoleModel = array_merge_recursive($defaultModel, [
+$userRoleModel = array_merge($defaultModel, [
   'tableName' => 'prom__user_roles',
+  'phpName' => 'UserRole',
   'title' => 'User roles',
   'admin' => [
     'icon' => 'UserExclamation'
@@ -57,8 +58,9 @@ $userRoleModel = array_merge_recursive($defaultModel, [
   ]
 ]);
 
-$fileModel = array_merge_recursive($defaultModel, [
+$fileModel = array_merge($defaultModel, [
   'tableName' => 'prom__files',
+  'phpName' => 'File',
   'title' => 'Files',
   'admin' => [
     'icon' => 'Folder'
@@ -95,8 +97,9 @@ $fileModel = array_merge_recursive($defaultModel, [
   ]
 ]);
 
-$usersModel = array_merge_recursive($defaultModel, [
+$usersModel = array_merge($defaultModel, [
   'tableName' => 'prom__users',
+  'phpName' => 'User',
   'title' => 'Users',
   'ignoreSeeding' => false,
   'admin' => [
@@ -109,14 +112,14 @@ $usersModel = array_merge_recursive($defaultModel, [
       'title' => 'Email',
       'unique' => true,
     ]),
-    array_merge_recursive($defaultColumn, [
+    array_merge($defaultColumn, [
       'name' => 'password',
       'type' => 'longText',
       'title' => 'Password',
       'editable' => false,
-      'admin' => [
+      'admin' => array_merge($defaultColumn['admin'], [
         'isHidden' => true
-      ]
+      ])
     ]),
     array_merge($defaultColumn, [
       'name' => 'firstname',
@@ -161,9 +164,10 @@ $usersModel = array_merge_recursive($defaultModel, [
   ]
 ]);
 
-$optionsModel = array_merge_recursive($defaultModel, [
+$optionsModel = array_merge($defaultModel, [
   'tableName' => 'prom__settings',
   'title' => 'Settings',
+  'phpName' => 'Setting',
   'ownable' => true,
   'admin' => [
     'icon' => 'Settings'
@@ -191,9 +195,10 @@ $optionsModel = array_merge_recursive($defaultModel, [
   ]
 ]);
 
-$generalTranslationsModel = array_merge_recursive($defaultModel, [
+$generalTranslationsModel = array_merge($defaultModel, [
   'tableName' => 'prom__general_translations',
   'title' => 'General translations',
+  'phpName' => 'GeneralTranslation',
   'admin' => [
     'icon' => 'LanguageHiragana'
   ],
@@ -221,7 +226,8 @@ $generalTranslationsModel = array_merge_recursive($defaultModel, [
 return [
   // This is used for testing purposes, when used as plugin the config is fetched from app
   'project' => [
-    'name' => 'PromCMS Project',
+    // Leave this in unchanged
+    'name' => '__prom-core',
   ],
   'database' => [
     'connections' => [

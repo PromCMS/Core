@@ -2,9 +2,6 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
-use PromCMS\Core\Models\Map\FileTableMap;
-use PromCMS\Core\Models\Map\UserRoleTableMap;
-use PromCMS\Core\Models\Map\UserTableMap;
 use PromCMS\Core\Models\UserRoleQuery;
 use PromCMS\Core\Models\User;
 use PromCMS\Core\Session;
@@ -19,7 +16,7 @@ class PermissionMiddleware
 {
   private $container;
   private $loadedModels;
-  private $adminOnlyModels = [UserTableMap::TABLE_NAME, UserRoleTableMap::TABLE_NAME];
+  private $adminOnlyModels = [User::class, UserRole::class];
   private array $modelSlugToModelReference = [];
 
   public function __construct($container)
@@ -28,10 +25,10 @@ class PermissionMiddleware
     $this->loadedModels = $container->get('sysinfo')['loadedModels'];
 
     foreach ($this->loadedModels as $loadedModelClassReference) {
-      $tableMap = ($loadedModelClassReference)::TABLE_MAP;
+      // $tableMap = ($loadedModelClassReference)::TABLE_MAP;
 
 
-      $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
+      // $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
     }
   }
 

@@ -33,5 +33,4 @@ class Application extends SymfonyApplication
 
     return strpos($filePath, 'vendor') !== false;
   }
-
 }

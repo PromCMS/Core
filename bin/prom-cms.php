@@ -8,12 +8,13 @@ if (!class_exists(\Symfony\Component\Console\Application::class)) {
     foreach ($autoloadFileCandidates as $file) {
         if (file_exists($file)) {
             require_once $file;
-
+            
             break;
         }
     }
 }
 
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
 use Doctrine\ORM\Tools\Console\ConsoleRunner;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Finder\Finder;
@@ -42,6 +43,6 @@ foreach ($finder as $file) {
 
 $promApp->init(true);
 $em = $promApp->getSlimApp()->getContainer()->get(EntityManager::class);
-ConsoleRunner::addCommands($cliApp, $em);
+ConsoleRunner::addCommands($cliApp, new SingleManagerProvider($em));
 
 $cliApp->run();
