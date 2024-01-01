@@ -4,6 +4,7 @@ namespace PromCMS\Core\PromConfig;
 
 use PromCMS\Core\Models\Trait\Draftable;
 use PromCMS\Core\Models\Trait\Localized;
+use PromCMS\Core\Models\Trait\NumericId;
 use PromCMS\Core\Models\Trait\Ordable;
 use PromCMS\Core\Models\Trait\Ownable;
 use PromCMS\Core\Models\Trait\Sharable;
@@ -42,6 +43,8 @@ class Entity {
     if ($this->sharable) {
       $this->traits[] = Sharable::class;
     }
+
+    $this->traits[] = NumericId::class;
   }
 
   public function __construct(

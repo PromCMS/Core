@@ -23,7 +23,8 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 #[Mapping\PromModel(ignoreSeeding: <?php echo json_encode($entity->ignoreSeeding) ?>)]
 class <?php echo $entity->phpName ?> extends BaseModel
 {
-  <?php echo implode("\n", array_map(fn ($trait) => "use \\$trait;", $entity->traits)); ?>
+<?php echo implode("\n", array_map(fn ($trait) => "use \\$trait;", $entity->traits)); ?>
+<?php echo "\n"; ?>
 
   <?php 
   foreach ($entity->getColumns() as $column): ?>

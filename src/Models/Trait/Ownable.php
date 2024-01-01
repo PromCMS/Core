@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Models\Trait;
 
 use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\User;
 use PromCMS\Core\Models\Mapping as PromMapping;
 
 trait Ownable

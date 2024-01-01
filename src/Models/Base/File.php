@@ -15,7 +15,9 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 #[Mapping\PromModel(ignoreSeeding: true)]
 class File extends BaseModel
 {
-  use \PromCMS\Core\Models\Trait\Timestamps;
+use \PromCMS\Core\Models\Trait\Timestamps;
+use \PromCMS\Core\Models\Trait\NumericId;
+
       #[ORM\Column(
       type: 'string', 
       name: 'filename',

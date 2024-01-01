@@ -15,7 +15,9 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 #[Mapping\PromModel(ignoreSeeding: false)]
 class User extends BaseModel
 {
-  use \PromCMS\Core\Models\Trait\Timestamps;
+use \PromCMS\Core\Models\Trait\Timestamps;
+use \PromCMS\Core\Models\Trait\NumericId;
+
       #[ORM\Column(
       type: 'string', 
       unique: true,

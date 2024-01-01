@@ -15,8 +15,10 @@ use PromCMS\Core\Models\Abstract\BaseModel;
 #[Mapping\PromModel(ignoreSeeding: true)]
 class Setting extends BaseModel
 {
-  use \PromCMS\Core\Models\Trait\Timestamps;
+use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\Ownable;
+use \PromCMS\Core\Models\Trait\NumericId;
+
       #[ORM\Column(
       type: 'string', 
       unique: true,

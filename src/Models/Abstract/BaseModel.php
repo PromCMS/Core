@@ -14,12 +14,6 @@ use PromCMS\Core\PromConfig;
 
 abstract class BaseModel
 {
-  #[ORM\Id]
-  #[ORM\Column(type: 'integer')]
-  #[ORM\GeneratedValue]
-  #[PromMapping\PromModelColumn(title: 'ID', type: 'number', editable: false)]
-  private int|null $id = null;
-
   private array $cachedMetadata;
 
   /**
