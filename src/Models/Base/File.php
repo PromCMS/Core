@@ -70,7 +70,7 @@ class File extends BaseModel
       hide: 'false',
       localized: 'false'
     )]
-    private ?string $private = false;
+    private ?bool $private = false;
     
       #[ORM\Column(
       type: 'text', 

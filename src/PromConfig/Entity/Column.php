@@ -61,6 +61,7 @@ class Column {
     }
     
    return match($this->type) {
+      'boolean' => 'bool',
       'number' => 'int',
       'json' => 'array',
       'date' => '\DateTimeInterface',
