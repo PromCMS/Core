@@ -127,6 +127,11 @@ $usersModel = array_merge($defaultModel, [
       'title' => 'First name',
     ]),
     array_merge($defaultColumn, [
+      'name' => 'lastname',
+      'type' => 'string',
+      'title' => 'Last name',
+    ]),
+    array_merge($defaultColumn, [
       'name' => 'state',
       'type' => 'enum',
       'title' => 'State',

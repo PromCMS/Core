@@ -9,11 +9,11 @@ trait Timestamps
 {
   #[ORM\Column(type: 'datetime', name: 'created_at', )]
   #[PromMapping\PromModelColumn(title: 'Created at', type: 'dateTime')]
-  private \DateTimeInterface $createdAt;
+  protected \DateTimeInterface $createdAt;
 
   #[ORM\Column(type: 'datetime', name: 'updated_at', nullable: true)]
   #[PromMapping\PromModelColumn(title: 'Updated at', type: 'dateTime')]
-  private ?\DateTimeInterface $updatedAt = null;
+  protected ?\DateTimeInterface $updatedAt = null;
 
   #[ORM\PrePersist]
   #[ORM\PreUpdate]

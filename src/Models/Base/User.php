@@ -10,10 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'prom__users')]
-#[Mapping\PromModel(ignoreSeeding: false)]
-class User extends BaseModel
+abstract class User extends BaseModel
 {
 use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\NumericId;
@@ -31,7 +28,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $email;
+    protected string $email;
     
       #[ORM\Column(
       type: 'text', 
@@ -45,7 +42,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $password;
+    protected string $password;
     
       #[ORM\Column(
       type: 'string', 
@@ -59,7 +56,21 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $firstname;
+    protected string $firstname;
+    
+      #[ORM\Column(
+      type: 'string', 
+      name: 'lastname',
+      nullable: false,
+    )]
+    #[Mapping\PromModelColumn(
+      title: 'Last name', 
+      type: 'string',
+      editable: 'true',
+      hide: 'false',
+      localized: 'false'
+    )]
+    protected string $lastname;
     
       #[ORM\Column(
       type: 'string', 
@@ -74,7 +85,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private UserState $state = UserState::INVITED;
+    protected UserState $state = UserState::INVITED;
     
       #[ORM\Column(
       type: 'string', 
@@ -88,7 +99,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?\PromCMS\Core\Models\File $avatar;
+    protected ?\PromCMS\Core\Models\File $avatar;
     
       #[ORM\Column(
       type: 'string', 
@@ -102,7 +113,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?\PromCMS\Core\Models\UserRole $role;
+    protected ?\PromCMS\Core\Models\UserRole $role;
     
   
   public function __construct() {

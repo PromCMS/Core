@@ -10,10 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'prom__files')]
-#[Mapping\PromModel(ignoreSeeding: true)]
-class File extends BaseModel
+abstract class File extends BaseModel
 {
 use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\NumericId;
@@ -30,7 +27,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $filename;
+    protected string $filename;
     
       #[ORM\Column(
       type: 'string', 
@@ -44,7 +41,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $mimeType;
+    protected string $mimeType;
     
       #[ORM\Column(
       type: 'text', 
@@ -58,7 +55,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $filepath;
+    protected string $filepath;
     
       #[ORM\Column(
       type: 'boolean', 
@@ -72,7 +69,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?bool $private = false;
+    protected ?bool $private = false;
     
       #[ORM\Column(
       type: 'text', 
@@ -86,7 +83,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?string $description;
+    protected ?string $description;
     
   
   public function __construct() {

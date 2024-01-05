@@ -10,10 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'prom__user_roles')]
-#[Mapping\PromModel(ignoreSeeding: true)]
-class UserRole extends BaseModel
+abstract class UserRole extends BaseModel
 {
 use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\NumericId;
@@ -31,7 +28,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $label;
+    protected string $label;
     
       #[ORM\Column(
       type: 'array', 
@@ -45,7 +42,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?array $permissions = [];
+    protected ?array $permissions = [];
     
       #[ORM\Column(
       type: 'text', 
@@ -59,7 +56,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?string $description;
+    protected ?string $description;
     
   
   public function __construct() {

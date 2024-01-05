@@ -10,10 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'prom__general_translations')]
-#[Mapping\PromModel(ignoreSeeding: true)]
-class GeneralTranslation extends BaseModel
+abstract class GeneralTranslation extends BaseModel
 {
 use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\NumericId;
@@ -31,7 +28,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $lang;
+    protected string $lang;
     
       #[ORM\Column(
       type: 'string', 
@@ -46,7 +43,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $key;
+    protected string $key;
     
       #[ORM\Column(
       type: 'string', 
@@ -60,7 +57,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $value;
+    protected string $value;
     
   
   public function __construct() {

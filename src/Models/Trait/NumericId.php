@@ -11,5 +11,5 @@ trait NumericId
   #[ORM\Column(type: 'integer')]
   #[ORM\GeneratedValue]
   #[PromMapping\PromModelColumn(title: 'ID', type: 'number', editable: false)]
-  private int|null $id = null;
+  protected int|null $id = null;
 }

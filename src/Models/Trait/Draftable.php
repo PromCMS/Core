@@ -9,7 +9,7 @@ trait Draftable
 {
   #[ORM\Column(name: 'is_published', type: 'boolean')]
   #[PromMapping\PromModelColumn(title: 'Is published', type: 'boolean')]
-  private bool $published = false;
+  protected bool $published = false;
 
   public function publish()
   {

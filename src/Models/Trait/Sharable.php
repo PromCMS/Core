@@ -10,7 +10,7 @@ trait Sharable
 {
   #[ORM\Column(type: 'array', nullable: true)]
   #[PromMapping\PromModelColumn(title: 'Coeditors', type: 'json')]
-  private array|null $coeditors = null;
+  protected array|null $coeditors = null;
 
   public function shareWith(User $user)
   {

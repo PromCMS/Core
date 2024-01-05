@@ -18,10 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: '<?php echo $entity->tableName ?>')]
-#[Mapping\PromModel(ignoreSeeding: <?php echo json_encode($entity->ignoreSeeding) ?>)]
-class <?php echo $entity->phpName ?> extends BaseModel
+abstract class <?php echo $entity->phpName ?> extends BaseModel
 {
 <?php echo implode("\n", array_map(fn ($trait) => "use \\$trait;", $entity->traits)); ?>
 <?php echo "\n"; ?>
@@ -65,7 +62,7 @@ class <?php echo $entity->phpName ?> extends BaseModel
       hide: '<?php echo json_encode($column->hide); ?>',
       localized: '<?php echo json_encode($column->localized); ?>'
     )]
-    private <?php if (!$column->required): echo '?'; endif; ?><?php echo $column->getPhpType() ?> $<?php echo $column->name; ?><?php if ($column->defaultValue): ?> = <?php echo $column->defaultValue; endif; ?>;
+    protected <?php if (!$column->required): echo '?'; endif; ?><?php echo $column->getPhpType() ?> $<?php echo $column->name; ?><?php if ($column->defaultValue): ?> = <?php echo $column->defaultValue; endif; ?>;
     <?php echo "\n"; ?>
   <?php endforeach; ?>
 

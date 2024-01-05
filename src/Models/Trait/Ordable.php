@@ -11,7 +11,7 @@ trait Ordable
 {
   #[ORM\Column(type: 'integer', nullable: true)]
   #[PromMapping\PromModelColumn(title: 'Order', type: 'number', editable: false)]
-  private int|null $order = null;
+  protected int|null $order = null;
 
   public function getOrder(): ?int
   {

@@ -10,10 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as Mapping;
 use PromCMS\Core\Models\Abstract\BaseModel;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'prom__settings')]
-#[Mapping\PromModel(ignoreSeeding: true)]
-class Setting extends BaseModel
+abstract class Setting extends BaseModel
 {
 use \PromCMS\Core\Models\Trait\Timestamps;
 use \PromCMS\Core\Models\Trait\Ownable;
@@ -32,7 +29,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private string $name;
+    protected string $name;
     
       #[ORM\Column(
       type: 'array', 
@@ -46,7 +43,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?array $content = [];
+    protected ?array $content = [];
     
       #[ORM\Column(
       type: 'text', 
@@ -60,7 +57,7 @@ use \PromCMS\Core\Models\Trait\NumericId;
       hide: 'false',
       localized: 'false'
     )]
-    private ?string $description;
+    protected ?string $description;
     
   
   public function __construct() {
