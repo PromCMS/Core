@@ -57,7 +57,7 @@ class CreateModels extends AbstractCommand
      * {@inheritDoc}
      *
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
       $cwd = $input->getOption('cwd');
       chdir($cwd);

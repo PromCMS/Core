@@ -49,7 +49,7 @@ class CreateUser extends AbstractCommand
      * {@inheritDoc}
      *
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $email = $input->getOption('email');
         $password = $input->getOption('password');
