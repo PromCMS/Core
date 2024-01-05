@@ -53,7 +53,7 @@ class Entity {
     public readonly array $columns,
     public readonly string $namespace,
     private readonly PromConfig $promConfig,
-    public ?string $phpName,
+    public ?string $phpName = null,
     public readonly bool $timestamp = true,
     public readonly bool $sorting = false,
     public readonly bool $draftable = false,
@@ -63,6 +63,7 @@ class Entity {
     public readonly bool $ignoreSeeding = false,
     public array $admin = [],
     public readonly bool $referenceOnly = false,
+    ...$rest
   ) {
     $this->admin = array_merge_recursive([ 'isHidden' => false ], $this->admin);
     $this->phpName = $this->phpName ?? str_replace('_', '', ucwords($this->tableName, '_'));
