@@ -4,6 +4,7 @@ namespace PromCMS\Core\Bootstrap;
 
 use DI\Container;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\ORMSetup;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\PromConfig;
@@ -14,7 +15,7 @@ class Database implements AppModuleInterface
   public function run($app, Container $container)
   {
     $promConfig = $container->get(PromConfig::class);
-    $databaseConnections = array_values($promConfig->getDatabaseConnections());
+    $databaseConnections = $promConfig->getDatabaseConnections();
     $modelsPaths = [Path::join(__DIR__, '..', '..', 'src', 'Models')];
     
     if (!$promConfig->isCore) {
@@ -25,7 +26,12 @@ class Database implements AppModuleInterface
       paths: $modelsPaths,
       isDevMode: true,
     );
-    $connection = DriverManager::getConnection($databaseConnections[0], $config);
+    
+    $dsnParser = new DsnParser(['mysql' => 'mysqli', 'postgres' => 'pdo_pgsql', 'sqlite'  => 'pdo_sqlite']);
+    $connection = DriverManager::getConnection(
+      $dsnParser->parse($databaseConnections['uri']), 
+      $config
+    );
 
     $container->set(EntityManager::class, new EntityManager($connection, $config));
   }

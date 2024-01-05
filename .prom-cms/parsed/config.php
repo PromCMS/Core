@@ -236,9 +236,9 @@ return [
   ],
   'database' => [
     'connections' => [
-      'core' => [
-        'driver' => 'pdo_sqlite',
-        'path' => __DIR__ . '/database.sqlite',
+      [
+        'name' => 'core',
+        'uri' => 'pdo-sqlite:///' . __DIR__ . '/database.sqlite',
       ]
     ],
     // Models are used int real applications though
