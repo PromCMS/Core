@@ -4,11 +4,10 @@ namespace PromCMS\Core\Services;
 
 use DI\Container;
 use Exception;
-use PromCMS\Core\Config;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use PromCMS\Core\Models\Base\GeneralTranslationQuery;
 use PromCMS\Core\Models\GeneralTranslation;
-use PromCMS\Core\Models\GeneralTranslations;
+use PromCMS\Core\PromConfig;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Map\TableMap;
 
@@ -22,12 +21,12 @@ class LocalizationService
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $config = $this->container->get(
-      Config::class,
+    $promConfig = $this->container->get(
+      PromConfig::class,
     );
 
-    $this->supportedLanguages = $config->i18n->languages;
-    $this->defaultLanguage = $config->i18n->default;
+    $this->supportedLanguages = $promConfig->getProjectLanguages();
+    $this->defaultLanguage = $promConfig->getProjectDefaultLanguage();
     $this->currentLanguage = $this->defaultLanguage;
   }
 

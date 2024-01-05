@@ -102,7 +102,7 @@ class Modules implements AppModuleInterface
     ]);
 
     $routePrefix = $promConfig->getProjectUri()->getPath();
-    $supportedLanguages = $config->i18n->languages;
+    $supportedLanguages = $promConfig->getProjectLanguages();
     $coreFrontRoutes = new FrontRoutes($container);
     $coreApiRoutes = new ApiRoutes($container);
 

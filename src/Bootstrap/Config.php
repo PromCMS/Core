@@ -10,8 +10,6 @@ use PromCMS\Core\Config\Security as ConfigPart__Security;
 use PromCMS\Core\Config\SecuritySession as ConfigPart__Security__Session;
 use PromCMS\Core\Config\SecurityToken as ConfigPart__Security__Token;
 use PromCMS\Core\Config\Environment as ConfigPart__Environment;
-use PromCMS\Core\Config\Filesystem as ConfigPart__Filesystem;
-use PromCMS\Core\Config\i18n as ConfigPart__i18n;
 use PromCMS\Core\Config\System as ConfigPart__System;
 use PromCMS\Core\Config\SystemModules as ConfigPart__System__Modules;
 use PromCMS\Core\Config\SystemLogging as ConfigPart__System__Logging;
@@ -43,12 +41,6 @@ class Config implements AppModuleInterface
     $RELATIVE_LOGGING_FILEPATH = $_ENV['SYSTEM_LOGGING_PATHNAME'] ?? null;
     $IS_DEV_ENV = $APP_ENV == 'development' || $APP_ENV == 'develop';
     $DEBUG_ENABLED = $IS_DEV_ENV ? true : ($this->getEnvSafely('APP_DEBUG') ?? "false" === "true");
-    $LANGUAGES = array_filter(
-      explode(',', $_ENV['LANGUAGES'] ?? 'en'),
-      function ($item) {
-        return is_string($item) && strlen($item);
-      }
-    );
 
     $config = new AppConfig([
       'security' => new ConfigPart__Security([
@@ -64,10 +56,6 @@ class Config implements AppModuleInterface
         'development' => $IS_DEV_ENV,
         'debug' => $DEBUG_ENABLED,
         'env' => $APP_ENV,
-      ]),
-      'i18n' => new ConfigPart__i18n([
-        'default' => $LANGUAGES[0],
-        'languages' => $LANGUAGES,
       ]),
       'system' => new ConfigPart__System([
         'modules' => new ConfigPart__System__Modules([

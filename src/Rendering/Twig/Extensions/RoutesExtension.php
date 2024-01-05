@@ -3,7 +3,7 @@
 namespace PromCMS\Core\Rendering\Twig\Extensions;
 
 use DI\Container;
-use PromCMS\Core\Config;
+use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Services\RouteCollectorService;
 use Twig\Extension\AbstractExtension;
@@ -11,7 +11,7 @@ use Twig\TwigFunction;
 
 class RoutesExtension extends AbstractExtension
 {
-  private Config $config;
+  private PromConfig $promConfig;
   private Container $container;
   private LocalizationService $localizationService;
   private string $currentLanguage;
@@ -20,7 +20,7 @@ class RoutesExtension extends AbstractExtension
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->config = $this->container->get(Config::class);
+    $this->config = $this->container->get(PromConfig::class);
     $this->localizationService = $this->container->get(LocalizationService::class);
     $this->cachedTranslations = [];
   }
@@ -36,7 +36,7 @@ class RoutesExtension extends AbstractExtension
   public function urlFor(string $routeName, array $data = [], array $queryParams = []): string
     {
         $currentLanguage = $this->localizationService->getCurrentLanguage();
-        $defaultLanguage = $this->config->i18n->default;
+        $defaultLanguage = $this->promConfig->getProjectDefaultLanguage();
         $finalRoute = $this->container
           ->get(RouteCollectorService::class)
           ->getRouteParser()

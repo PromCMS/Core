@@ -58,6 +58,14 @@ class PromConfig
     return $this->getProject()['name'];
   }
 
+  public function getProjectLanguages(): array {
+    return $this->getProject()['languages'] ?? ['en'];
+  }
+
+  public function getProjectDefaultLanguage(): string {
+    return $this->getProjectLanguages()[0];
+  }
+
   public function getProjectSlug(): string|null
   {
     return $this->getProject()['slug'] ?? null;

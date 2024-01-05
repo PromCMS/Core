@@ -39,11 +39,7 @@ class TestUtils
     }
     mkdir($root);
     file_put_contents(Path::join($root, ".env"), "
-      APP_NAME=\"PromCMS Test Project\"
       APP_DEBUG=true
-      APP_URL=http://localhost:3004
-      LANGUAGE=\"en\"
-      MORE_LANG=\"cs,fr\"
       
       MAIL_HOST=\"test\"
       MAIL_PORT=2525
