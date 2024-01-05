@@ -62,4 +62,26 @@ use \PromCMS\Core\Models\Trait\NumericId;
   
   public function __construct() {
           }
-}
+
+    public function getName() {
+    return $this->name;
+  }
+  
+  public function setName(string $name) {
+    return $this->name = $name;
+  }
+  public function getContent() {
+    return $this->content;
+  }
+  
+  public function setContent(array|null $content) {
+    return $this->content = $content;
+  }
+  public function getDescription() {
+    return $this->description;
+  }
+  
+  public function setDescription(string|null $description) {
+    return $this->description = $description;
+  }
+  }

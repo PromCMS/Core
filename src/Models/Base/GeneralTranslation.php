@@ -62,4 +62,26 @@ use \PromCMS\Core\Models\Trait\NumericId;
   
   public function __construct() {
           }
-}
+
+    public function getLang() {
+    return $this->lang;
+  }
+  
+  public function setLang(string $lang) {
+    return $this->lang = $lang;
+  }
+  public function getKey() {
+    return $this->key;
+  }
+  
+  public function setKey(string $key) {
+    return $this->key = $key;
+  }
+  public function getValue() {
+    return $this->value;
+  }
+  
+  public function setValue(string $value) {
+    return $this->value = $value;
+  }
+  }

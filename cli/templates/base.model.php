@@ -72,4 +72,14 @@ abstract class <?php echo $entity->phpName ?> extends BaseModel
 $this-><?php $column->name; ?> = new Doctrine\Common\Collections\ArrayCollection();
     <?php endforeach; ?>
   }
+
+  <?php $publicColumns = $entity->getColumns() ?>
+  <?php foreach ($publicColumns as $column): ?>public function get<?php echo ucfirst($column->name) ?>() {
+    return $this-><?php echo $column->name ?>;
+  }
+  
+  public function set<?php echo ucfirst($column->name) ?>(<?php echo $column->getPhpType() ?><?php if (!$column->required): echo '|null'; endif; ?> $<?php echo $column->name ?>) {
+    return $this-><?php echo $column->name ?> = $<?php echo $column->name ?>;
+  }
+  <?php endforeach; ?>
 }

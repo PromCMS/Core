@@ -61,4 +61,26 @@ use \PromCMS\Core\Models\Trait\NumericId;
   
   public function __construct() {
           }
-}
+
+    public function getLabel() {
+    return $this->label;
+  }
+  
+  public function setLabel(string $label) {
+    return $this->label = $label;
+  }
+  public function getPermissions() {
+    return $this->permissions;
+  }
+  
+  public function setPermissions(array|null $permissions) {
+    return $this->permissions = $permissions;
+  }
+  public function getDescription() {
+    return $this->description;
+  }
+  
+  public function setDescription(string|null $description) {
+    return $this->description = $description;
+  }
+  }

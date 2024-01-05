@@ -8,7 +8,7 @@ use Symfony\Component\Filesystem\Path;
 
 class PromConfig
 {
-  private bool $isCore;
+  public bool $isCore;
   private string $coreModelsNamespace = 'PromCMS\Core\Models';
   private array $configuration = [
     'project' => [
@@ -20,7 +20,7 @@ class PromConfig
 
   private array $trailingPartOfConfigFilename = ['.prom-cms', 'parsed', 'config.php'];
 
-  public function __construct(string $applicationRoot)
+  public function __construct(readonly string $applicationRoot)
   {
     $filename = Path::join($applicationRoot, ...$this->trailingPartOfConfigFilename);
 
@@ -38,6 +38,14 @@ class PromConfig
     
     $this->coreConfiguration = require Path::join(__DIR__, '..', ...$this->trailingPartOfConfigFilename);
     $this->isCore = $this->getProjectName() === '__prom-core';
+  }
+
+  public function getProjectModuleRoot() {
+    return Path::join($this->applicationRoot, $this->getModuleFolderName());
+  }
+
+  public function getProjectModuleModelsRoot() {
+    return Path::join($this->getProjectModuleRoot(), 'Models');
   }
 
   public function getProject(): array

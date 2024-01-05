@@ -35,7 +35,7 @@ abstract class AppTestCase extends TestCase
 
     TestUtils::prepareSystemForTests(static::$testProjectRoot);
     TestUtils::ensureSession();
-    TestUtils::ensureEmptyDatabase();
+    TestUtils::ensureEmptyDatabase(static::$projectRoot);
 
     static::$app = new App(static::$testProjectRoot);
     static::$app->init(true);

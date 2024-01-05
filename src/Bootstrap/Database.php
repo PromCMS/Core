@@ -13,11 +13,16 @@ class Database implements AppModuleInterface
 {
   public function run($app, Container $container)
   {
-    $databaseConnections = array_values($container->get(PromConfig::class)->getDatabaseConnections());
+    $promConfig = $container->get(PromConfig::class);
+    $databaseConnections = array_values($promConfig->getDatabaseConnections());
+    $modelsPaths = [Path::join(__DIR__, '..', '..', 'src', 'Models')];
+    
+    if (!$promConfig->isCore) {
+      $modelsPaths[] = $promConfig->getProjectModuleModelsRoot();
+    }
 
     $config = ORMSetup::createAttributeMetadataConfiguration(
-      // TODO: load models from each module
-      paths: [Path::join(__DIR__, '..', '..', 'src', 'Models')],
+      paths: $modelsPaths,
       isDevMode: true,
     );
     $connection = DriverManager::getConnection($databaseConnections[0], $config);

@@ -102,6 +102,10 @@ class CreateModels extends AbstractCommand
         }
       }
 
+      if (!$promConfig->isCore) {
+        exec('vendor/bin/prom-cms orm:schema-tool:update --force');
+      }
+
       return $this::SUCCESS;
     }
 }

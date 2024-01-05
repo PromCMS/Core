@@ -54,10 +54,10 @@
   },
   "scripts": {
     "test": [
-      "composer run database:migrate",
       "Composer\\Config::disableProcessTimeout",
       "phpunit --testdox --stop-on-failure tests"
     ],
+    "database:migrate": "composer run cli orm:schema-tool:update",
     "cli": ["bin/prom-cms"]
   }
 }

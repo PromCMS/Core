@@ -88,4 +88,40 @@ use \PromCMS\Core\Models\Trait\NumericId;
   
   public function __construct() {
           }
-}
+
+    public function getFilename() {
+    return $this->filename;
+  }
+  
+  public function setFilename(string $filename) {
+    return $this->filename = $filename;
+  }
+  public function getMimeType() {
+    return $this->mimeType;
+  }
+  
+  public function setMimeType(string $mimeType) {
+    return $this->mimeType = $mimeType;
+  }
+  public function getFilepath() {
+    return $this->filepath;
+  }
+  
+  public function setFilepath(string $filepath) {
+    return $this->filepath = $filepath;
+  }
+  public function getPrivate() {
+    return $this->private;
+  }
+  
+  public function setPrivate(bool|null $private) {
+    return $this->private = $private;
+  }
+  public function getDescription() {
+    return $this->description;
+  }
+  
+  public function setDescription(string|null $description) {
+    return $this->description = $description;
+  }
+  }

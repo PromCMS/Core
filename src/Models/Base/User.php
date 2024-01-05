@@ -118,4 +118,54 @@ use \PromCMS\Core\Models\Trait\NumericId;
   
   public function __construct() {
           }
-}
+
+    public function getEmail() {
+    return $this->email;
+  }
+  
+  public function setEmail(string $email) {
+    return $this->email = $email;
+  }
+  public function getPassword() {
+    return $this->password;
+  }
+  
+  public function setPassword(string $password) {
+    return $this->password = $password;
+  }
+  public function getFirstname() {
+    return $this->firstname;
+  }
+  
+  public function setFirstname(string $firstname) {
+    return $this->firstname = $firstname;
+  }
+  public function getLastname() {
+    return $this->lastname;
+  }
+  
+  public function setLastname(string $lastname) {
+    return $this->lastname = $lastname;
+  }
+  public function getState() {
+    return $this->state;
+  }
+  
+  public function setState(UserState $state) {
+    return $this->state = $state;
+  }
+  public function getAvatar() {
+    return $this->avatar;
+  }
+  
+  public function setAvatar(\PromCMS\Core\Models\File|null $avatar) {
+    return $this->avatar = $avatar;
+  }
+  public function getRole() {
+    return $this->role;
+  }
+  
+  public function setRole(\PromCMS\Core\Models\UserRole|null $role) {
+    return $this->role = $role;
+  }
+  }

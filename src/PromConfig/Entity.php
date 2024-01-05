@@ -69,6 +69,14 @@ class Entity {
     $this->className = $this->namespace . '\\' . $this->phpName;
     $this->initializeTraits();
   }
+
+  /**
+   * @return array<int, Column|RelationshipColumn>
+   */
+  function getPublicColumns() {
+    return array_map(fn(Column|RelationshipColumn $column) => $column->hide, $this->getColumns());
+  }
+
   private ?array $cachedColumnsAsInstances = null;
   /**
    * @return array<int, Column|RelationshipColumn>
