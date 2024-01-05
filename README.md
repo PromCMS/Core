@@ -60,20 +60,7 @@ Every PromCMS should have secrets stored in .env. PromCMS stores known configura
 
 ### Known keys
 
-#### `APP_PREFIX`
 #### `APP_ENV`
-#### `LANGUAGES`
-
-Describe available languages in the application. The first language in the list is taken as the default one.
-
-- type: `array<string>`
-- default: `'en'`
-- example: 
-    - one language: `LANGUAGES='cs'` (isn't really necessary, default one is for cases when you decide your application needs more languages)
-    - more languages: `LANGUAGES='cs,en,de,sk'`
-
-#### `APP_NAME`
-#### `APP_URL`
 #### `SECURITY_SESSION_LIFETIME`
 #### `SECURITY_TOKEN_LIFETIME`
 #### `APP_DEBUG`
