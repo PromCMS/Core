@@ -29,7 +29,7 @@ class Database implements AppModuleInterface
     
     $dsnParser = new DsnParser(['mysql' => 'mysqli', 'postgres' => 'pdo_pgsql', 'sqlite'  => 'pdo_sqlite']);
     $connection = DriverManager::getConnection(
-      $dsnParser->parse($databaseConnections['uri']), 
+      $dsnParser->parse($databaseConnections[0]['uri']), 
       $config
     );
 
