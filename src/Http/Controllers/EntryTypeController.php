@@ -34,6 +34,16 @@ class EntryTypeController
     $this->em = $container->get(EntityManager::class);
   }
 
+  public function getInfo(
+    ServerRequestInterface $request,
+    ResponseInterface $response
+  ): ResponseInterface {
+    $entity = $request->getAttribute(Entity::class);
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
+
+    return $response;
+  }
+
   // TODO: Convert this to middleware
   private function getCurrentLanguage($request, $args)
   {

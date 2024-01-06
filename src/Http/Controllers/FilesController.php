@@ -41,7 +41,7 @@ class FilesController
     ResponseInterface $response
   ): ResponseInterface {
     $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName));
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
 
     return $response;
   }
