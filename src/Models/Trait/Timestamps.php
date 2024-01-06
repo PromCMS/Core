@@ -21,7 +21,7 @@ trait Timestamps
   {
     $this->updatedAt = new \DateTime('now');
 
-    if ($this->createdAt === null) {
+    if (empty($this->createdAt)) {
       $this->createdAt = new \DateTime('now');
     }
   }
