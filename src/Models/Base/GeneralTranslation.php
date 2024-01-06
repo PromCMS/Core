@@ -84,4 +84,8 @@ use \PromCMS\Core\Models\Trait\NumericId;
   public function setValue(string $value) {
     return $this->value = $value;
   }
+  
+  public function getId(): int|null {
+    return $this->id;
   }
+}

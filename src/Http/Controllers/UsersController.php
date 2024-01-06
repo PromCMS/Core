@@ -1,11 +1,14 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Http\WhereQueryParam;
+use PromCMS\Core\Models\Base\UserState;
 use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\UserState;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
+use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
@@ -16,7 +19,6 @@ use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Services\JWTService;
-use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -24,20 +26,25 @@ class UsersController
 {
   private $container;
   private UserService $userService;
-  private $currentUser;
+  private PromConfig $promConfig;
+  private User $currentUser;
+  private EntityManager $em;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
     $this->userService = $container->get(UserService::class);
+    $this->promConfig = $container->get(PromConfig::class);
     $this->currentUser = $container->get(Session::class)->get('user', false);
+    $this->em = $container->get(EntityManager::class);
   }
 
   public function getInfo(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    HttpUtils::prepareJsonResponse($response, User::getPromCMSMetadata());
+    $entity = $request->getAttribute(Entity::class);
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName));
 
     return $response;
   }
@@ -52,7 +59,7 @@ class UsersController
     $where = [];
 
     if (isset($queryParams['where'])) {
-      [$where] = HttpUtils::normalizeWhereQueryParam($queryParams['where']);
+      $where = new WhereQueryParam($queryParams['where']);
     }
 
     return ResponseHelper::withServerPagedResponse($response, $this->userService->getManyPaged($page, $limit, $where))->getResponse();
@@ -78,9 +85,9 @@ class UsersController
 
     try {
       $user = $this->userService->getOneById($args['itemId']);
-      $user->fromArray($parsedBody['data']);
+      $user->fill($parsedBody['data']);
 
-      HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
+      HttpUtils::prepareJsonResponse($response, $user->toArray());
 
       return $response;
     } catch (\Exception $ex) {
@@ -106,11 +113,12 @@ class UsersController
     array $args
   ): ResponseInterface {
     try {
-      // If is not admin then we will return just id and name for safety reasons
-      $currentUserIsAdmin = strval($this->currentUser->role) === '0';
-      $item = $this->userService->getOneById($args['itemId'], $currentUserIsAdmin ? [] : ['Id', 'Name']);
+      $item = $this->userService->getOneById(
+        $args['itemId'],
+        $this->currentUser->isAdmin() ? [] : ['id', 'name']
+      );
 
-      HttpUtils::prepareJsonResponse($response, $item->toArray(TableMap::TYPE_CAMELNAME));
+      HttpUtils::prepareJsonResponse($response, $item->toArray());
 
       return $response;
     } catch (\Exception $e) {
@@ -131,7 +139,7 @@ class UsersController
     if (isset($parsedBody['data']['password'])) {
       unset($parsedBody['data']['password']);
     }
-    $parsedBody['data']['state'] = UserState::$INVITED;
+    $parsedBody['data']['state'] = UserState::INVITED;
 
     // Generate random password, because user will choose their password by themselves
     $parsedBody['data']['password'] = Password::hash(
@@ -158,9 +166,9 @@ class UsersController
 
     $generatedJwt = $jwtService->generate(['id' => $user->getId()]);
 
-    $themePayload = array_merge($user->toArray(TableMap::TYPE_CAMELNAME), [
+    $themePayload = array_merge($user->toArray(), [
       'token' => $generatedJwt,
-      'app_url' => $promConfig->getProjectUri()->__toString(),
+      'app_url' => $promConfig->getProject()->url->__toString(),
     ]);
 
     try {
@@ -184,7 +192,7 @@ class UsersController
     $emailService->Body = $generatedEmailContent;
     $emailService->send();
 
-    $userAsArray = $user->toArray(TableMap::TYPE_CAMELNAME);
+    $userAsArray = $user->toArray();
 
     HttpUtils::prepareJsonResponse($response, $userAsArray);
 
@@ -196,10 +204,18 @@ class UsersController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
-    $this->userService->getOneById($args['itemId'])->delete();
+    $user = $this->userService->getOneById(intval($args['itemId']));
+
+    if ($this->currentUser->getId() === $user->getId()) {
+      return $response->withStatus(404);
+    }
+
+    $this->em->remove($user);
+    $this->em->flush();
 
     HttpUtils::prepareJsonResponse(
-      $response, []
+      $response,
+      []
     );
 
     return $response;
@@ -214,7 +230,7 @@ class UsersController
       'state' => UserState::$BLOCKED,
     ]);
 
-    $userAsArray = $updatedUser->toArray(TableMap::TYPE_CAMELNAME);
+    $userAsArray = $updatedUser->toArray();
 
     HttpUtils::prepareJsonResponse($response, $userAsArray);
 
@@ -232,12 +248,13 @@ class UsersController
       return $response->withStatus(400);
     }
 
-    $updatedUser = $user->fromArray([
+    $user->fill([
       'state' => UserState::$ACTIVE,
     ]);
-    $updatedUser->save();
 
-    HttpUtils::prepareJsonResponse($response, $updatedUser->getData());
+    $this->em->flush();
+
+    HttpUtils::prepareJsonResponse($response, $user->toArray());
 
     return $response;
   }
@@ -252,7 +269,7 @@ class UsersController
     $twigService = $this->container->get(RenderingService::class);
     $promConfig = $this->container->get(PromConfig::class);
 
-    $user = $this->userService->getOneById($args['itemId']);
+    $user = $this->userService->getOneById(intval($args['itemId']));
 
     if ($user->isBlocked()) {
       return $response->withStatus(400);
@@ -264,7 +281,7 @@ class UsersController
       'email' => $user->getEmail(),
       'id' => $user->getId(),
       'token' => $generatedJwt,
-      'app_url' => $promConfig->getProjectUri()->__toString(),
+      'app_url' => $promConfig->getProject()->url->__toString(),
     ];
 
     try {
@@ -290,15 +307,16 @@ class UsersController
     // If user is invited the this whole function is for resending whole token
     if ($user->state !== 'invited') {
       $user
-        ->fromArray([
+        ->fill([
           'state' => UserState::$PASSWORD_RESET,
-        ])
-        ->save();
+        ]);
+
+      $this->em->flush();
     }
 
     $emailService->send();
 
-    HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
+    HttpUtils::prepareJsonResponse($response, $user->toArray());
 
     return $response;
   }

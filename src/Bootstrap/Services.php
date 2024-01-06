@@ -7,21 +7,17 @@ use PromCMS\Core\Services\ImageService;
 use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Services\ModulesService;
-use PromCMS\Core\Services\PasswordService;
 use PromCMS\Core\Services\RouteCollectorService;
 use PromCMS\Core\Services\SchemaService;
-use PromCMS\Core\Services\UserRoleService;
 use PromCMS\Core\Services\UserService;
 
 class Services implements AppModuleInterface
 {
   public function run($app, $container)
   {
-    $container->set(PasswordService::class, new PasswordService());
     $container->set(JWTService::class, new JWTService($container));
     $container->set(ImageService::class, new ImageService($container));
     $container->set(FileService::class, new FileService($container));
-    $container->set(UserRoleService::class, new UserRoleService($container));
     $container->set(UserService::class, new UserService($container));
     $container->set(
       LocalizationService::class,

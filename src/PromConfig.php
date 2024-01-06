@@ -4,6 +4,9 @@ namespace PromCMS\Core;
 
 use GuzzleHttp\Psr7\Uri;
 use PromCMS\Core\PromConfig\Entity;
+use PromCMS\Core\PromConfig\Project;
+use PromCMS\Core\PromConfig\Project\Security;
+use PromCMS\Core\PromConfig\Project\Security\Roles;
 use Symfony\Component\Filesystem\Path;
 
 class PromConfig
@@ -12,11 +15,13 @@ class PromConfig
   private string $coreModelsNamespace = 'PromCMS\Core\Models';
   private array $configuration = [
     'project' => [
-      'prefix' => '',
-      'url' => 'http://localhost'
+      'url' => 'http://localhost',
+      'slug' => 'prom-core',
+      'languages' => ['en']
     ]
   ];
   private array $coreConfiguration = [];
+
 
   private array $trailingPartOfConfigFilename = ['.prom-cms', 'parsed', 'config.php'];
 
@@ -35,45 +40,48 @@ class PromConfig
     if (empty($this->configuration['database']['connections'])) {
       throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one at {$filename}");
     }
-    
+
     $this->coreConfiguration = require Path::join(__DIR__, '..', ...$this->trailingPartOfConfigFilename);
-    $this->isCore = $this->getProjectName() === '__prom-core';
+    $this->isCore = $this->configuration['project']['name'] === '__prom-core';
   }
 
-  public function getProjectModuleRoot() {
+  public function getProjectModuleRoot()
+  {
     return Path::join($this->applicationRoot, $this->getModuleFolderName());
   }
 
-  public function getProjectModuleModelsRoot() {
+  public function getProjectModuleModelsRoot()
+  {
     return Path::join($this->getProjectModuleRoot(), 'Models');
   }
 
-  public function getProject(): array
+  private Project|null $cachedProject = null;
+  public function getProject(): Project
   {
-    return $this->configuration['project'];
-  }
+    if ($this->cachedProject) {
+      return $this->cachedProject;
+    }
 
-  public function getProjectName(): string
-  {
-    return $this->getProject()['name'];
-  }
+    $this->configuration['project']['security']['roles'] = array_filter(
+      $this->configuration['project']['security']['roles'] ?? [],
+      // Make sure thats only one admin in array
+      fn($role) => $role['slug'] !== 'admin'
+    );
 
-  public function getProjectLanguages(): array {
-    return $this->getProject()['languages'] ?? ['en'];
-  }
+    $this->configuration['project']['security']['roles'][] = [
+      'label' => 'Admin',
+      'slug' => 'admin',
+      'description' => 'Main user role provided by PromCMS Core module',
+      'modelPermissions' => array_fill_keys($this->getEntityTableNames(), 'allow-all')
+    ];
 
-  public function getProjectDefaultLanguage(): string {
-    return $this->getProjectLanguages()[0];
-  }
+    $this->configuration['project']['security']['roles'] = new Roles($this->configuration['project']['security']['roles']);
+    $this->configuration['project']['security'] = new Security(...$this->configuration['project']['security']);
+    $this->configuration['project']['url'] = new Uri($this->configuration['project']['url']);
 
-  public function getProjectSlug(): string|null
-  {
-    return $this->getProject()['slug'] ?? null;
-  }
+    $this->cachedProject = new Project(...$this->configuration['project']);
 
-  public function getProjectUri(): Uri
-  {
-    return new Uri($this->getProject()['url']);
+    return $this->cachedProject;
   }
 
   public function getDatabaseConnections(): array
@@ -81,7 +89,8 @@ class PromConfig
     return $this->configuration['database']['connections'];
   }
 
-  public function getModelNamespace() {
+  public function getModelNamespace()
+  {
     if ($this->isCore) {
       return $this->coreModelsNamespace;
     }
@@ -97,7 +106,7 @@ class PromConfig
   function getEntities()
   {
     $models = $this->getDatabaseModels();
-    $singletons = $this->configuration['database']['singletons'] ?? [];
+    $singletons = $this->getDatabaseSingletons();
     $cachedTableNames = array_map(fn($entity) => $entity->tableName, $this->cachedEntities);
 
     $entities = array_merge($models, $singletons);
@@ -114,30 +123,52 @@ class PromConfig
     return $this->cachedEntities;
   }
 
-  private function getDatabaseModels() {
+  function getDatabaseModels(bool $includeCore = true)
+  {
     $models = $this->configuration['database']['models'] ?? [];
 
-    if (!$this->isCore) {
+    if (!$this->isCore && $includeCore) {
       $coreModels = array_map(function ($entity) {
         $entity['namespace'] = $this->coreModelsNamespace;
         $entity['referenceOnly'] = true;
         return $entity;
       }, $this->coreConfiguration['database']['models']);
-      $models = array_merge($models, $coreModels);
+
+      $models = array_merge($models, $coreModels ?? []);
     }
 
     return $models;
   }
 
-  function getEntity(string $entityTableName) {
+  function getDatabaseSingletons()
+  {
+    return $this->configuration['database']['singletons'] ?? [];
+  }
+
+  public function getSingletonTableNames()
+  {
+    return array_map(fn($entity) => $entity['tableName'], $this->getDatabaseSingletons());
+  }
+
+  private function getEntityTableNames()
+  {
+    return array_merge($this->getSingletonTableNames(), array_map(fn($entity) => $entity['tableName'], $this->getDatabaseModels()));
+  }
+
+  function getEntity(string $entityTableName, bool $raw = false)
+  {
     $models = $this->getDatabaseModels();
-    $singletons = $this->configuration['database']['singletons'] ?? [];
+    $singletons = $this->getDatabaseSingletons();
     $entities = array_merge($models, $singletons);
 
     foreach ($entities as $entity) {
       $tableName = $entity['tableName'];
 
       if ($tableName === $entityTableName) {
+        if ($raw) {
+          return $entity;
+        }
+
         if (!isset($this->cachedEntities[$tableName])) {
           $entity['promConfig'] = $this;
           if (empty($entity['namespace'])) {
@@ -145,7 +176,7 @@ class PromConfig
           }
           $this->cachedEntities[$tableName] = new Entity(...$entity);
         }
-        
+
         return $this->cachedEntities[$tableName];
       }
     }
@@ -153,10 +184,11 @@ class PromConfig
     return null;
   }
 
-  public function getModuleFolderName() {
-    return ucfirst(ucwords($this->getProjectSlug() ?? $this->getProjectName()));
+  public function getModuleFolderName()
+  {
+    return ucfirst(ucwords($this->configuration['project']['slug'] ?? $this->configuration['project']['name']));
   }
-  
+
   public function getTableColumns(string $tableName)
   {
     $entity = $this->getEntity($tableName);

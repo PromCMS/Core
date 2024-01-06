@@ -2,9 +2,8 @@
 
 namespace PromCMS\Core\Http;
 
+use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Http\Enums\HttpContentType;
-use Propel\Runtime\Map\TableMap;
-use Propel\Runtime\Util\PropelModelPager;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseHelper
@@ -33,7 +32,7 @@ class ResponseHelper
 
   public static function withServerPagedResponse(
     ResponseInterface &$serverResponse,
-    PropelModelPager $body,
+    Paginate $body,
     int $httpStatus = 200
   ) {
     $contentType = HttpContentType::JSON;
@@ -52,15 +51,14 @@ class ResponseHelper
     $this->contentType = $contentType;
   }
 
-  public function setPagedBody(array|PropelModelPager $body)
+  public function setPagedBody(array|Paginate $body)
   {
     if ($this->contentType !== HttpContentType::JSON) {
       throw new \Exception("Response content type must be json for paged body");
     }
 
     $itemsAsArray = [];
-
-    foreach ($body->getResults()->getData() as $item) {
+    foreach ($body->getItems() as $item) {
       if (!is_array($item)) {
         $itemsAsArray[] = $item->toArray();
 
@@ -70,15 +68,11 @@ class ResponseHelper
       return $itemsAsArray;
     }
 
-    $indexOfFirstFromResult = ($body->getPage() - 1) * $body->getMaxPerPage() + 1;
-
     $responseBody = [
       'data' => $itemsAsArray,
+      'current_page' => $body->getCurrentPage(),
       'last_page' => $body->getLastPage(),
-      'per_page' => $body->getMaxPerPage(),
-      'total' => $body->getNbResults(),
-      'from' => $indexOfFirstFromResult,
-      'to' => $indexOfFirstFromResult + count($itemsAsArray) - 1,
+      'total' => $body->getTotal(),
     ];
 
     $this->response->getBody()->write(json_encode($responseBody));

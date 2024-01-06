@@ -2,18 +2,19 @@
 
 namespace PromCMS\Core\Http\Routes;
 
+use PromCMS\Core\Http\Middleware\EntityMiddlewareMode;
 use Slim\Routing\RouteCollectorProxy as Router;
 use DI\Container;
 use PromCMS\Core\Config;
 use PromCMS\Core\Http\Middleware\AuthMiddleware;
-use PromCMS\Core\Http\Middleware\EntryTypeMiddleware;
+use PromCMS\Core\Http\Middleware\EntityMiddleware;
 use PromCMS\Core\Http\Middleware\PermissionMiddleware;
 
 class ApiRoutes implements CoreRoutes
 {
   private Container $container;
   private Config $config;
-  private static string $controllersPath = '\PromCMS\Core\Controllers';
+  private static string $controllersPath = '\PromCMS\Core\Http\Controllers';
 
   public function __construct($container)
   {
@@ -30,8 +31,8 @@ class ApiRoutes implements CoreRoutes
   function attachAllHandlers($router)
   {
     $auth = new AuthMiddleware($this->container);
-    $entryTypeMiddleware = new EntryTypeMiddleware($this->container, false);
-    $singletonMiddleware = new EntryTypeMiddleware($this->container, true);
+    $entryTypeMiddleware = new EntityMiddleware($this->container, EntityMiddlewareMode::MODEL);
+    $singletonMiddleware = new EntityMiddleware($this->container, EntityMiddlewareMode::SINGLETON);
     $permissionMiddleware = new PermissionMiddleware($this->container);
 
     // Languages

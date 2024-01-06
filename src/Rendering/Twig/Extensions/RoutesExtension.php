@@ -20,7 +20,7 @@ class RoutesExtension extends AbstractExtension
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $this->config = $this->container->get(PromConfig::class);
+    $this->promConfig = $this->container->get(PromConfig::class);
     $this->localizationService = $this->container->get(LocalizationService::class);
     $this->cachedTranslations = [];
   }

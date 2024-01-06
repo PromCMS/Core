@@ -43,7 +43,6 @@ return function (App $app) {
 
 PromCMS exposes a variety of services and objects that help you with creating your project. Each item has its own documentation page (or even PHPDoc) that you can access by clicking on each item
 
-- [`PasswordService::class`](./src/Services/PasswordService.php)
 - [`JWTService::class`](./src/Services/JWTService.php)
 - [`ImageService::class`](./src/Services/ImageService.php)
 - [`FileService::class`](./src/Services/FileService.php)

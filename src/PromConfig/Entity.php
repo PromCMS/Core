@@ -13,11 +13,13 @@ use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity\Column;
 use PromCMS\Core\PromConfig\Entity\RelationshipColumn;
 
-class Entity {
+class Entity
+{
   public string $className;
   public array $traits = [];
 
-  private function initializeTraits() {
+  private function initializeTraits()
+  {
 
     if ($this->timestamp) {
       $this->traits[] = Timestamps::class;
@@ -65,7 +67,7 @@ class Entity {
     public readonly bool $referenceOnly = false,
     ...$rest
   ) {
-    $this->admin = array_merge_recursive([ 'isHidden' => false ], $this->admin);
+    $this->admin = array_merge_recursive(['isHidden' => false], $this->admin);
     $this->phpName = $this->phpName ?? str_replace('_', '', ucwords($this->tableName, '_'));
     $this->className = $this->namespace . '\\' . $this->phpName;
     $this->initializeTraits();
@@ -74,15 +76,22 @@ class Entity {
   /**
    * @return array<int, Column|RelationshipColumn>
    */
-  function getPublicColumns() {
+  function getPublicColumns()
+  {
     return array_map(fn(Column|RelationshipColumn $column) => $column->hide, $this->getColumns());
+  }
+
+  function isSingleton()
+  {
+    return in_array($this->tableName, $this->promConfig->getSingletonTableNames());
   }
 
   private ?array $cachedColumnsAsInstances = null;
   /**
    * @return array<int, Column|RelationshipColumn>
    */
-  function getColumns() {
+  function getColumns()
+  {
     if ($this->cachedColumnsAsInstances) {
       return $this->cachedColumnsAsInstances;
     }
@@ -100,18 +109,21 @@ class Entity {
   /**
    * @return array<int, RelationshipColumn>
    */
-  function getRelationshipColumns() {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column instanceof RelationshipColumn); 
+  function getRelationshipColumns()
+  {
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column instanceof RelationshipColumn);
   }
 
   /**
    * @return array<int, Column>
    */
-  function getEnumColumns() {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->isEnumColumn()); 
+  function getEnumColumns()
+  {
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->isEnumColumn());
   }
 
-  function getLocalizedColumns() {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->localized); 
+  function getLocalizedColumns()
+  {
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->localized);
   }
 }

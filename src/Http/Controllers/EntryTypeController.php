@@ -1,43 +1,45 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
-use PromCMS\Core\Models\FileQuery;
+use Doctrine\Common\Collections\ArrayCollection;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Models\User;
+use PromCMS\Core\PromConfig;
+use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
-use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
-use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Map\TableMap;
-use Propel\Runtime\Propel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use PromCMS\Core\Config\i18n as I18nConfig;
 
 /**
  * Take care of normal models and singletons!
  */
 class EntryTypeController
 {
-  protected $currentUser;
-
-  protected I18nConfig $languageConfig;
+  protected User $currentUser;
+  protected PromConfig $promConfig;
+  protected EntityManager $em;
 
   public function __construct(Container $container)
   {
     $this->currentUser = $container->get(Session::class)->get('user', false);
-    $this->languageConfig = $container->get(Config::class)->i18n;
+    $this->promConfig = $container->get(PromConfig::class);
+    $this->em = $container->get(EntityManager::class);
   }
 
+  // TODO: Convert this to middleware
   private function getCurrentLanguage($request, $args)
   {
     $queryParams = $request->getQueryParams();
-    $nextLanguage = $this->languageConfig->default;
-    $supportedLanguages = $this->languageConfig->languages;
+    $nextLanguage = $this->promConfig->getProject()->getDefaultLanguage();
+    $supportedLanguages = $this->promConfig->getProject()->languages;
 
     if (
       isset($queryParams['lang']) &&
@@ -53,27 +55,7 @@ class EntryTypeController
     return $nextLanguage;
   }
 
-  private function isLocalizedModel(TableMap $tableMap)
-  {
-    return isset($tableMap->getBehaviors()["i18n"]);
-  }
-
-  private function isSortableModel(TableMap $tableMap)
-  {
-    return isset($tableMap->getBehaviors()["sortable"]);
-  }
-
-  private function isSharableModel(TableMap $tableMap)
-  {
-    // TODO
-    return false;
-  }
-
-  private function isModelSingleton(TableMap $tableMap)
-  {
-    return str_starts_with($tableMap::TABLE_NAME, "singleton_");
-  }
-
+  // TODO: Sharable models should have join tables for user ids
   private function filterQueryOnlyToOwners(TableMap $modelTableMap, User $currentUser, &$query)
   {
     $query->filterBy("created_by", $currentUser->getId());
@@ -82,7 +64,6 @@ class EntryTypeController
       $query
         ->_or()
         ->filterBy("coeditors.user_id", $currentUser->getId());
-
     }
   }
 
@@ -91,25 +72,26 @@ class EntryTypeController
     ResponseInterface $response,
     $args
   ): ResponseInterface {
-    $modelAsString = $request->getAttribute('model')->entry;
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $modelInstance = new $modelAsString();
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
 
-    if ($this->isLocalizedModel($modelTableMap)) {
-      $modelInstance->setLocale($this->getCurrentLanguage($request, $args));
-    }
+    // if ($this->isLocalizedModel($modelTableMap)) {
+    //   $modelInstance->setLocale($this->getCurrentLanguage($request, $args));
+    // }
 
     $parsedBody = $request->getParsedBody();
 
     try {
-      if ($this->isSharableModel($modelTableMap) && $this->currentUser) {
+      if ($entity->sharable && $this->currentUser) {
         $parsedBody['data']['created_by'] = $this->currentUser->getId();
       }
 
-      $modelInstance->fromArray($parsedBody['data']);
-      $modelInstance->save();
+      $instance = (new $entity->phpName);
+      $instance->fill($parsedBody['data']);
+      $this->em->persist($instance);
+      $this->em->flush();
 
-      HttpUtils::prepareJsonResponse($response, $modelInstance->toArray(TableMap::TYPE_CAMELNAME));
+      HttpUtils::prepareJsonResponse($response, $instance->toArray());
 
       return $response;
     } catch (\Exception $ex) {
@@ -133,38 +115,39 @@ class EntryTypeController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $query = ($request->getAttribute('model')->query)::create();
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
+    $query = $this->em->getRepository($entity->phpName);
 
-    if ($this->isLocalizedModel($modelTableMap)) {
-      $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    }
+    // if ($this->isLocalizedModel($modelTableMap)) {
+    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
+    // }
 
-    if (!$this->isModelSingleton($modelTableMap)) {
-      $query->filterById($args['itemId']);
+    if (!$entity->isSingleton()) {
+      $item = $query->find(intval($args['itemId']));
+      // $query->filterById($args['itemId']);
 
-      // TODO
-      if ($request->getAttribute('permission-only-own', false) === true) {
-        $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      }
+      // if ($request->getAttribute('permission-only-own') === true) {
+      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+      // }
+    } else {
+      $item = $query->findOneBy([]);
     }
 
     try {
-      $foundItem = $query->findOne();
-
-      if (!$foundItem) {
+      if (!$item) {
         throw new EntityNotFoundException();
       }
 
       HttpUtils::prepareJsonResponse(
         $response,
-        $foundItem->toArray(TableMap::TYPE_CAMELNAME)
+        $item->toArray()
       );
 
       return $response;
     } catch (\Exception | EntityNotFoundException $error) {
       // If it does not exist then create it
-      if ($error instanceof EntityNotFoundException) {
+      if ($error instanceof EntityNotFoundException && $entity->isSingleton()) {
         return $this->create($request, $response, $args);
       }
 
@@ -179,32 +162,33 @@ class EntryTypeController
     ResponseInterface $response,
     $args
   ): ResponseInterface {
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $query = ($request->getAttribute('model')->query)::create();
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
+    $query = $this->em->createQueryBuilder()->from($entity->phpName, 'i');
 
-    if ($this->isModelSingleton($modelTableMap)) {
+    if ($entity->isSingleton()) {
       return $response->withStatus(404);
     }
 
-    if ($this->isLocalizedModel($modelTableMap)) {
-      $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    }
+    // if ($this->isLocalizedModel($modelTableMap)) {
+    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
+    // }
 
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
 
-    // If current user can view this content
-    if ($request->getAttribute('permission-only-own', false) === true) {
-      $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    }
+    // if ($request->getAttribute('permission-only-own', false) === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
 
     // TODO - make it more dynamic
     if (isset($queryParams['orderBy_created_at'])) {
-      $query->orderBy("created_at", $queryParams['orderBy_created_at']);
+      $query->orderBy("i.created_at", $queryParams['orderBy_created_at']);
     }
+    $paginatedQuery = new Paginate($query);
 
-    return ResponseHelper::withServerPagedResponse($response, $query->paginate($page, $limit))->getResponse();
+    return ResponseHelper::withServerPagedResponse($response, $paginatedQuery->execute($page, $limit))->getResponse();
   }
 
   public function update(
@@ -212,39 +196,38 @@ class EntryTypeController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $query = ($request->getAttribute('model')->query)::create();
-
-    if ($this->isLocalizedModel($modelTableMap)) {
-      $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    }
-
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
+    $query = $this->em->getRepository($entity->phpName);
     $parsedBody = $request->getParsedBody();
 
-    if (!$this->isModelSingleton($modelTableMap)) {
-      $query->filterById($args['itemId']);
+    // if ($this->isLocalizedModel($modelTableMap)) {
+    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
+    // }
 
-      // TODO: should singletons be with permissions?
-      if ($request->getAttribute('permission-only-own', false) === true) {
-        $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      }
+    if (!$entity->isSingleton()) {
+      $item = $query->find(intval($args['itemId']));
+
+      // if ($request->getAttribute('permission-only-own', false) === true) {
+      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+      // }
+    } else {
+      $item = $query->findOneBy([]);
     }
 
-    if ($this->isSharableModel($modelTableMap) && $this->currentUser) {
+    if ($entity->sharable && $this->currentUser) {
       $parsedBody['data']['updated_by'] = $this->currentUser->getId();
     }
 
     try {
-      $foundItem = $query->findOne();
-
-      if (!$foundItem) {
+      if (!$item) {
         throw new EntityNotFoundException();
       }
 
-      $foundItem->fromArray($parsedBody['data']);
-      $foundItem->save();
+      $item->fill($parsedBody['data']);
+      $this->em->flush();
 
-      HttpUtils::prepareJsonResponse($response, $foundItem->toArray(TableMap::TYPE_CAMELNAME));
+      HttpUtils::prepareJsonResponse($response, $item->toArray());
 
       return $response;
     } catch (\Exception $ex) {
@@ -269,23 +252,25 @@ class EntryTypeController
     ResponseInterface $response,
     array $args
   ): ResponseInterface {
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $query = ($request->getAttribute('model')->query)::create();
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
+    $query = $this->em->createQueryBuilder()->delete($entity->phpName, 'i');
 
-    if ($this->isLocalizedModel($modelTableMap)) {
-      $query->joinWithI18n($this->getCurrentLanguage($request, $args));
+    // if ($this->isLocalizedModel($modelTableMap)) {
+    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
+    // }
+
+    if (!$entity->isSingleton()) {
+      $query->where("i.id", intval($args['itemId']));
+
+      // if ($request->getAttribute('permission-only-own', false) === true) {
+      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+      // }
     }
 
-    if (!$this->isModelSingleton($modelTableMap)) {
-      $query->filterById($args['itemId']);
+    $result = $query->getQuery()->execute();
 
-      // TODO
-      if ($request->getAttribute('permission-only-own', false) === true) {
-        $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      }
-    }
-
-    if (!$query->delete()) {
+    if (empty($result)) {
       HttpUtils::prepareJsonResponse($response, [], 'Failed to delete');
 
       return $response
@@ -302,17 +287,19 @@ class EntryTypeController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $modelTableMap = new($request->getAttribute('model')->map)();
-    $parsedBody = $request->getParsedBody();
-    $data = $parsedBody['data'];
-    $query = ($request->getAttribute('model')->query)::create();
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
 
-    if ($this->isModelSingleton($modelTableMap)) {
+    if ($entity->isSingleton()) {
       return $response->withStatus(404);
     }
 
+    $query = $this->em->getRepository($entity->tableName);
+    $parsedBody = $request->getParsedBody();
+    $data = $parsedBody['data'];
+
     if (
-      !$this->isSortableModel($modelTableMap) ||
+      !$entity->sorting ||
       empty($fromId = $data['fromId']) ||
       empty($toId = $data['toId']) ||
       $data['fromId'] === $data['toId']
@@ -323,19 +310,21 @@ class EntryTypeController
     $fromId = intval($fromId);
     $toId = intval($toId);
 
-    if ($request->getAttribute('permission-only-own', false) === true) {
-      $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    }
+    // if ($request->getAttribute('permission-only-own', false) === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
 
-    $results = FileQuery::create()->findById([$fromId, $toId], Criteria::IN);
+    $items = new ArrayCollection($query->findBy([
+      'id' => [$fromId, $toId]
+    ]));
 
-    if ($results->count() !== 2) {
+    if ($items->count() !== 2) {
       return $response->withStatus(400);
     }
 
-    $transactionConnection = Propel::getWriteConnection(($modelTableMap)::TABLE_NAME);
+    $this->em->getConnection()->beginTransaction();
 
-    foreach ($results as $result) {
+    foreach ($items as $result) {
       if ($result->getId() === $fromId) {
         $fromEntry = $result;
       } else {
@@ -344,21 +333,20 @@ class EntryTypeController
     }
 
     try {
-      if ($this->isSharableModel($modelTableMap) && $this->currentUser) {
+      if ($entity->sharable && $this->currentUser) {
         $fromEntry->setUpdatedBy($this->currentUser->getId());
         $toEntry->setUpdatedBy($this->currentUser->getId());
       }
 
-      $fromEntry->swapWith($toEntry);
+      $fromEntry->setOrder($toEntry);
+      $toEntry->setOrder($fromEntry);
 
-      $fromEntry->save($transactionConnection);
-      $toEntry->save($transactionConnection);
-
-      $transactionConnection->commit();
+      $this->em->flush();
+      $this->em->getConnection()->commit();
 
       HttpUtils::prepareJsonResponse($response, [], '', 'success');
     } catch (\Exception $e) {
-      $transactionConnection->rollBack();
+      $this->em->getConnection()->rollBack();
 
       return $response
         ->withStatus(500)

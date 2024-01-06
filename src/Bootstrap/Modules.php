@@ -4,7 +4,6 @@ namespace PromCMS\Core\Bootstrap;
 
 use DI\Container;
 use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\UserRole;
 use PromCMS\Core\Models\File;
 use PromCMS\Core\Models\GeneralTranslation;
 use PromCMS\Core\Models\Setting;
@@ -39,7 +38,6 @@ class Modules implements AppModuleInterface
     // array of loaded model names (names of classes)
     $coreModels = [
       User::class,
-      UserRole::class,
       File::class,
       GeneralTranslation::class,
       Setting::class
@@ -101,8 +99,8 @@ class Modules implements AppModuleInterface
       'loadedModels' => $loadedModels,
     ]);
 
-    $routePrefix = $promConfig->getProjectUri()->getPath();
-    $supportedLanguages = $promConfig->getProjectLanguages();
+    $routePrefix = $promConfig->getProject()->url->getPath();
+    $supportedLanguages = $promConfig->getProject()->languages;
     $coreFrontRoutes = new FrontRoutes($container);
     $coreApiRoutes = new ApiRoutes($container);
 

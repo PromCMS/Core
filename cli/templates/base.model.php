@@ -82,4 +82,8 @@ $this-><?php $column->name; ?> = new Doctrine\Common\Collections\ArrayCollection
     return $this-><?php echo $column->name ?> = $<?php echo $column->name ?>;
   }
   <?php endforeach; ?>
+
+  public function getId(): int|null {
+    return $this->id;
+  }
 }

@@ -1,34 +1,28 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
 use DI\Container;
-use PromCMS\Core\Database\SingletonModel;
 use PromCMS\Core\Http\ResponseHelper;
+use PromCMS\Core\PromConfig;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class SingletonsController
 {
-    private $loadedModelNames;
+    private PromConfig $promConfig;
 
     public function __construct(Container $container)
     {
-        $this->loadedModelNames = $container->get('sysinfo')['loadedModels'];
+        $this->promConfig = $container->get(PromConfig::class);
     }
 
     public function getInfo(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $collectedModelSummaries = [];
 
-        foreach ($this->loadedModelNames as $modelClassPath) {
-            if (!$modelClassPath::isSingleton()) {
-                continue;
-            }
-
-            $metadata = $modelClassPath::getPromCmsMetadata();
-
-            $collectedModelSummaries[$metadata['tableName']] = $metadata;
+        foreach ($this->promConfig->getDatabaseSingletons() as $entity) {
+            $collectedModelSummaries[$entity['tableName']] = $entity;
         }
 
         return ResponseHelper::withServerResponse($response, $collectedModelSummaries)->getResponse();

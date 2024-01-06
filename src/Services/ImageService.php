@@ -5,6 +5,7 @@ namespace PromCMS\Core\Services;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
+use PromCMS\Core\Models\File;
 use PromCMS\Core\Filesystem;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
@@ -70,17 +71,17 @@ class ImageService
     return $result;
   }
 
-  public function getProcessed(array $fileInfo, $dirtyParams = [])
+  public function getProcessed(File $file, $dirtyParams = [])
   {
     $args = $this->parseDirtyParamsToGetProcessed($dirtyParams);
-    $file = $this->fs->withUploads()->readStream($fileInfo['filepath']);
-    $fileInfo['filepath'] = Path::makeAbsolute($fileInfo['filepath'], '');
+    $fileAsStream = $this->fs->withUploads()->readStream($file->getFilepath());
+    $filepath = Path::makeAbsolute($file->getFilepath(), '');
     $fileStream = $file;
 
     if (count($args)) {
       $fileName = basename(
-        $fileInfo['filepath'],
-        '.' . pathinfo($fileInfo['filepath'], PATHINFO_EXTENSION),
+        $filepath,
+        '.' . pathinfo($filepath, PATHINFO_EXTENSION),
       );
 
       $fileNameWithArgs = implode('.', [
@@ -93,11 +94,11 @@ class ImageService
         ),
         $fileName,
       ]);
-      $transformToType = $args["f"] ?? $this->getFileTypeFromMimeType($fileInfo["mimeType"]) ?? $this->DEFAULT_IMAGE_TYPE;
+      $transformToType = $args["f"] ?? $this->getFileTypeFromMimeType($filepath) ?? $this->DEFAULT_IMAGE_TYPE;
       $fileBasenameWithArgs = "$fileNameWithArgs.$transformToType";
 
       if (!$this->fs->withCachedImages()->fileExists($fileBasenameWithArgs)) {
-        $gdImageSource = \imagecreatefromstring(stream_get_contents($file));
+        $gdImageSource = \imagecreatefromstring(stream_get_contents($fileAsStream));
 
         if (isset($args['w'])) {
           if (isset($args['h'])) {
@@ -147,7 +148,7 @@ class ImageService
       $fileStream = $this->fs->withCachedImages()->readStream($fileBasenameWithArgs);
     }
 
-    $fileId = $fileInfo['id'];
+    $fileId = $file->getId();
     $gdImageSource = \imagecreatefromstring(stream_get_contents($fileStream));
     $imageWidth = imagesx($gdImageSource);
     $imageHeight = imagesy($gdImageSource);
@@ -160,7 +161,7 @@ class ImageService
       }, array_keys($args)),
     );
 
-    $srcPrefix = $this->promConfig->getProjectUri()->__toString();
+    $srcPrefix = $this->promConfig->getProject()->url->__toString();
     $src = "api/entry-types/files/items/$fileId/raw?$joinedArgs";
 
     if (!str_ends_with($srcPrefix, "/")) {

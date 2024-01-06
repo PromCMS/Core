@@ -1,5 +1,5 @@
 <?php
-namespace PromCMS\Core\Config;
+namespace PromCMS\Core\Internal\Config;
 
 class ConfigBase
 {

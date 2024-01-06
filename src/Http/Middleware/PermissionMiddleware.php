@@ -2,11 +2,13 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
-use PromCMS\Core\Models\UserRoleQuery;
 use PromCMS\Core\Models\User;
+use PromCMS\Core\PromConfig;
+use PromCMS\Core\PromConfig\Entity;
+use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionKey;
+use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionValue;
 use PromCMS\Core\Session;
 use GuzzleHttp\Psr7\Response;
-use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -14,22 +16,13 @@ use PromCMS\Core\Utils\HttpUtils;
 
 class PermissionMiddleware
 {
-  private $container;
-  private $loadedModels;
-  private $adminOnlyModels = [User::class, UserRole::class];
-  private array $modelSlugToModelReference = [];
+  private Session $session;
+  private PromConfig $promConfig;
 
   public function __construct($container)
   {
-    $this->container = $container;
-    $this->loadedModels = $container->get('sysinfo')['loadedModels'];
-
-    foreach ($this->loadedModels as $loadedModelClassReference) {
-      // $tableMap = ($loadedModelClassReference)::TABLE_MAP;
-
-
-      // $this->modelSlugToModelReference[$tableMap::TABLE_NAME] = $loadedModelClassReference;
-    }
+    $this->session = $container->get(Session::class);
+    $this->promConfig = $container->get(PromConfig::class);
   }
 
   /**
@@ -46,78 +39,56 @@ class PermissionMiddleware
     /**
      * @var User
      */
-    $user = $this->container->get(Session::class)->get('user', false);
-    $roleId = intval($user->getRoleId());
-    $model = $request->getAttribute('model');
+    $user = $this->session->get('user', null);
+    /**
+     * @var Entity
+     */
+    $entity = $request->getAttribute(Entity::class);
 
-    if (!$model) {
+    if (!$user) {
+      throw new \Exception('Cannot run permission middleware before auth middleware');
+    }
+
+    if (!$entity) {
       throw new \Exception('Cannot run permission middleware before entry type middleware');
     }
 
+    $roleSlug = $user->getRoleSlug();
+    $role = $this->promConfig->getProject()->security->roles->getRoleBySlug($roleSlug);
+    $permissionByRequestMethod = match ($request->getMethod()) {
+      'POST' => RolePermissionOptionKey::CREATE,
+      'GET' => RolePermissionOptionKey::READ,
+      'HEAD' => RolePermissionOptionKey::READ,
+      'PATCH' => RolePermissionOptionKey::UPDATE,
+      'DELETE' => RolePermissionOptionKey::DELETE,
+      default => throw new \Exception(
+        '[permissionMiddleware]: Unexpected request method',
+      )
+    };
+    $rolePermissionOnTable = $role->getPermissionSetForModel($entity->tableName);
+    $rolePermissionOnTableValue = $rolePermissionOnTable[$permissionByRequestMethod];
 
-    // TODO we should allow setting permission on files too so it makes sense
-    // Handle any other than admin and allow manipulate files on any user
-    if ($roleId !== 0) {
-      $modelTableName = $model->map::TABLE_NAME;
-
-      if (in_array($modelTableName, $this->adminOnlyModels)) {
-        $response = new Response();
-
-        return $response
-          ->withStatus(401)
-          ->withHeader('Content-Description', 'Role not sufficient');
-      }
+    if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY) {
+      // TODO: Log this if no role has been found as that may be a missconfig on administrator side
 
       $response = new Response();
 
-      $role = UserRoleQuery::create()->findOneById($roleId)->toArray(TableMap::TYPE_CAMELNAME);
-      $role = json_decode(json_encode($role), true);
-      $modelPermissions = $role['permissions']['models'][$modelTableName];
+      HttpUtils::prepareJsonResponse(
+        $response,
+        [],
+        'Your user role is not sufficient',
+        'role-not-sufficient',
+      );
 
-      $requestMethod = $request->getMethod();
-      // 'allow-everything' | 'allow-own' | false
-      $requestPermissionValue = false;
-
-      if (isset($modelPermissions)) {
-        switch ($requestMethod) {
-          case 'POST':
-            $requestPermissionValue = $modelPermissions['c'];
-            break;
-          case 'GET':
-            $requestPermissionValue = $modelPermissions['r'];
-            break;
-          case 'PATCH':
-            $requestPermissionValue = $modelPermissions['u'];
-            break;
-          case 'DELETE':
-            $requestPermissionValue = $modelPermissions['d'];
-            break;
-          default:
-            throw new \Exception(
-              '[permissionMiddleware]: Unexpected request method',
-            );
-        }
-
-        $request = $request->withAttribute(
-          'permission-only-own',
-          $requestPermissionValue === 'allow-own',
-        );
-      }
-
-      // If there is not yet set permission then we assume that user does not have access to this
-      if ($requestPermissionValue === false) {
-        HttpUtils::prepareJsonResponse(
-          $response,
-          [],
-          'Your user role is not sufficient',
-          'role-not-sufficient',
-        );
-
-        return $response
-          ->withStatus(401)
-          ->withHeader('Content-Description', 'role not sufficient');
-      }
+      return $response
+        ->withStatus(401)
+        ->withHeader('Content-Description', 'Role not sufficient');
     }
+
+    $request = $request->withAttribute(
+      'permission-only-own',
+      $rolePermissionOnTableValue === RolePermissionOptionValue::ALLOW_OWN
+    );
 
     return $handler->handle($request);
   }

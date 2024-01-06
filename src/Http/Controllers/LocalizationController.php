@@ -1,11 +1,12 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\LocalizationService;
 use DI\Container;
-use PromCMS\Core\Utils\HttpUtils;;
+use PromCMS\Core\Utils\HttpUtils;
+;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

@@ -1,28 +1,28 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
 use PromCMS\Core\Filesystem;
+use PromCMS\Core\Http\WhereQueryParam;
+use PromCMS\Core\PromConfig;
+use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
-use PromCMS\Core\Config;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
 
 use PromCMS\Core\Services\FileService;
-use PromCMS\Core\Models\File;
 use PromCMS\Core\Services\ImageService;
-use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class FilesController
 {
   private $container;
-  private Config $config;
+  private PromConfig $promConfig;
   private Filesystem $fs;
   private FileService $fileService;
   private ImageService $imageService;
@@ -33,14 +33,15 @@ class FilesController
     $this->fs = $container->get(Filesystem::class);
     $this->fileService = $container->get(FileService::class);
     $this->imageService = $container->get(ImageService::class);
-    $this->config = $container->get(Config::class);
+    $this->promConfig = $container->get(PromConfig::class);
   }
 
   public function getInfo(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    HttpUtils::prepareJsonResponse($response, File::getPromCMSMetadata());
+    $entity = $request->getAttribute(Entity::class);
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName));
 
     return $response;
   }
@@ -53,7 +54,7 @@ class FilesController
     try {
       HttpUtils::prepareJsonResponse(
         $response,
-        $this->fileService->getById($args['itemId'])->getData(),
+        $this->fileService->getById($args['itemId'])->toArray(),
       );
 
       return $response;
@@ -76,7 +77,7 @@ class FilesController
     $where = [];
 
     if (isset($queryParams['where'])) {
-      [$where] = HttpUtils::normalizeWhereQueryParam($queryParams['where']);
+      $where = new WhereQueryParam($queryParams['where']);
     }
 
     if (!empty($queryParams['path'])) {
@@ -108,13 +109,13 @@ class FilesController
 
       if (preg_match('/image\/.*/', $fileInfo->getMimeType())) {
         $imageResource = $this->imageService->getProcessed(
-          $fileInfo->getData(),
+          $fileInfo,
           $queryParams,
         );
         $stream = new Stream($imageResource['resource']);
         $responseMimeType = mime_content_type($imageResource['resource']);
       } else {
-        $stream = $this->fileService->getStream($fileInfo->getData());
+        $stream = $this->fileService->getStream($fileInfo);
       }
 
       return $response
@@ -168,7 +169,7 @@ class FilesController
       $data = $queryParams ? $queryParams : [];
       $createdFile = $this->fileService->create($file, $data);
 
-      HttpUtils::prepareJsonResponse($response, $createdFile->toArray(TableMap::TYPE_CAMELNAME));
+      HttpUtils::prepareJsonResponse($response, $createdFile->toArray());
     } catch (\Exception $e) {
       return $response
         ->withStatus(500)
@@ -186,7 +187,7 @@ class FilesController
     $parsedBody = $request->getParsedBody();
     $updatedFile = $this->fileService->updateById($args['itemId'], $parsedBody['data']);
 
-    HttpUtils::prepareJsonResponse($response, $updatedFile->toArray(TableMap::TYPE_CAMELNAME));
+    HttpUtils::prepareJsonResponse($response, $updatedFile->toArray());
 
     return $response;
   }

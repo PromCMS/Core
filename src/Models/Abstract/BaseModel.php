@@ -2,8 +2,8 @@
 
 namespace PromCMS\Core\Models\Abstract;
 
-use PromCMS\Core\Models\Mapping as PromMapping;
 use Doctrine\ORM\Mapping as ORM;
+use PromCMS\Core\Models\Mapping\PromModelColumn;
 use PromCMS\Core\Models\Trait\Draftable;
 use PromCMS\Core\Models\Trait\Localized;
 use PromCMS\Core\Models\Trait\Ordable;
@@ -50,5 +50,68 @@ abstract class BaseModel
     ];
 
     return $this->cachedMetadata = $metadata;
+  }
+
+  /**
+   * @return array<string, \ReflectionProperty>
+   */
+  private function getPromFields()
+  {
+    $ref = new \ReflectionClass(static::class);
+    $propers = $ref->getProperties();
+    $res = [];
+
+    /**
+     * @var \ReflectionProperty  $proper
+     */
+    foreach ($propers as $proper) {
+      /**
+       * @var \ReflectionAttribute  $attr
+       */
+      if (!empty($proper->getAttributes(PromModelColumn::class)[0])) {
+        $res[$proper->getName()] = $proper;
+      }
+    }
+
+    return $res;
+  }
+
+  public function toArray()
+  {
+    $propers = $this->getPromFields();
+    $res = [];
+
+    foreach ($propers as $proper) {
+      $attr = $proper->getAttributes(PromModelColumn::class)[0];
+      $info = new PromModelColumn(...$attr->getArguments());
+
+      if (!$info->hide) {
+        $value = $this->${$proper->getName()};
+        $res[$proper->getName()] = $value;
+      }
+    }
+
+    return $res;
+  }
+
+  public function fill(array $values)
+  {
+    $propers = $this->getPromFields();
+    $incommingValuesAsKeys = array_keys($values);
+
+    foreach ($propers as $propertyName => $proper) {
+      if (!in_array($propertyName, $incommingValuesAsKeys)) {
+        continue;
+      }
+
+      $attr = $proper->getAttributes(PromModelColumn::class)[0];
+      $info = new PromModelColumn(...$attr->getArguments());
+
+      if ($info->editable) {
+        $this->${$propertyName} = $values[$propertyName];
+      }
+    }
+
+    return $this;
   }
 }

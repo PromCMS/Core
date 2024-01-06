@@ -1,8 +1,11 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
-use PromCMS\Core\Models\UserState;
+use Doctrine\ORM\QueryBuilder;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Models\Base\UserState;
+use PromCMS\Core\Models\User;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
@@ -14,22 +17,24 @@ use PromCMS\Core\Utils\HttpUtils;
 
 use PromCMS\Core\Mailer;
 use PromCMS\Core\Services\JWTService;
-use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class UserProfileController
 {
   private $container;
-  private $jwt;
+  private JWTService $jwt;
   private UserService $userService;
+  private EntityManager $em;
+  private QueryBuilder $qb;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
     $this->jwt = $container->get(JWTService::class);
     $this->userService = $container->get(UserService::class);
+    $this->em = $container->get(EntityManager::class);
+    $this->qb = $container->get(QueryBuilder::class);
   }
 
   public function getCurrent(
@@ -85,7 +90,7 @@ class UserProfileController
         }
 
         $this->container->get(Session::class)->set('user_id', $user->getId());
-        $responseAry['data'] = $user->toArray(TableMap::TYPE_CAMELNAME);
+        $responseAry['data'] = $user->toArray();
         $responseAry['result'] = 'success';
         $responseAry['message'] = 'successfully logged in';
         $code = 200;
@@ -111,6 +116,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
+    /** @var User */
     $user = $this->container->get(Session::class)->get('user');
     $parsedBody = $request->getParsedBody();
 
@@ -136,10 +142,10 @@ class UserProfileController
       unset($data['state']);
     }
 
-    $user->fromArray($data);
-    $user->save();
+    $user->fill($data);
+    $this->em->flush();
 
-    HttpUtils::prepareJsonResponse($response, $user->toArray(TableMap::TYPE_CAMELNAME));
+    HttpUtils::prepareJsonResponse($response, $user->toArray());
 
     return $response;
   }
@@ -172,10 +178,12 @@ class UserProfileController
     }
 
     try {
-      $user = $this->userService->findOneBy([
-        'email' => [$params['email'], Criteria::EQUAL],
-        'state' => ['blocked', Criteria::NOT_EQUAL]
-      ]);
+      $user = $this->userService->findOneBy(
+        $this->qb->expr()->andX(
+          $this->qb->expr()->eq('u.email', $params['email']),
+          $this->qb->expr()->not($this->qb->expr()->eq('u.state', UserState::BLOCKED))
+        )
+      );
     } catch (\Exception $e) {
       // We did not find user on provided email, but we do not want to let user know about it since we do not want to expose anything to public
       return $response;
@@ -187,7 +195,7 @@ class UserProfileController
       'email' => $user->email,
       'id' => $user->id,
       'token' => $generatedJwt,
-      'app_url' => $promConfig->getProjectUri()->__toString(),
+      'app_url' => $promConfig->getProject()->url->__toString(),
     ];
 
     try {
@@ -210,8 +218,7 @@ class UserProfileController
     $emailService->Subject = 'Password reset';
     $emailService->Body = $generatedEmailContent;
 
-    // User should be supposed to be in this state
-    $user->update([
+    $this->userService->updateById($user->getId(), [
       'state' => UserState::$PASSWORD_RESET,
     ]);
 
@@ -252,10 +259,10 @@ class UserProfileController
       return $response->withStatus(401);
     }
 
-    // Now everything is ok and we can update user password
-    $user->update([
+    $this->userService->updateById($user->getId(), [
       'password' => Password::hash($newPassword),
     ]);
+
 
     // TODO: Send email that notifies about password change
 
@@ -286,7 +293,7 @@ class UserProfileController
       return $response->withStatus(404);
     }
 
-    $user->update([
+    $this->userService->updateById($user->getId(), [
       'password' => Password::hash($newPassword),
       'state' => UserState::$ACTIVE,
     ]);

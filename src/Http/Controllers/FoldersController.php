@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Controllers;
+namespace PromCMS\Core\Http\Controllers;
 
 use DI\Container;
 use League\Flysystem\DirectoryListing;

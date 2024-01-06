@@ -1,5 +1,5 @@
 <?php
-namespace PromCMS\Core\Config;
+namespace PromCMS\Core\Internal\Config;
 
 final class Environment extends ConfigBase
 {

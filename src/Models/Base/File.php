@@ -124,4 +124,8 @@ use \PromCMS\Core\Models\Trait\NumericId;
   public function setDescription(string|null $description) {
     return $this->description = $description;
   }
+  
+  public function getId(): int|null {
+    return $this->id;
   }
+}

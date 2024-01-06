@@ -6,13 +6,13 @@ use PromCMS\Core\PromConfig;
 use Symfony\Component\Dotenv\Dotenv;
 
 use PromCMS\Core\Config as AppConfig;
-use PromCMS\Core\Config\Security as ConfigPart__Security;
-use PromCMS\Core\Config\SecuritySession as ConfigPart__Security__Session;
-use PromCMS\Core\Config\SecurityToken as ConfigPart__Security__Token;
-use PromCMS\Core\Config\Environment as ConfigPart__Environment;
-use PromCMS\Core\Config\System as ConfigPart__System;
-use PromCMS\Core\Config\SystemModules as ConfigPart__System__Modules;
-use PromCMS\Core\Config\SystemLogging as ConfigPart__System__Logging;
+use PromCMS\Core\Internal\Config\Security as ConfigPart__Security;
+use PromCMS\Core\Internal\Config\SecuritySession as ConfigPart__Security__Session;
+use PromCMS\Core\Internal\Config\SecurityToken as ConfigPart__Security__Token;
+use PromCMS\Core\Internal\Config\Environment as ConfigPart__Environment;
+use PromCMS\Core\Internal\Config\System as ConfigPart__System;
+use PromCMS\Core\Internal\Config\SystemModules as ConfigPart__System__Modules;
+use PromCMS\Core\Internal\Config\SystemLogging as ConfigPart__System__Logging;
 use Symfony\Component\Filesystem\Path;
 
 class Config implements AppModuleInterface

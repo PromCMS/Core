@@ -3,8 +3,6 @@
 use DI\Container;
 use PromCMS\Core\App;
 use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\UserState;
-use PromCMS\Core\Services\PasswordService;
 use PromCMS\Tests\AppTestCase;
 
 final class UserRoutesTest extends AppTestCase

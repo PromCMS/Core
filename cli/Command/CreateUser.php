@@ -64,7 +64,7 @@ class CreateUser extends AbstractCommand
             'password' => Password::hash($password),
             'state' => 'active',
             'name' => $name,
-            'role' => 0
+            'role' => 'admin'
         ]);
         $createdUserEmail = $createdUser->getEmail();
 

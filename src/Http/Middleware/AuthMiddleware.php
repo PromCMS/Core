@@ -56,8 +56,6 @@ class AuthMiddleware
         // User does not exist hence the session destroy
         $this->container->get(Session::class)::destroy();
 
-        echo $e;
-
         HttpUtils::prepareJsonResponse(
           $response,
           [],

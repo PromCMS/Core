@@ -8,16 +8,12 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Models\Mapping as PromMapping;
 
 #[ORM\Entity, ORM\Table(name: 'prom__users'), PromMapping\PromModel(ignoreSeeding: false)]
-class User extends Base\User {
-    // static function getPrivateFields(): array
+class User extends Base\User
+{
+  // static function getPrivateFields(): array
   // {
   //   return array_merge(static::$privateFields, array_map(fn($item) => ucfirst($item), static::$privateFields));
   // }
-
-  public function getId(): int|null
-  {
-    return $this->id;
-  }
 
   public function getName(): string
   {
@@ -52,5 +48,10 @@ class User extends Base\User {
     }
 
     return Password::check($checkAgainst, $userPassword);
+  }
+
+  public function isAdmin(): bool
+  {
+    return $this->getRoleSlug() === 'admin';
   }
 }
