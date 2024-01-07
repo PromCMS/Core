@@ -10,7 +10,7 @@ use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use PromCMS\Core\Http\WhereQueryParam;
-use PromCMS\Core\Models\User;
+use PromCMS\Core\Database\Models\User;
 
 
 class UserService

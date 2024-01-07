@@ -2,13 +2,13 @@
 
 namespace PromCMS\Core\PromConfig;
 
-use PromCMS\Core\Models\Trait\Draftable;
-use PromCMS\Core\Models\Trait\Localized;
-use PromCMS\Core\Models\Trait\NumericId;
-use PromCMS\Core\Models\Trait\Ordable;
-use PromCMS\Core\Models\Trait\Ownable;
-use PromCMS\Core\Models\Trait\Sharable;
-use PromCMS\Core\Models\Trait\Timestamps;
+use PromCMS\Core\Database\Models\Trait\Draftable;
+use PromCMS\Core\Database\Models\Trait\Localized;
+use PromCMS\Core\Database\Models\Trait\NumericId;
+use PromCMS\Core\Database\Models\Trait\Ordable;
+use PromCMS\Core\Database\Models\Trait\Ownable;
+use PromCMS\Core\Database\Models\Trait\Sharable;
+use PromCMS\Core\Database\Models\Trait\Timestamps;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity\Column;
 use PromCMS\Core\PromConfig\Entity\RelationshipColumn;

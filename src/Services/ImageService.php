@@ -5,7 +5,7 @@ namespace PromCMS\Core\Services;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
-use PromCMS\Core\Models\File;
+use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\Filesystem;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;

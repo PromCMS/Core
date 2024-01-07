@@ -1,10 +1,10 @@
 <?php
 
-namespace PromCMS\Core\Models\Trait;
+namespace PromCMS\Core\Database\Models\Trait;
 
 use Exception;
 use PromCMS\Core\Database\EntityManager;
-use PromCMS\Core\Models\Mapping as PromMapping;
+use PromCMS\Core\Database\Models\Mapping as PromMapping;
 use Doctrine\ORM\Mapping as ORM;
 
 trait Ordable

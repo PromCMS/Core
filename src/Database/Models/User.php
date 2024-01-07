@@ -1,11 +1,11 @@
 <?php
 
-namespace PromCMS\Core\Models;
+namespace PromCMS\Core\Database\Models;
 
-use PromCMS\Core\Models\Base\UserState;
+use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Password;
 use Doctrine\ORM\Mapping as ORM;
-use PromCMS\Core\Models\Mapping as PromMapping;
+use PromCMS\Core\Database\Models\Mapping as PromMapping;
 
 #[ORM\Entity, ORM\Table(name: 'prom__users'), PromMapping\PromModel(ignoreSeeding: false), ORM\HasLifecycleCallbacks]
 class User extends Base\User

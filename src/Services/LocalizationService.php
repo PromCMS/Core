@@ -7,7 +7,7 @@ use Doctrine\ORM\QueryBuilder;
 use Exception;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
-use PromCMS\Core\Models\GeneralTranslation;
+use PromCMS\Core\Database\Models\GeneralTranslation;
 use PromCMS\Core\PromConfig;
 
 class LocalizationService

@@ -70,7 +70,7 @@ class CreateModels extends AbstractCommand
     $modelsRoot = Path::join($cwd, 'Modules', $promConfig->getModuleFolderName(), 'Models');
 
     if (!Application::isBeingRunInsideApp()) {
-      $modelsRoot = Path::join($cwd, 'src', 'Models');
+      $modelsRoot = Path::join($cwd, 'src', 'Database', 'Models');
     }
 
     $entities = $promConfig->getEntities();

@@ -5,7 +5,7 @@ namespace PromCMS\Core\Internal\Http\Controllers;
 use Doctrine\Common\Collections\ArrayCollection;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
-use PromCMS\Core\Models\User;
+use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Session;

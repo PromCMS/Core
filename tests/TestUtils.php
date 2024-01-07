@@ -6,7 +6,7 @@ namespace PromCMS\Tests;
 
 use PromCMS\Core\App;
 use PromCMS\Core\Database\EntityManager;
-use PromCMS\Core\Models\User;
+use PromCMS\Core\Database\Models\User;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 

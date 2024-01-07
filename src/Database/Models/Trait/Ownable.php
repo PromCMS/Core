@@ -1,10 +1,10 @@
 <?php
 
-namespace PromCMS\Core\Models\Trait;
+namespace PromCMS\Core\Database\Models\Trait;
 
 use Doctrine\ORM\Mapping as ORM;
-use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\Mapping as PromMapping;
+use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Database\Models\Mapping as PromMapping;
 
 trait Ownable
 {

@@ -14,7 +14,7 @@ use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Filesystem;
 use GuzzleHttp\Psr7\Stream;
 use PromCMS\Core\Http\WhereQueryParam;
-use PromCMS\Core\Models\File;
+use PromCMS\Core\Database\Models\File;
 use Symfony\Component\Filesystem\Path;
 
 class FileService

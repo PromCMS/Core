@@ -18,7 +18,7 @@ class Logging implements AppModuleInterface
     $config = $container->get(Config::class);
     /** @var PromConfig */
     $promConfig = $container->get(PromConfig::class);
-    $logger = new Logger($promConfig->getProjectName());
+    $logger = new Logger($promConfig->getProject()->name);
 
     if (!empty($config->system->logging->logFilepath)) {
       $logger->pushFileHandler($config->system->logging->logFilepath);

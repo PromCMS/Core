@@ -2,7 +2,7 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
-use PromCMS\Core\Models\User;
+use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionKey;

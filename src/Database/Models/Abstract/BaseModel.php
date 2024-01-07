@@ -1,15 +1,15 @@
 <?php
 
-namespace PromCMS\Core\Models\Abstract;
+namespace PromCMS\Core\Database\Models\Abstract;
 
 use Doctrine\ORM\Mapping as ORM;
-use PromCMS\Core\Models\Mapping\PromModelColumn;
-use PromCMS\Core\Models\Trait\Draftable;
-use PromCMS\Core\Models\Trait\Localized;
-use PromCMS\Core\Models\Trait\Ordable;
-use PromCMS\Core\Models\Trait\Ownable;
-use PromCMS\Core\Models\Trait\Sharable;
-use PromCMS\Core\Models\Trait\Timestamps;
+use PromCMS\Core\Database\Models\Mapping\PromModelColumn;
+use PromCMS\Core\Database\Models\Trait\Draftable;
+use PromCMS\Core\Database\Models\Trait\Localized;
+use PromCMS\Core\Database\Models\Trait\Ordable;
+use PromCMS\Core\Database\Models\Trait\Ownable;
+use PromCMS\Core\Database\Models\Trait\Sharable;
+use PromCMS\Core\Database\Models\Trait\Timestamps;
 use PromCMS\Core\PromConfig;
 
 abstract class BaseModel

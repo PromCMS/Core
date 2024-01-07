@@ -3,10 +3,10 @@
 namespace PromCMS\Core\Internal\Bootstrap;
 
 use DI\Container;
-use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\File;
-use PromCMS\Core\Models\GeneralTranslation;
-use PromCMS\Core\Models\Setting;
+use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Database\Models\File;
+use PromCMS\Core\Database\Models\GeneralTranslation;
+use PromCMS\Core\Database\Models\Setting;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\RenderingService;

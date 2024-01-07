@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PromCMS\Core\Models\Mapping;
+namespace PromCMS\Core\Database\Models\Mapping;
 
 use Attribute;
 

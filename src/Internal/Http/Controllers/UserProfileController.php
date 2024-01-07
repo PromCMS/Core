@@ -4,8 +4,8 @@ namespace PromCMS\Core\Internal\Http\Controllers;
 
 use Doctrine\ORM\QueryBuilder;
 use PromCMS\Core\Database\EntityManager;
-use PromCMS\Core\Models\Base\UserState;
-use PromCMS\Core\Models\User;
+use PromCMS\Core\Database\Models\Base\UserState;
+use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;

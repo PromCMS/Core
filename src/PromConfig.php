@@ -12,7 +12,7 @@ use Symfony\Component\Filesystem\Path;
 class PromConfig
 {
   public bool $isCore;
-  private string $coreModelsNamespace = 'PromCMS\Core\Models';
+  private string $coreModelsNamespace = 'PromCMS\Core\Database\Models';
   private array $configuration = [
     'project' => [
       'url' => 'http://localhost',

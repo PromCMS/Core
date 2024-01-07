@@ -19,7 +19,7 @@ class Database implements AppModuleInterface
   {
     $promConfig = $container->get(PromConfig::class);
     $databaseConnections = $promConfig->getDatabaseConnections();
-    $modelsPaths = [Path::join(__DIR__, '..', '..', 'src', 'Models')];
+    $modelsPaths = [Path::join(__DIR__, '..', '..', '..', 'src', 'Database', 'Models')];
 
     if (!$promConfig->isCore) {
       $modelsPaths[] = $promConfig->getProjectModuleModelsRoot();
