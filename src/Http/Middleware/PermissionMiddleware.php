@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Http\Middleware;
 
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionKey;
@@ -19,11 +20,13 @@ class PermissionMiddleware
 {
   private Session $session;
   private PromConfig $promConfig;
+  private Logger $logger;
 
   public function __construct($container)
   {
     $this->session = $container->get(Session::class);
     $this->promConfig = $container->get(PromConfig::class);
+    $this->logger = $container->get(Logger::class);
   }
 
   /**
@@ -46,7 +49,8 @@ class PermissionMiddleware
       throw new \Exception('Cannot run permission middleware before auth middleware');
     }
 
-    $modelIdParam = RouteContext::fromRequest($request)->getRoute()->getArgument('modelId');
+    $route = RouteContext::fromRequest($request)->getRoute();
+    $modelIdParam = $route->getArgument('modelId');
 
     // For viewing roles you just need to be logged in, managing roles d
     if (in_array($modelIdParam, ['user-roles', 'userRoles', 'prom__user_roles'])) {
@@ -78,7 +82,15 @@ class PermissionMiddleware
     $rolePermissionOnTableValue = $rolePermissionOnTable[$permissionByRequestMethod];
 
     if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY->value) {
-      // TODO: Log this if no role has been found as that may be a missconfig on administrator side
+      if (!$role) {
+        $this->logger->error("User logged in, but role under slug $roleSlug could not be found. Please check your config or change user role", [
+          'entity' => $entity->phpName,
+          'route' => $route->getPattern(),
+          'user' => [
+            'id' => $user->getId(),
+          ]
+        ]);
+      }
 
       $response = new Response();
 

@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Http\Middleware;
 
 use DI\Container;
+use PromCMS\Core\Logger;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -63,7 +64,9 @@ class AuthMiddleware
           'not-logged-in',
         );
 
-        // TODO: Log this as this is unwanted exception
+        $this->container->get(Logger::class)->error("Failed to get user in auth middleware, but session has user_id", [
+          'error' => $e
+        ]);
 
         return $response
           // TODO here should be different status code

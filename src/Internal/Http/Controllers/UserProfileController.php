@@ -2,10 +2,10 @@
 
 namespace PromCMS\Core\Internal\Http\Controllers;
 
-use Doctrine\ORM\QueryBuilder;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Logger;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
@@ -25,10 +25,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class UserProfileController
 {
-  private $container;
+  private Container $container;
   private JWTService $jwt;
   private UserService $userService;
   private EntityManager $em;
+  private Logger $logger;
 
   public function __construct(Container $container)
   {
@@ -36,6 +37,7 @@ class UserProfileController
     $this->jwt = $container->get(JWTService::class);
     $this->userService = $container->get(UserService::class);
     $this->em = $container->get(EntityManager::class);
+    $this->logger = $container->get(Logger::class);
   }
 
   private function getQb()
@@ -101,6 +103,15 @@ class UserProfileController
         $responseAry['message'] = 'successfully logged in';
         $code = 200;
       } catch (\Exception $e) {
+        if (str_contains($e->getMessage(), 'does not have any password')) {
+          $this->logger->error('User does not have any password and we prevented their log in, please check this in database', [
+            'error' => $e,
+            'user' => [
+              'id' => $user->getId()
+            ]
+          ]);
+        }
+
         if ($userCannotLoginBecauseOfState) {
           $responseAry['result'] = 'error';
           $responseAry['message'] = 'user cannot login';

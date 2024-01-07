@@ -44,7 +44,6 @@ class User extends Base\User
     $userPassword = $this->password;
 
     if (!$userPassword) {
-      // Log this!
       throw new \Exception('Cannot check password because user does not have any password');
     }
 
