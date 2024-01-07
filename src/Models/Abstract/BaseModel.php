@@ -108,7 +108,7 @@ abstract class BaseModel
       $info = new PromModelColumn(...$attr->getArguments());
 
       if ($info->editable) {
-        $this->${$propertyName} = $values[$propertyName];
+        $this->{$propertyName} = $values[$propertyName];
       }
     }
 

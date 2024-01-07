@@ -41,7 +41,7 @@ class FilesController
     ResponseInterface $response
   ): ResponseInterface {
     $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
 
     return $response;
   }
@@ -74,7 +74,7 @@ class FilesController
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
-    $where = [];
+    $where = null;
 
     if (isset($queryParams['where'])) {
       $where = new WhereQueryParam($queryParams['where']);

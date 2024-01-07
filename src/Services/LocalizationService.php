@@ -17,7 +17,6 @@ class LocalizationService
   private string $defaultLanguage;
   private string $currentLanguage;
   private EntityManager $em;
-  private QueryBuilder $qb;
 
   public function __construct(Container $container)
   {
@@ -30,12 +29,16 @@ class LocalizationService
     $this->defaultLanguage = $promConfig->getProject()->getDefaultLanguage();
     $this->currentLanguage = $this->defaultLanguage;
     $this->em = $container->get(EntityManager::class);
-    $this->qb = $this->em->createQueryBuilder();
   }
 
   function languageIsSupported($lang)
   {
     return in_array($lang, $this->supportedLanguages);
+  }
+
+  private function createQb()
+  {
+    return $this->em->createQueryBuilder();
   }
 
   /**
@@ -44,6 +47,7 @@ class LocalizationService
   function getTranslations($language, $includeUnknown = false)
   {
     $r = $this->em->getRepository(GeneralTranslation::class);
+    $qb = $this->createQb();
     $localizations = $r
       ->findBy(
         [
@@ -63,8 +67,8 @@ class LocalizationService
     }
 
     if ($includeUnknown) {
-      $otherTranslations = $this->qb->from(GeneralTranslation::class, 't')
-        ->where($this->qb->expr()->notIn('t.key', array_keys($items)))
+      $otherTranslations = $qb->from(GeneralTranslation::class, 't')->select('t')
+        ->where($qb->expr()->notIn('t.key', array_keys($items)))
         ->getQuery()
         ->execute();
 
@@ -142,7 +146,7 @@ class LocalizationService
 
   function deleteTranslationKey($key)
   {
-    $this->qb->delete(GeneralTranslation::class, 't')->where('t.key = :key')->setParameter('key', $key)->getQuery()->execute();
+    $this->createQb()->delete(GeneralTranslation::class, 't')->where('t.key = :key')->setParameter('key', $key)->getQuery()->execute();
 
     return true;
   }

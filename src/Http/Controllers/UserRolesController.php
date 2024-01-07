@@ -6,7 +6,6 @@ use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\PromConfig;
-use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,16 +17,6 @@ class UserRolesController
   public function __construct(Container $container)
   {
     $this->promConfig = $container->get(PromConfig::class);
-  }
-
-  public function getInfo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
-
-    return $response;
   }
 
   public function getMany(

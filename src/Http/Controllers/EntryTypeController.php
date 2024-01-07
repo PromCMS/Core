@@ -39,7 +39,7 @@ class EntryTypeController
     ResponseInterface $response
   ): ResponseInterface {
     $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
 
     return $response;
   }
@@ -174,7 +174,7 @@ class EntryTypeController
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->from($entity->phpName, 'i');
+    $query = $this->em->createQueryBuilder()->from($entity->phpName, 'i')->select('i');
 
     if ($entity->isSingleton()) {
       return $response->withStatus(404);
@@ -196,9 +196,8 @@ class EntryTypeController
     if (isset($queryParams['orderBy_created_at'])) {
       $query->orderBy("i.created_at", $queryParams['orderBy_created_at']);
     }
-    $paginatedQuery = new Paginate($query);
 
-    return ResponseHelper::withServerPagedResponse($response, $paginatedQuery->execute($page, $limit))->getResponse();
+    return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($query)->execute($page, $limit))->getResponse();
   }
 
   public function update(

@@ -13,6 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use PromCMS\Core\Utils\HttpUtils;
+use Slim\Routing\RouteContext;
 
 class PermissionMiddleware
 {
@@ -40,14 +41,22 @@ class PermissionMiddleware
      * @var User
      */
     $user = $this->session->get('user', null);
-    /**
-     * @var Entity
-     */
-    $entity = $request->getAttribute(Entity::class);
 
     if (!$user) {
       throw new \Exception('Cannot run permission middleware before auth middleware');
     }
+
+    $modelIdParam = RouteContext::fromRequest($request)->getRoute()->getArgument('modelId');
+
+    // For viewing roles you just need to be logged in, managing roles d
+    if (in_array($modelIdParam, ['user-roles', 'userRoles', 'prom__user_roles'])) {
+      return $handler->handle($request);
+    }
+
+    /**
+     * @var Entity
+     */
+    $entity = $request->getAttribute(Entity::class);
 
     if (!$entity) {
       throw new \Exception('Cannot run permission middleware before entry type middleware');
@@ -56,11 +65,11 @@ class PermissionMiddleware
     $roleSlug = $user->getRoleSlug();
     $role = $this->promConfig->getProject()->security->roles->getRoleBySlug($roleSlug);
     $permissionByRequestMethod = match ($request->getMethod()) {
-      'POST' => RolePermissionOptionKey::CREATE,
-      'GET' => RolePermissionOptionKey::READ,
-      'HEAD' => RolePermissionOptionKey::READ,
-      'PATCH' => RolePermissionOptionKey::UPDATE,
-      'DELETE' => RolePermissionOptionKey::DELETE,
+      'POST' => RolePermissionOptionKey::CREATE->value,
+      'GET' => RolePermissionOptionKey::READ->value,
+      'HEAD' => RolePermissionOptionKey::READ->value,
+      'PATCH' => RolePermissionOptionKey::UPDATE->value,
+      'DELETE' => RolePermissionOptionKey::DELETE->value,
       default => throw new \Exception(
         '[permissionMiddleware]: Unexpected request method',
       )
@@ -68,7 +77,7 @@ class PermissionMiddleware
     $rolePermissionOnTable = $role->getPermissionSetForModel($entity->tableName);
     $rolePermissionOnTableValue = $rolePermissionOnTable[$permissionByRequestMethod];
 
-    if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY) {
+    if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY->value) {
       // TODO: Log this if no role has been found as that may be a missconfig on administrator side
 
       $response = new Response();
@@ -87,7 +96,7 @@ class PermissionMiddleware
 
     $request = $request->withAttribute(
       'permission-only-own',
-      $rolePermissionOnTableValue === RolePermissionOptionValue::ALLOW_OWN
+      $rolePermissionOnTableValue === RolePermissionOptionValue::ALLOW_OWN->value
     );
 
     return $handler->handle($request);

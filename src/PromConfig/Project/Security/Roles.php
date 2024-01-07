@@ -20,7 +20,7 @@ class Roles
    */
   public function getRoles()
   {
-    if ($this->roles) {
+    if (isset($this->roles)) {
       return $this->roles;
     }
 

@@ -32,7 +32,15 @@ class WhereQueryParam
     foreach (explode($PART_SEPARATOR, $stringToExtract) as $part) {
       $pieces = explode($PIECE_SEPARATOR, $part);
 
-      if (!empty($fieldName = $pieces[0]) && !empty($criteria = $pieces[1]) && !empty($value = $pieces[2]) && in_array($criteria, $allowedCriteria)) {
+      if (count($pieces) < 3) {
+        continue;
+      }
+
+      [$fieldName, $criteria] = $pieces;
+      // string in query could have dot and in that case we need to make sure that string includes dot back
+      $value = implode($PIECE_SEPARATOR, array_slice($pieces, 2));
+
+      if (!empty($fieldName) && !empty($criteria) && in_array($criteria, $allowedCriteria)) {
         if ($criteria === 'NOT IN' || $criteria === 'IN') {
           $this->parsed[$fieldName] = [
             'value' => explode(',', $value),
@@ -81,10 +89,12 @@ class WhereQueryParam
 
     foreach ($this->parsed as $fieldName => $entry) {
       $paramName = ":$fieldName";
-      $conditions[] = $qb->expr()->${static::$searchParamsCriteriaToExpressionMethod[$entry['criteria']]}("$for.$fieldName", $paramName);
+      $criteria = static::$searchParamsCriteriaToExpressionMethod[$entry['criteria']];
+
+      $conditions[] = $qb->expr()->{$criteria}("$for.$fieldName", $paramName);
       $qb->setParameter($paramName, $entry['value']);
     }
 
-    return $qb->where($qb->expr()->andX($conditions));
+    return $qb->where($qb->expr()->andX(...$conditions));
   }
 }

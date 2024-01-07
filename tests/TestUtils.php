@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PromCMS\Tests;
 
+use PromCMS\Core\App;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Models\User;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
@@ -27,9 +30,15 @@ class TestUtils
     $_SESSION = [];
   }
 
-  public static function ensureEmptyDatabase(string $root)
+  public static function ensureEmptyDatabase(App $app)
   {
-    
+    try {
+      /** @var EntityManager */
+      $em = $app->getSlimApp()->getContainer()->get(EntityManager::class);
+      $em->createQueryBuilder()->delete(User::class)->getQuery()->execute();
+    } catch (\Exception $error) {
+      echo "messing: " . $error->getMessage();
+    }
   }
 
   public static function prepareSystemForTests(string $root)

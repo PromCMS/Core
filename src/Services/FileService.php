@@ -6,7 +6,6 @@ use DI\Container;
 use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Andx;
-use Doctrine\ORM\QueryBuilder;
 use GuzzleHttp\Psr7\MimeType;
 use GuzzleHttp\Psr7\UploadedFile;
 use PromCMS\Core\Config;
@@ -23,14 +22,17 @@ class FileService
   private Filesystem $fs;
   private Config $config;
   private EntityManager $em;
-  private QueryBuilder $qb;
 
   public function __construct(Container $container)
   {
     $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
     $this->em = $container->get(EntityManager::class);
-    $this->qb = $this->em->createQueryBuilder();
+  }
+
+  private function createQb()
+  {
+    return $this->em->createQueryBuilder();
   }
 
   /**
@@ -43,7 +45,7 @@ class FileService
 
   public function getManyPaged(int $page, int $perPage = 15, Expr|WhereQueryParam|Comparison|Andx|null $where = null)
   {
-    $filesQuery = $this->qb->from(File::class, 'f');
+    $filesQuery = $this->createQb()->from(File::class, 'f')->select('f');
 
     if (!empty($where)) {
       if ($where instanceof WhereQueryParam) {
@@ -53,7 +55,7 @@ class FileService
       }
     }
 
-    return new Paginate($filesQuery);
+    return Paginate::fromQuery($filesQuery)->execute($page, $perPage);
   }
 
   /**
@@ -73,7 +75,7 @@ class FileService
     // };
 
     if (empty($where)) {
-      $where = $this->qb->expr();
+      $where = $this->em->getExpressionBuilder();
     }
 
     if ($where instanceof WhereQueryParam) {

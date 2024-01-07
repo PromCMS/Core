@@ -26,7 +26,6 @@ class UserProfileController
   private JWTService $jwt;
   private UserService $userService;
   private EntityManager $em;
-  private QueryBuilder $qb;
 
   public function __construct(Container $container)
   {
@@ -34,7 +33,11 @@ class UserProfileController
     $this->jwt = $container->get(JWTService::class);
     $this->userService = $container->get(UserService::class);
     $this->em = $container->get(EntityManager::class);
-    $this->qb = $container->get(QueryBuilder::class);
+  }
+
+  private function getQb()
+  {
+    return $this->em->createQueryBuilder();
   }
 
   public function getCurrent(
@@ -172,6 +175,7 @@ class UserProfileController
     $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(RenderingService::class);
     $promConfig = $this->container->get(PromConfig::class);
+    $expr = $this->getQb()->expr();
 
     if (!$params['email']) {
       return $response->withStatus(400);
@@ -179,9 +183,9 @@ class UserProfileController
 
     try {
       $user = $this->userService->findOneBy(
-        $this->qb->expr()->andX(
-          $this->qb->expr()->eq('u.email', $params['email']),
-          $this->qb->expr()->not($this->qb->expr()->eq('u.state', UserState::BLOCKED))
+        $expr->andX(
+          $expr->eq('u.email', $params['email']),
+          $expr->not($expr->eq('u.state', UserState::BLOCKED))
         )
       );
     } catch (\Exception $e) {
@@ -219,7 +223,7 @@ class UserProfileController
     $emailService->Body = $generatedEmailContent;
 
     $this->userService->updateById($user->getId(), [
-      'state' => UserState::$PASSWORD_RESET,
+      'state' => UserState::PASSWORD_RESET,
     ]);
 
     $emailService->send();
@@ -295,7 +299,7 @@ class UserProfileController
 
     $this->userService->updateById($user->getId(), [
       'password' => Password::hash($newPassword),
-      'state' => UserState::$ACTIVE,
+      'state' => UserState::ACTIVE,
     ]);
 
     return $response;

@@ -69,7 +69,7 @@ class PromConfig
     );
 
     $this->configuration['project']['security']['roles'][] = [
-      'label' => 'Admin',
+      'name' => 'Admin',
       'slug' => 'admin',
       'description' => 'Main user role provided by PromCMS Core module',
       'modelPermissions' => array_fill_keys($this->getEntityTableNames(), 'allow-all')
@@ -155,7 +155,7 @@ class PromConfig
     return array_merge($this->getSingletonTableNames(), array_map(fn($entity) => $entity['tableName'], $this->getDatabaseModels()));
   }
 
-  function getEntity(string $entityTableName, bool $raw = false)
+  function getEntityAsArray(string $entityTableName): ?array
   {
     $models = $this->getDatabaseModels();
     $singletons = $this->getDatabaseSingletons();
@@ -165,23 +165,33 @@ class PromConfig
       $tableName = $entity['tableName'];
 
       if ($tableName === $entityTableName) {
-        if ($raw) {
-          return $entity;
-        }
-
-        if (!isset($this->cachedEntities[$tableName])) {
-          $entity['promConfig'] = $this;
-          if (empty($entity['namespace'])) {
-            $entity['namespace'] = $this->getModelNamespace();
-          }
-          $this->cachedEntities[$tableName] = new Entity(...$entity);
-        }
-
-        return $this->cachedEntities[$tableName];
+        return $entity;
       }
     }
 
     return null;
+  }
+
+  function getEntity(string $entityTableName): ?Entity
+  {
+
+    $entityAsArray = $this->getEntityAsArray($entityTableName);
+
+    if (!$entityAsArray) {
+      return null;
+    }
+
+    $tableName = $entityAsArray['tableName'];
+
+    if (!isset($this->cachedEntities[$tableName])) {
+      $entityAsArray['promConfig'] = $this;
+      if (empty($entityAsArray['namespace'])) {
+        $entityAsArray['namespace'] = $this->getModelNamespace();
+      }
+      $this->cachedEntities[$tableName] = new Entity(...$entityAsArray);
+    }
+
+    return $this->cachedEntities[$tableName];
   }
 
   public function getModuleFolderName()

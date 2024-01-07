@@ -15,6 +15,11 @@ class Paginate
   {
   }
 
+  public static function fromQuery(\Doctrine\ORM\Query|\Doctrine\ORM\QueryBuilder $query)
+  {
+    return new self($query);
+  }
+
   /**
    * @param int $page
    * @param int $limit

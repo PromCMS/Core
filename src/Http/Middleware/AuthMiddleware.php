@@ -50,7 +50,7 @@ class AuthMiddleware
       try {
         $this->container
           ->get(Session::class)
-          ->set('user', $userService->getOneById($userId));
+          ->set('user', $userService->getOneById(intval($userId)));
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
@@ -62,6 +62,8 @@ class AuthMiddleware
           'User is not logged in',
           'not-logged-in',
         );
+
+        // TODO: Log this as this is unwanted exception
 
         return $response
           // TODO here should be different status code

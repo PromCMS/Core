@@ -5,14 +5,15 @@ namespace PromCMS\Core\PromConfig\Project\Security;
 class Role
 {
   private static $defaultPermissisonsSet = [
-    RolePermissionOptionKey::CREATE => RolePermissionOptionValue::DENY,
-    RolePermissionOptionKey::READ => RolePermissionOptionValue::DENY,
-    RolePermissionOptionKey::UPDATE => RolePermissionOptionValue::DENY,
-    RolePermissionOptionKey::DELETE => RolePermissionOptionValue::DENY,
+    RolePermissionOptionKey::CREATE->value => RolePermissionOptionValue::DENY->value,
+    RolePermissionOptionKey::READ->value => RolePermissionOptionValue::DENY->value,
+    RolePermissionOptionKey::UPDATE->value => RolePermissionOptionValue::DENY->value,
+    RolePermissionOptionKey::DELETE->value => RolePermissionOptionValue::DENY->value,
   ];
 
   public function __construct(
     public readonly string $name,
+    public readonly string $description,
     public readonly string $slug,
     private array|string $modelPermissions,
     public readonly ?bool $hasAccessToAdmin = true,
@@ -27,7 +28,7 @@ class Role
     if (is_string($this->modelPermissions)) {
       $permission = RolePermissionOptionValue::tryFrom($this->modelPermissions) ?? RolePermissionOptionValue::DENY;
 
-      return array_fill_keys(array_keys(static::$defaultPermissisonsSet), $permission);
+      return array_fill_keys(array_keys(static::$defaultPermissisonsSet), $permission->value);
     }
 
     if (empty($permissionSetFromConfig = $this->modelPermissions[$tableName])) {

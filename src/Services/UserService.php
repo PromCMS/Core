@@ -6,7 +6,6 @@ use DI\Container;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Comparison;
-use Doctrine\ORM\QueryBuilder;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -17,12 +16,15 @@ use PromCMS\Core\Models\User;
 class UserService
 {
   private EntityManager $em;
-  private QueryBuilder $qb;
 
   public function __construct(Container $container)
   {
     $this->em = $container->get(EntityManager::class);
-    $this->qb = $this->em->createQueryBuilder();
+  }
+
+  private function createQb()
+  {
+    return $this->em->createQueryBuilder();
   }
 
   private function getRepository()
@@ -32,7 +34,7 @@ class UserService
 
   public function findOneBy(Expr|WhereQueryParam|Comparison|Andx $where, array $select = []): User
   {
-    $query = $this->qb->from(User::class, 'u');
+    $query = $this->createQb()->from(User::class, 'u')->select('u');
 
     if ($where instanceof WhereQueryParam) {
       $where->toQuery($query, 'u');
@@ -40,18 +42,21 @@ class UserService
       $query->where($where);
     }
 
-    $result = $query->getQuery()->getResult();
+    $results = $query->getQuery()->getResult();
 
-    if (!$result) {
+    if (count($results) === 0) {
       throw new EntityNotFoundException();
     }
 
-    return $result;
+    return $results[0];
   }
 
   public function getOneBy(string $field, $fieldValue, array $select = []): User
   {
-    return $this->findOneBy($this->qb->expr()->eq("u.$field", $fieldValue), $select);
+    return $this->findOneBy(
+      new WhereQueryParam("$field.=.$fieldValue"),
+      $select
+    );
   }
 
   public function getOneById($id, array $select = [])
@@ -78,7 +83,7 @@ class UserService
      */
     array $select = []
   ) {
-    $userQuery = $this->qb->from(User::class, 'u');
+    $userQuery = $this->createQb()->from(User::class, 'u')->select('u');
 
     if (!empty($where)) {
       if ($where instanceof WhereQueryParam) {
@@ -88,7 +93,7 @@ class UserService
       }
     }
 
-    return new Paginate($userQuery);
+    return Paginate::fromQuery($userQuery)->execute($page, $perPage);
   }
 
   public function create(array $payload): User

@@ -44,7 +44,7 @@ class UsersController
     ResponseInterface $response
   ): ResponseInterface {
     $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntity($entity->tableName, true));
+    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
 
     return $response;
   }
@@ -56,7 +56,7 @@ class UsersController
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
-    $where = [];
+    $where = null;
 
     if (isset($queryParams['where'])) {
       $where = new WhereQueryParam($queryParams['where']);
@@ -227,7 +227,7 @@ class UsersController
     $args
   ) {
     $updatedUser = $this->userService->updateById(intval($args['itemId']), [
-      'state' => UserState::$BLOCKED,
+      'state' => UserState::BLOCKED,
     ]);
 
     $userAsArray = $updatedUser->toArray();
@@ -249,7 +249,7 @@ class UsersController
     }
 
     $user->fill([
-      'state' => UserState::$ACTIVE,
+      'state' => UserState::ACTIVE,
     ]);
 
     $this->em->flush();
@@ -308,7 +308,7 @@ class UsersController
     if ($user->state !== 'invited') {
       $user
         ->fill([
-          'state' => UserState::$PASSWORD_RESET,
+          'state' => UserState::PASSWORD_RESET,
         ]);
 
       $this->em->flush();

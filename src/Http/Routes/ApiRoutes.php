@@ -176,29 +176,14 @@ class ApiRoutes implements CoreRoutes
       // TODO - prom__user_roles is only valid
       // User roles
       $innerRouter
-        ->group('/{modelId:user-roles|userRoles|prom__user_roles}', function (Router $innerRouter) {
-          $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getInfo'));
+        ->group('/{modelId:user-roles|userRoles|prom__user_roles}/items', function (Router $innerRouter) {
+          $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getMany'));
 
-          $innerRouter->group('/items', function (Router $innerRouter) {
-            $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getMany'));
-            $innerRouter->post('/create', ApiRoutes::getControllerPath('UserRoles', 'create'));
-
-            $innerRouter->group('/{itemId}', function (Router $innerRouter) {
-              $innerRouter->patch('', ApiRoutes::getControllerPath('UserRoles', 'update'));
-              $innerRouter->delete('', ApiRoutes::getControllerPath('UserRoles', 'delete'));
-            });
+          $innerRouter->group('/{itemId}', function (Router $innerRouter) {
+            $innerRouter->get('', ApiRoutes::getControllerPath('UserRoles', 'getOne'));
           });
         })
         ->add($permissionMiddleware)
-        ->add($entryTypeMiddleware)
-        ->add($auth);
-
-      $innerRouter
-        ->get(
-          '/{modelId:user-roles|userRoles|prom__user_roles}/items/{itemId}',
-          ApiRoutes::getControllerPath('UserRoles', 'getOne'),
-        )
-        ->add($entryTypeMiddleware)
         ->add($auth);
 
       // Other

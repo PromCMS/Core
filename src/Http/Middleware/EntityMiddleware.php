@@ -9,9 +9,10 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
 
-enum EntityMiddlewareMode: string {
-   case MODEL = "model";
-   case SINGLETON = "singleton";
+enum EntityMiddlewareMode: string
+{
+    case MODEL = "model";
+    case SINGLETON = "singleton";
 }
 
 class EntityMiddleware
@@ -23,7 +24,7 @@ class EntityMiddleware
     public function __construct($container, EntityMiddlewareMode $mode)
     {
         $this->promConfig = $container->get(PromConfig::class);
-        
+
         $entities = [];
         if ($mode === EntityMiddlewareMode::MODEL) {
             $entities = $this->promConfig->getDatabaseModels();
@@ -31,7 +32,7 @@ class EntityMiddleware
             $entities = $this->promConfig->getDatabaseSingletons();
         }
 
-        $this->tableNames = array_map(fn ($entity) => $entity['tableName'], $entities);
+        $this->tableNames = array_map(fn($entity) => $entity['tableName'], $entities);
     }
 
     /**
@@ -51,13 +52,11 @@ class EntityMiddleware
 
         if (!in_array($modelTableName, $this->tableNames)) {
             // TODO: this should be dropped
-            if ($modelTableName === "user-roles" || strtolower($modelTableName) === 'userroles') {
-                $modelTableName = 'user_roles';
-            } else if ($modelTableName === "generalTranslations") {
-                $modelTableName = 'general_translations';
-            }
             // TODO: remove this after you have ensured that everything works correctly as we probably dont want this check to be here and take models from url as is
-            $modelTableName = "prom__$modelTableName";
+            $modelTableName = 'prom__' . match ($modelTableName) {
+                'generalTranslations' => 'general_translations',
+                default => $modelTableName
+            };
 
             if (!in_array($modelTableName, $this->tableNames)) {
                 $response = new Response();
@@ -69,7 +68,7 @@ class EntityMiddleware
         }
 
         // Attach on request to pass the model instance info
-        $request = $request->withAttribute(Entity::class, $this->promConfig->getEntity($modelTableName) );
+        $request = $request->withAttribute(Entity::class, $this->promConfig->getEntity($modelTableName));
 
         return $handler->handle($request);
     }

@@ -76,9 +76,18 @@ class Entity
   /**
    * @return array<int, Column|RelationshipColumn>
    */
-  function getPublicColumns()
+  function getPublicColumns(): array
   {
-    return array_map(fn(Column|RelationshipColumn $column) => $column->hide, $this->getColumns());
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->hide);
+  }
+
+
+  /**
+   * @return array<int, Column|RelationshipColumn>
+   */
+  function getPrivateColumns(): array
+  {
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => !$column->hide);
   }
 
   function isSingleton()

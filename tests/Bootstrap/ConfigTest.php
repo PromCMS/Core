@@ -40,10 +40,6 @@ final class ConfigTest extends AppTestCase
                 'debug' => true,
                 'env' => 'development',
             ],
-            'i18n' => [
-                'default' => 'en',
-                'languages' => ['en'],
-            ],
             'system' => [
                 'modules' => [
                     'modelsFolderName' => 'Models',
