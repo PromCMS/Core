@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<database name="core" defaultIdMethod="native" namespace="PromCMS\Core\Models">
+<database name="core" defaultIdMethod="native" namespace="PromCMS\Core\Database\Models">
   <!-- Files -->
   <table name="prom__files" phpName="File" prom.adminMetadata.icon="Folder" prom.ignoreSeeding="true">
     <column name="id" type="INTEGER" required="true" primaryKey="true" autoIncrement="true"
