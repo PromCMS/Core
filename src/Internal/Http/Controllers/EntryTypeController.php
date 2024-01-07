@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use PromCMS\Core\Database\EntityManager;
@@ -19,7 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Take care of normal models and singletons!
+ * @internal Part of PromCMS Core and should not be used outside of it
  */
 class EntryTypeController
 {

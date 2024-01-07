@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Dotenv\Dotenv;
@@ -15,6 +15,9 @@ use PromCMS\Core\Internal\Config\SystemModules as ConfigPart__System__Modules;
 use PromCMS\Core\Internal\Config\SystemLogging as ConfigPart__System__Logging;
 use Symfony\Component\Filesystem\Path;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Config implements AppModuleInterface
 {
   private function getEnvSafely(string $key): string|null

@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
@@ -10,6 +10,9 @@ use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class UserRolesController
 {
   private PromConfig $promConfig;

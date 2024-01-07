@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
@@ -11,6 +11,9 @@ use PromCMS\Core\Services\RouteCollectorService;
 use PromCMS\Core\Services\SchemaService;
 use PromCMS\Core\Services\UserService;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Services implements AppModuleInterface
 {
   public function run($app, $container)

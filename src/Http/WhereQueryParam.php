@@ -2,7 +2,6 @@
 
 namespace PromCMS\Core\Http;
 
-use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 
 class WhereQueryParam

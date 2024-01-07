@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\Config;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
@@ -13,6 +13,9 @@ use Symfony\Component\Filesystem\Path;
 use Twig\Extra\Html\HtmlExtension;
 use Twig\Loader\FilesystemLoader;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Twig implements AppModuleInterface
 {
   public function run($app, $container)

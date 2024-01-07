@@ -1,21 +1,23 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\Services\LocalizationService;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
-
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Middlewares implements AppModuleInterface
 {
   public function run($app, $container)
   {
     $localizationMiddleware = function (Request $request, RequestHandler $handler) use ($container) {
-      $path = $request->getUri()->getPath();  
+      $path = $request->getUri()->getPath();
       $localizationService = $container->get(LocalizationService::class);
       $possibleLanguages = $localizationService->getSupportedLanguages();
-      $possibleLanguagesAsJoinedString = implode('|',$possibleLanguages);
+      $possibleLanguagesAsJoinedString = implode('|', $possibleLanguages);
 
       if (preg_match("/^\/($possibleLanguagesAsJoinedString)($|\/\.*)/", $path)) {
         $firstSegmentAsLanguage = explode('/', $path)[1];
@@ -25,7 +27,7 @@ class Middlewares implements AppModuleInterface
 
       return $handler->handle($request);
     };
-  
+
     $app->add($localizationMiddleware);
   }
 }

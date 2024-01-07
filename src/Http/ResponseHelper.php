@@ -3,23 +3,23 @@
 namespace PromCMS\Core\Http;
 
 use PromCMS\Core\Database\Paginate;
-use PromCMS\Core\Http\Enums\HttpContentType;
+use PromCMS\Core\Http;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseHelper
 {
   private ResponseInterface $response;
-  private HttpContentType $contentType;
+  private ContentType $contentType;
 
   public static function withServerResponse(
     ResponseInterface &$serverResponse,
     string|array $body,
     int $httpStatus = 200
   ) {
-    $contentType = HttpContentType::HTML;
+    $contentType = Http\ContentType::HTML;
 
     if (is_array($body)) {
-      $contentType = HttpContentType::JSON;
+      $contentType = Http\ContentType::JSON;
     }
 
     $instance = new self($serverResponse, $contentType);
@@ -35,7 +35,7 @@ class ResponseHelper
     Paginate $body,
     int $httpStatus = 200
   ) {
-    $contentType = HttpContentType::JSON;
+    $contentType = Http\ContentType::JSON;
 
     $instance = new self($serverResponse, $contentType);
 
@@ -45,7 +45,7 @@ class ResponseHelper
     return $instance;
   }
 
-  function __construct(ResponseInterface $serverResponse, HttpContentType $contentType)
+  function __construct(ResponseInterface $serverResponse, Http\ContentType $contentType)
   {
     $this->response = $serverResponse;
     $this->contentType = $contentType;
@@ -53,7 +53,7 @@ class ResponseHelper
 
   public function setPagedBody(array|Paginate $body)
   {
-    if ($this->contentType !== HttpContentType::JSON) {
+    if ($this->contentType !== Http\ContentType::JSON) {
       throw new \Exception("Response content type must be json for paged body");
     }
 
@@ -84,7 +84,7 @@ class ResponseHelper
 
   public function setBody(string|array $body)
   {
-    if ($this->contentType === HttpContentType::JSON && is_string($body)) {
+    if ($this->contentType === Http\WhereQueryParamContentType::JSON && is_string($body)) {
       throw new \Exception("Response content type is json and you are trying to return string. Please pass array to setBody instead or change content type to HTML");
     }
 

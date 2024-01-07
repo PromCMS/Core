@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
@@ -8,7 +8,10 @@ use PromCMS\Core\PromConfig;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class EntryTypesController
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
+class SingletonsController
 {
     private PromConfig $promConfig;
 
@@ -21,7 +24,7 @@ class EntryTypesController
     {
         $collectedModelSummaries = [];
 
-        foreach ($this->promConfig->getDatabaseModels() as $entity) {
+        foreach ($this->promConfig->getDatabaseSingletons() as $entity) {
             $collectedModelSummaries[$entity['tableName']] = $entity;
         }
 

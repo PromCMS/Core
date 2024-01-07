@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Filesystem;
 use PromCMS\Core\Http\WhereQueryParam;
@@ -19,6 +19,9 @@ use PromCMS\Core\Services\ImageService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class FilesController
 {
   private $container;

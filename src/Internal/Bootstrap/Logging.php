@@ -1,12 +1,15 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\Config;
 use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
 use Slim\App;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Logging implements AppModuleInterface
 {
   public function run(App $app, $container)

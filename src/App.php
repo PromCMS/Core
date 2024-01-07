@@ -8,14 +8,14 @@ use Slim\App as SlimApp;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\Session as SessionMiddleware;
 
-use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
-use PromCMS\Core\Bootstrap\Database as DatabaseBootstrap;
-use PromCMS\Core\Bootstrap\FileSystem as FileSystemBootstrap;
-use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
-use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
-use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
-use PromCMS\Core\Bootstrap\Services as ServicesBootstrap;
-use PromCMS\Core\Bootstrap\Middlewares as MiddlewaresBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Config as ConfigBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Database as DatabaseBootstrap;
+use PromCMS\Core\Internal\Bootstrap\FileSystem as FileSystemBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Twig as TwigBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Modules as ModulesBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Mailer as MailerBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Services as ServicesBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Middlewares as MiddlewaresBootstrap;
 use Symfony\Component\Filesystem\Path;
 
 /**

@@ -1,12 +1,15 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class SettingsController
 {
   public function __construct(private PromConfig $promConfig)

@@ -1,10 +1,13 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PromCMS\Core\Mailer as MailerClass;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Mailer implements AppModuleInterface
 {
   public function run($app, $container)

@@ -4,7 +4,7 @@ namespace PromCMS\Tests\Bootstrap;
 
 use DI\Container;
 use PromCMS\Tests\AppTestCase;
-use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Config as ConfigBootstrap;
 use PromCMS\Core\Config as AppConfig;
 use Symfony\Component\Filesystem\Path;
 

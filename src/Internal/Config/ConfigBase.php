@@ -1,6 +1,9 @@
 <?php
 namespace PromCMS\Core\Internal\Config;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class ConfigBase
 {
   function __construct(

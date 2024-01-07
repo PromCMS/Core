@@ -2,7 +2,6 @@
 
 namespace PromCMS\Core\Http\Routes;
 
-use PromCMS\Core\Config;
 use PromCMS\Core\Path;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

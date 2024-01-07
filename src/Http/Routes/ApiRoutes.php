@@ -14,7 +14,7 @@ class ApiRoutes implements CoreRoutes
 {
   private Container $container;
   private Config $config;
-  private static string $controllersPath = '\PromCMS\Core\Http\Controllers';
+  private static string $controllersPath = '\PromCMS\Core\Internal\Http\Controllers';
 
   public function __construct($container)
   {

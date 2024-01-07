@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Bootstrap;
+namespace PromCMS\Core\Internal\Bootstrap;
 
 use DI\Container;
 use PromCMS\Core\Models\User;
@@ -18,6 +18,9 @@ use PromCMS\Core\Http\Routes\ApiRoutes;
 use PromCMS\Core\Http\Routes\FrontRoutes;
 use Symfony\Component\Filesystem\Path;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class Modules implements AppModuleInterface
 {
   public function run(App $app, Container $container)

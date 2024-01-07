@@ -1,6 +1,6 @@
 <?php
 
-namespace PromCMS\Core\Http\Controllers;
+namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Http\WhereQueryParam;
@@ -22,6 +22,9 @@ use PromCMS\Core\Services\JWTService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @internal Part of PromCMS Core and should not be used outside of it
+ */
 class UsersController
 {
   private $container;

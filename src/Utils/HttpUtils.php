@@ -3,7 +3,7 @@
 namespace PromCMS\Core\Utils;
 
 use PromCMS\Core\Exceptions\EntityDuplicateException;
-use PromCMS\Core\Http\Enums\HttpContentType;
+use PromCMS\Core\Http;
 use Psr\Http\Message\ResponseInterface;
 
 class HttpUtils
@@ -26,7 +26,7 @@ class HttpUtils
     string $message = '',
     $code = false
   ) {
-    $response = $response->withHeader("Content-Type", HttpContentType::JSON->asHeaderValue());
+    $response = $response->withHeader("Content-Type", Http\ContentType::JSON->asHeaderValue());
 
     $response->getBody()->write(
       json_encode([
