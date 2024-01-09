@@ -2,19 +2,18 @@
 
 namespace PromCMS\Core\Http\Routing;
 
-use PromCMS\Core\Http\Routing\Interface\Route;
+use Attribute;
 use Psr\Http\Message\UriInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteCollectorProxy as Router;
 
 /**
  * @Annotation
  * @Target("METHOD")
  */
-#[\Attribute(Attribute::TARGET_METHOD)]
-final class AsRedirectRoute implements Route
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+final class AsRedirectRoute implements RouteImplementation
 {
-  public readonly array $methods;
-
   public function __construct(
     public readonly string $from,
     public readonly UriInterface|string $to,
@@ -23,9 +22,9 @@ final class AsRedirectRoute implements Route
   ) {
   }
 
-  public function attach(Router &$router)
+  public function attach(Router &$router, callable|string $callable): RouteInterface
   {
-    $responseFactory = $router->responseFactory;
+    $responseFactory = $router->getResponseFactory();
 
     $handler = function () use ($responseFactory) {
       $response = $responseFactory->createResponse($this->status);
@@ -38,5 +37,7 @@ final class AsRedirectRoute implements Route
     if ($this->name) {
       $route->setName($this->name);
     }
+
+    return $route;
   }
 }
