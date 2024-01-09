@@ -11,7 +11,7 @@ use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
-use PromCMS\Core\Internal\Http\Middleware\EntityMiddleware;
+use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
@@ -50,7 +50,7 @@ class UsersController
 
   #[AsApiRoute('GET', '/items'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function getMany(
@@ -71,7 +71,7 @@ class UsersController
 
   #[AsApiRoute('PATCH', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function update(
@@ -120,7 +120,7 @@ class UsersController
   // Thats because user email. id and name is used to display contributors on entity
   #[AsApiRoute('GET', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
   ]
   public function getOne(
     ServerRequestInterface $request,
@@ -144,7 +144,7 @@ class UsersController
 
   #[AsApiRoute('POST', '/items/create'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function create(
@@ -222,7 +222,7 @@ class UsersController
 
   #[AsApiRoute('DELETE', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function delete(
@@ -249,7 +249,7 @@ class UsersController
 
   #[AsApiRoute('PATCH', '/items/{itemId}/block'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function block(
@@ -270,7 +270,7 @@ class UsersController
 
   #[AsApiRoute('PATCH', '/items/{itemId}/unblock'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function unblock(
@@ -297,7 +297,7 @@ class UsersController
 
   #[AsApiRoute('PATCH', '/items/{itemId}/request-password-reset'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function requestPasswordReset(

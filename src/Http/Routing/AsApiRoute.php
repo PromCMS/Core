@@ -12,12 +12,19 @@ use Slim\Interfaces\RouteInterface;
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class AsApiRoute extends AsRoute
 {
+  public function getRoutePathname()
+  {
+    return '/api' . parent::getRoutePathname();
+  }
+
   public function attach(\Slim\Routing\RouteCollectorProxy &$router, callable|string $callable): RouteInterface
   {
+    $routePathname = $this->getRoutePathname();
+
     if ($this->methods[0] === 'ANY') {
-      $route = $router->any('/api' . $this->route, $callable);
+      $route = $router->any($routePathname, $callable);
     } else {
-      $route = $router->map($this->methods, '/api' . $this->route, $callable);
+      $route = $router->map($this->methods, $routePathname, $callable);
     }
 
     if ($this->name) {

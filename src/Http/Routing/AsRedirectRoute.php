@@ -14,6 +14,8 @@ use Slim\Routing\RouteCollectorProxy as Router;
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 final class AsRedirectRoute implements RouteImplementation
 {
+  private string $routePrefix = "";
+
   public function __construct(
     public readonly string $from,
     public readonly UriInterface|string $to,
@@ -32,12 +34,19 @@ final class AsRedirectRoute implements RouteImplementation
       return $response->withHeader('Location', (string) $this->to);
     };
 
-    $route = $router->get($this->from, $handler);
+    $route = $router->get($this->routePrefix . $this->from, $handler);
 
     if ($this->name) {
       $route->setName($this->name);
     }
 
     return $route;
+  }
+
+  public function setRoutePrefix(string $prefix): static
+  {
+    $this->routePrefix = $prefix;
+
+    return $this;
   }
 }

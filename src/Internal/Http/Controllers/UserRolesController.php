@@ -9,7 +9,6 @@ use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Http\Routing\AsApiRoute;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
-use PromCMS\Core\Internal\Http\Middleware\EntityMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
@@ -32,7 +31,6 @@ class UserRolesController
   #[
     AsApiRoute('GET', '/items'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
   ]
   public function getMany(
     ServerRequestInterface $request,
@@ -44,7 +42,6 @@ class UserRolesController
   #[
     AsApiRoute('GET', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
   ]
   public function getOne(
     ServerRequestInterface $request,

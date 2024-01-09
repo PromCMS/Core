@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Filesystem;
+use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\Routing\AsApiRoute;
@@ -10,7 +11,6 @@ use PromCMS\Core\Http\Routing\AsRoute;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
-use PromCMS\Core\Internal\Http\Middleware\EntityMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -49,7 +49,7 @@ class FilesController
   #[
     AsApiRoute('GET', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function getOne(
@@ -77,7 +77,7 @@ class FilesController
   #[
     AsApiRoute('GET', '/items'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function getMany(
@@ -153,7 +153,7 @@ class FilesController
   #[
     AsApiRoute('POST', '/items'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function create(
@@ -204,7 +204,7 @@ class FilesController
   #[
     AsApiRoute('PATCH', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function update(
@@ -223,7 +223,7 @@ class FilesController
   #[
     AsApiRoute('DELETE', '/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function delete(

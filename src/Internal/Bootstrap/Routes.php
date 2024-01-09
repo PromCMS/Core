@@ -37,16 +37,18 @@ class Routes implements AppModuleInterface
     // Staticly prepare controllers, no need to search through folder as with modules
     $controllerClassNames = [
       InternalControllers\AdminController::class,
-      InternalControllers\EntityController::class,
-      InternalControllers\EntitiesController::class,
       InternalControllers\FilesController::class,
       InternalControllers\FoldersController::class,
       InternalControllers\LocalizationController::class,
       InternalControllers\SettingsController::class,
-      InternalControllers\SingletonsController::class,
       InternalControllers\UserProfileController::class,
       InternalControllers\UserRolesController::class,
       InternalControllers\UsersController::class,
+        // These are just matchers - previous controllers have explicit routes defined
+      InternalControllers\EntityController::class,
+      InternalControllers\EntitiesController::class,
+      InternalControllers\SingletonsController::class,
+      InternalControllers\SingletonController::class,
     ];
 
     $finder = new Finder();
@@ -88,30 +90,30 @@ class Routes implements AppModuleInterface
           $routesPrefix = $groupAsInstance->pathnamePrefix;
         }
 
-        $router->group($routesPrefix, function (Router $innerRouter) use ($ref) {
-          $methods = $ref->getMethods();
-          /** @var \ReflectionMethod $method */
-          foreach ($methods as $method) {
-            $routeAttributes = $method->getAttributes(RouteImplementation::class, \ReflectionAttribute::IS_INSTANCEOF);
-            $middlewareClasses = array_map(
-              fn(\ReflectionAttribute $middlewareMedata) => $middlewareMedata->getArguments()[0],
-              array_reverse($method->getAttributes(WithMiddleware::class))
-            );
-            $methodAddress = $ref->getName() . ":" . $method->getName();
+        $methods = $ref->getMethods();
+        /** @var \ReflectionMethod $method */
+        foreach ($methods as $method) {
+          $routeAttributes = $method->getAttributes(RouteImplementation::class, \ReflectionAttribute::IS_INSTANCEOF);
+          $middlewareClasses = array_map(
+            fn(\ReflectionAttribute $middlewareMedata) => $middlewareMedata->getArguments()[0],
+            array_reverse($method->getAttributes(WithMiddleware::class))
+          );
+          $methodAddress = $ref->getName() . ":" . $method->getName();
 
-            /** @var \ReflectionAttribute $routeAttribute */
-            foreach ($routeAttributes as $routeAttribute) {
-              /** @var RouteImplementation */
-              $routeMetadata = $routeAttribute->newInstance();
-              $route = $routeMetadata->attach($innerRouter, $methodAddress);
+          /** @var \ReflectionAttribute $routeAttribute */
+          foreach ($routeAttributes as $routeAttribute) {
+            /** @var RouteImplementation */
+            $routeMetadata = $routeAttribute->newInstance();
+            $routeMetadata->setRoutePrefix($routesPrefix);
 
-              /** @var string $middlewareAttribute */
-              foreach ($middlewareClasses as $middlewareClassName) {
-                $route->add($middlewareClassName);
-              }
+            $route = $routeMetadata->attach($router, $methodAddress);
+
+            /** @var string $middlewareAttribute */
+            foreach ($middlewareClasses as $middlewareClassName) {
+              $route->add($middlewareClassName);
             }
           }
-        });
+        }
       }
     })->add(function ($request, $handler) use ($config) {
       $response = $handler->handle($request);

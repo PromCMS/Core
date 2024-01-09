@@ -14,18 +14,26 @@ use Slim\Interfaces\RouteInterface;
 class AsRoute implements RouteImplementation
 {
   protected readonly array $methods;
+  protected string $routePrefix = "";
 
-  public function __construct(string|array $method, protected readonly string $route, protected readonly ?string $name = null)
+  public function __construct(string|array $method, protected string $route, protected readonly ?string $name = null)
   {
     $this->methods = is_array($method) ? $method : [$method];
   }
 
+  protected function getRoutePathname()
+  {
+    return $this->routePrefix . $this->route;
+  }
+
   public function attach(\Slim\Routing\RouteCollectorProxy &$router, callable|string $callable): RouteInterface
   {
+    $routePathname = $this->getRoutePathname();
+
     if ($this->methods[0] === 'ANY') {
-      $route = $router->any($this->route, $callable);
+      $route = $router->any($routePathname, $callable);
     } else {
-      $route = $router->map($this->methods, $this->route, $callable);
+      $route = $router->map($this->methods, $routePathname, $callable);
     }
 
     if ($this->name) {
@@ -33,5 +41,12 @@ class AsRoute implements RouteImplementation
     }
 
     return $route;
+  }
+
+  public function setRoutePrefix(string $prefix): static
+  {
+    $this->routePrefix = $prefix;
+
+    return $this;
   }
 }
