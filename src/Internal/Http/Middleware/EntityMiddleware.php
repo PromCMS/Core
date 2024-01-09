@@ -1,27 +1,23 @@
 <?php
 
-namespace PromCMS\Core\Http\Middleware;
+namespace PromCMS\Core\Internal\Http\Middleware;
 
+use DI\Container;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
 
-enum EntityMiddlewareMode: string
-{
-    case MODEL = "model";
-    case SINGLETON = "singleton";
-}
-
-class EntityMiddleware
+abstract class EntityMiddleware implements MiddlewareInterface
 {
     private PromConfig $promConfig;
 
     private array $tableNames;
 
-    public function __construct($container, EntityMiddlewareMode $mode)
+    public function __construct(Container $container, EntityMiddlewareMode $mode)
     {
         $this->promConfig = $container->get(PromConfig::class);
 
@@ -44,7 +40,7 @@ class EntityMiddleware
      *
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function __invoke(Request $request, RequestHandler $handler): Response
+    public function process(Request $request, RequestHandler $handler): Response
     {
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();

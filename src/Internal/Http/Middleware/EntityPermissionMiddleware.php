@@ -1,7 +1,8 @@
 <?php
 
-namespace PromCMS\Core\Http\Middleware;
+namespace PromCMS\Core\Internal\Http\Middleware;
 
+use DI\Container;
 use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
@@ -12,17 +13,18 @@ use PromCMS\Core\Session;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use PromCMS\Core\Utils\HttpUtils;
 use Slim\Routing\RouteContext;
 
-class PermissionMiddleware
+class EntityPermissionMiddleware implements MiddlewareInterface
 {
   private Session $session;
   private PromConfig $promConfig;
   private Logger $logger;
 
-  public function __construct($container)
+  public function __construct(Container $container)
   {
     $this->session = $container->get(Session::class);
     $this->promConfig = $container->get(PromConfig::class);
@@ -31,14 +33,8 @@ class PermissionMiddleware
 
   /**
    * Permission middleware class, it interacts with session and gets if in session theres a sufficient user role for provided route
-   *
-   * @param  \Psr\Http\Message\ServerRequestInterface $request  PSR7 request
-   * @param  \Psr\Http\Message\ResponseInterface      $response PSR7 response
-   * @param  callable                                 $next     Next middleware
-   *
-   * @return \Psr\Http\Message\ResponseInterface
    */
-  public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
+  public function process(Request $request, RequestHandler $handler): ResponseInterface
   {
     /**
      * @var User

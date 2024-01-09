@@ -2,37 +2,29 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
-use DI\Container;
 use PromCMS\Core\Logger;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use GuzzleHttp\Psr7\Response;
 use PromCMS\Core\Utils\HttpUtils;
 
-class AuthMiddleware
+class UserLoggedInMiddleware implements MiddlewareInterface
 {
-  private Container $container;
 
-  public function __construct(Container $container)
+  public function __construct(private Session $session, private UserService $userService, private Logger $logger)
   {
-    $this->container = $container;
   }
 
   /**
    * Auth middleware class, it interacts with session and gets if in session theres a user_id or throws 401
-   *
-   * @param  \Psr\Http\Message\ServerRequestInterface $request  PSR7 request
-   * @param  \Psr\Http\Message\ResponseInterface      $response PSR7 response
-   * @param  callable                                 $next     Next middleware
-   *
-   * @return \Psr\Http\Message\ResponseInterface
    */
-  public function __invoke(Request $request, RequestHandler $handler)
+  public function process(Request $request, RequestHandler $handler): ResponseInterface
   {
-    $userId = $this->container->get(Session::class)->get('user_id', false);
-    $userService = $this->container->get(UserService::class);
+    $userId = $this->session->get('user_id', false);
 
     if (!$userId) {
       $response = new Response();
@@ -49,13 +41,12 @@ class AuthMiddleware
         ->withHeader('Content-Description', 'user logged off');
     } else {
       try {
-        $this->container
-          ->get(Session::class)
-          ->set('user', $userService->getOneById(intval($userId)));
+        $this->session
+          ->set('user', $this->userService->getOneById(intval($userId)));
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
-        $this->container->get(Session::class)::destroy();
+        $this->session::destroy();
 
         HttpUtils::prepareJsonResponse(
           $response,
@@ -64,7 +55,7 @@ class AuthMiddleware
           'not-logged-in',
         );
 
-        $this->container->get(Logger::class)->error("Failed to get user in auth middleware, but session has user_id", [
+        $this->logger->error("Failed to get user in auth middleware, but session has user_id", [
           'error' => $e
         ]);
 
