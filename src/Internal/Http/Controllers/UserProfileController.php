@@ -5,12 +5,14 @@ namespace PromCMS\Core\Internal\Http\Controllers;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Logger;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
-use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Services\RenderingService;
 use PromCMS\Core\Utils\HttpUtils;
@@ -25,19 +27,13 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class UserProfileController
 {
-  private Container $container;
-  private JWTService $jwt;
-  private UserService $userService;
-  private EntityManager $em;
-  private Logger $logger;
-
-  public function __construct(Container $container)
-  {
-    $this->container = $container;
-    $this->jwt = $container->get(JWTService::class);
-    $this->userService = $container->get(UserService::class);
-    $this->em = $container->get(EntityManager::class);
-    $this->logger = $container->get(Logger::class);
+  public function __construct(
+    private JWTService $jwt,
+    private Session $session,
+    private UserService $userService,
+    private EntityManager $em,
+    private Logger $logger
+  ) {
   }
 
   private function getQb()
@@ -45,22 +41,25 @@ class UserProfileController
     return $this->em->createQueryBuilder();
   }
 
+  #[AsApiRoute('GET', '/profile/me'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function getCurrent(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $user = $this->container->get(Session::class)->get('user');
+    $user = $this->session->get('user');
 
     HttpUtils::prepareJsonResponse($response, $user->toArray());
 
     return $response;
   }
 
+  #[AsApiRoute('POST', '/profile/login')]
   public function login(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $userId = $this->container->get(Session::class)->get('user_id', false);
+    $userId = $this->session->get('user_id', false);
     $args = $request->getParsedBody();
     $code = 200;
     $responseAry = [
@@ -97,7 +96,7 @@ class UserProfileController
           throw new \Exception("user-state-$userState");
         }
 
-        $this->container->get(Session::class)->set('user_id', $user->getId());
+        $this->session->set('user_id', $user->getId());
         $responseAry['data'] = $user->toArray();
         $responseAry['result'] = 'success';
         $responseAry['message'] = 'successfully logged in';
@@ -129,12 +128,14 @@ class UserProfileController
     return ResponseHelper::withServerResponse($response, $responseAry, $code)->getResponse();
   }
 
+  #[AsApiRoute('POST', '/profile/update'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
     /** @var User */
-    $user = $this->container->get(Session::class)->get('user');
+    $user = $this->session->get('user');
     $parsedBody = $request->getParsedBody();
 
     if (!$parsedBody['data']) {
@@ -167,11 +168,13 @@ class UserProfileController
     return $response;
   }
 
+  #[AsApiRoute('GET', '/profile/logout'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function logout(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $this->container->get(Session::class)::destroy();
+    $this->session::destroy();
 
     HttpUtils::prepareJsonResponse($response, [], '', 'success');
 
@@ -181,14 +184,15 @@ class UserProfileController
   /**
    * User have forgot theirs password and requested renewal when logged of
    */
+  #[AsApiRoute('GET', '/profile/request-password-reset')]
   public function requestPasswordReset(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    Mailer $emailService,
+    RenderingService $twigService,
+    PromConfig $promConfig
   ) {
     $params = $request->getQueryParams();
-    $emailService = $this->container->get(Mailer::class);
-    $twigService = $this->container->get(RenderingService::class);
-    $promConfig = $this->container->get(PromConfig::class);
     $expr = $this->getQb()->expr();
 
     if (!$params['email']) {
@@ -248,12 +252,14 @@ class UserProfileController
   /**
    * Finalizing of password renewal via token
    */
+  #[AsApiRoute('POST', '/profile/change-password'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function changePassword(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getParsedBody();
-    $user = $this->container->get(Session::class)->get('user');
+    $user = $this->session->get('user');
 
     // Check that we atleast have something
     if (!isset($params['newPassword']) || !isset($params['oldPassword'])) {
@@ -290,6 +296,7 @@ class UserProfileController
   /**
    * Finalizing of password renewal via token
    */
+  #[AsApiRoute('POST', '/profile/finalize-password-rest')]
   public function finalizePasswordReset(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -320,6 +327,7 @@ class UserProfileController
   }
 
   // TODO
+  #[AsApiRoute('GET', '/profile/request-email-change')]
   public function requestEmailChange(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -328,6 +336,7 @@ class UserProfileController
   }
 
   // TODO
+  #[AsApiRoute('POST', '/profile/finalize-email-change')]
   public function finalizeEmailChange(
     ServerRequestInterface $request,
     ResponseInterface $response

@@ -2,7 +2,13 @@
 
 namespace PromCMS\Core\Internal\Http\Controllers;
 
+use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\ResponseHelper;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\WithMiddleware;
+use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Services\LocalizationService;
 use DI\Container;
 use PromCMS\Core\Utils\HttpUtils;
@@ -13,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
+#[AsRouteGroup(pathnamePrefix: '/entry-types/{modelId:generalTranslations|prom__general_translations}')]
 class LocalizationController
 {
   private Container $container;
@@ -24,7 +31,13 @@ class LocalizationController
     $this->localizationService = $this->container->get(LocalizationService::class);
   }
 
-  function updateTranslation(
+  #[
+    AsApiRoute('POST', '/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+  ]
+  function updateOne(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
@@ -50,7 +63,13 @@ class LocalizationController
     return $response;
   }
 
-  function delete(
+  #[
+    AsApiRoute('DELETE', '/items/delete'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
+  function deleteOne(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
@@ -66,6 +85,10 @@ class LocalizationController
     return $response;
   }
 
+  #[
+    AsApiRoute('GET', '/items'),
+    WithMiddleware(ModelMiddleware::class)
+  ]
   public function getMany(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -91,6 +114,7 @@ class LocalizationController
   /**
    * Gets localization for defined language
    */
+  #[AsApiRoute('GET', '/locales/{lang}.json')]
   function getLocalization(
     ServerRequestInterface $request,
     ResponseInterface $response,

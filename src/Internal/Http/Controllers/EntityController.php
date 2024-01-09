@@ -6,6 +6,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\WithMiddleware;
+use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Session;
@@ -21,48 +26,13 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-class EntryTypeController
+class EntityController
 {
-  protected User $currentUser;
-  protected PromConfig $promConfig;
-  protected EntityManager $em;
+  protected ?User $currentUser;
 
-  public function __construct(Container $container)
+  public function __construct(Container $container, private PromConfig $promConfig, protected EntityManager $em)
   {
-    $this->currentUser = $container->get(Session::class)->get('user', false);
-    $this->promConfig = $container->get(PromConfig::class);
-    $this->em = $container->get(EntityManager::class);
-  }
-
-  public function getInfo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
-
-    return $response;
-  }
-
-  // TODO: Convert this to middleware
-  private function getCurrentLanguage($request, $args)
-  {
-    $queryParams = $request->getQueryParams();
-    $nextLanguage = $this->promConfig->getProject()->getDefaultLanguage();
-    $supportedLanguages = $this->promConfig->getProject()->languages;
-
-    if (
-      isset($queryParams['lang']) &&
-      in_array($queryParams['lang'], $supportedLanguages)
-    ) {
-      $nextLanguage = $queryParams['lang'];
-    }
-
-    if (isset($args['language'])) {
-      $nextLanguage = $args['language'];
-    }
-
-    return $nextLanguage;
+    $this->currentUser = $container->get(Session::class)->get('user', null);
   }
 
   // TODO: Sharable models should have join tables for user ids
@@ -77,6 +47,11 @@ class EntryTypeController
     }
   }
 
+  #[AsApiRoute('POST', '/entry-types/{modelId}/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function create(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -120,6 +95,11 @@ class EntryTypeController
     }
   }
 
+  #[AsApiRoute('GET', '/entry-types/{modelId}/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function getOne(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -133,16 +113,13 @@ class EntryTypeController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    if (!$entity->isSingleton()) {
-      $item = $query->find(intval($args['itemId']));
-      // $query->filterById($args['itemId']);
+    $item = $query->find(intval($args['itemId']));
+    // $query->filterById($args['itemId']);
 
-      // if ($request->getAttribute('permission-only-own') === true) {
-      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      // }
-    } else {
-      $item = $query->findOneBy([]);
-    }
+    // if ($request->getAttribute('permission-only-own') === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
+
 
     try {
       if (!$item) {
@@ -156,10 +133,6 @@ class EntryTypeController
 
       return $response;
     } catch (\Exception | EntityNotFoundException $error) {
-      // If it does not exist then create it
-      if ($error instanceof EntityNotFoundException && $entity->isSingleton()) {
-        return $this->create($request, $response, $args);
-      }
 
       return $response
         ->withStatus(404)
@@ -167,6 +140,11 @@ class EntryTypeController
     }
   }
 
+  #[AsApiRoute('GET', '/entry-types/{modelId}/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function getMany(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -175,10 +153,6 @@ class EntryTypeController
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->createQueryBuilder()->from($entity->phpName, 'i')->select('i');
-
-    if ($entity->isSingleton()) {
-      return $response->withStatus(404);
-    }
 
     // if ($this->isLocalizedModel($modelTableMap)) {
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
@@ -200,6 +174,11 @@ class EntryTypeController
     return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($query)->execute($page, $limit))->getResponse();
   }
 
+  #[AsApiRoute('PATCH', '/entry-types/{modelId}/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -214,15 +193,12 @@ class EntryTypeController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    if (!$entity->isSingleton()) {
-      $item = $query->find(intval($args['itemId']));
+    $item = $query->find(intval($args['itemId']));
 
-      // if ($request->getAttribute('permission-only-own', false) === true) {
-      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      // }
-    } else {
-      $item = $query->findOneBy([]);
-    }
+    // if ($request->getAttribute('permission-only-own', false) === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
+
 
     if ($entity->sharable && $this->currentUser) {
       $parsedBody['data']['updated_by'] = $this->currentUser->getId();
@@ -256,6 +232,11 @@ class EntryTypeController
     }
   }
 
+  #[AsApiRoute('DELETE', '/entry-types/{modelId}/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -269,13 +250,11 @@ class EntryTypeController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    if (!$entity->isSingleton()) {
-      $query->where("i.id", intval($args['itemId']));
+    $query->where("i.id", intval($args['itemId']));
 
-      // if ($request->getAttribute('permission-only-own', false) === true) {
-      //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-      // }
-    }
+    // if ($request->getAttribute('permission-only-own', false) === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
 
     $result = $query->getQuery()->execute();
 
@@ -292,16 +271,17 @@ class EntryTypeController
     return $response;
   }
 
+  #[AsApiRoute('DELETE', '/entry-types/{modelId}/items/reorder'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function swapTwo(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-
-    if ($entity->isSingleton()) {
-      return $response->withStatus(404);
-    }
 
     $query = $this->em->getRepository($entity->tableName);
     $parsedBody = $request->getParsedBody();

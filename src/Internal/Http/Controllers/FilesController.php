@@ -3,9 +3,15 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Filesystem;
+use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\AsRoute;
+use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
+use PromCMS\Core\Internal\Http\Middleware\EntityMiddleware;
 use PromCMS\Core\PromConfig;
-use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
@@ -22,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
+#[AsRouteGroup('/entry-types/{modelId:files|prom__files}')]
 class FilesController
 {
   private $container;
@@ -39,17 +46,13 @@ class FilesController
     $this->promConfig = $container->get(PromConfig::class);
   }
 
-  public function getInfo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
-
-    return $response;
-  }
-
-  public function get(
+  #[
+    AsApiRoute('GET', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
+  public function getOne(
     ServerRequestInterface $request,
     ResponseInterface $response,
     array $args
@@ -70,6 +73,12 @@ class FilesController
     }
   }
 
+  #[
+    AsApiRoute('GET', '/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function getMany(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -93,7 +102,11 @@ class FilesController
       ->getResponse();
   }
 
-  public function getFile(
+  // TODO - merge this one one with getOne and controll content type with http header Accept-Content-Type
+  #[
+    AsRoute('GET', '/{itemId}/raw'),
+  ]
+  public function getOneAsStream(
     ServerRequestInterface $request,
     ResponseInterface $response,
     array $args
@@ -137,6 +150,12 @@ class FilesController
     }
   }
 
+  #[
+    AsApiRoute('POST', '/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function create(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -182,6 +201,12 @@ class FilesController
     return $response->withStatus(200);
   }
 
+  #[
+    AsApiRoute('PATCH', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -195,6 +220,12 @@ class FilesController
     return $response;
   }
 
+  #[
+    AsApiRoute('DELETE', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response,

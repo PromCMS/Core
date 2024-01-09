@@ -34,7 +34,7 @@ class UserService
 
   public function findOneBy(Expr|WhereQueryParam|Comparison|Andx $where, array $select = []): User
   {
-    $query = $this->createQb()->from(User::class, 'u')->select('u');
+    $query = $this->createQb()->from(User::class, 'u')->select(empty($select) ? 'u' : implode(', ', array_map(fn($item) => "u.$item", $select)));
 
     if ($where instanceof WhereQueryParam) {
       $where->toQuery($query, 'u');

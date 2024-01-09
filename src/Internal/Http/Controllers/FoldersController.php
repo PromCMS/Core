@@ -7,6 +7,10 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemException;
 use PromCMS\Core\Config;
 use PromCMS\Core\Filesystem;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Utils\HttpUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,6 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
+#[AsRouteGroup('/entry-types')]
 class FoldersController
 {
   private Filesystem $fs;
@@ -38,6 +43,9 @@ class FoldersController
     return $hasItems;
   }
 
+  #[
+    AsApiRoute('GET', '/folders'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function get(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -68,6 +76,9 @@ class FoldersController
     }
   }
 
+  #[
+    AsApiRoute('POST', '/folders'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function create(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -91,6 +102,9 @@ class FoldersController
     }
   }
 
+  #[
+    AsApiRoute('DELETE', '/folders'),
+    WithMiddleware(UserLoggedInMiddleware::class)]
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response

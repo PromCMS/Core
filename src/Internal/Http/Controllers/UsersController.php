@@ -3,12 +3,17 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
+use PromCMS\Core\Http\Routing\AsApiRoute;
+use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Internal\Http\Middleware\EntityMiddleware;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
-use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
@@ -25,6 +30,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
+#[AsRouteGroup('/entry-types/{modelId:users|prom__users}')]
 class UsersController
 {
   private $container;
@@ -42,16 +48,11 @@ class UsersController
     $this->em = $container->get(EntityManager::class);
   }
 
-  public function getInfo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $entity = $request->getAttribute(Entity::class);
-    HttpUtils::prepareJsonResponse($response, $this->promConfig->getEntityAsArray($entity->tableName));
-
-    return $response;
-  }
-
+  #[AsApiRoute('GET', '/items'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function getMany(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -68,6 +69,11 @@ class UsersController
     return ResponseHelper::withServerPagedResponse($response, $this->userService->getManyPaged($page, $limit, $where))->getResponse();
   }
 
+  #[AsApiRoute('PATCH', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -110,6 +116,12 @@ class UsersController
     }
   }
 
+  // Here you would expect EntityPermissionMiddleware, but not quite! Other users can view others email, id and name
+  // Thats because user email. id and name is used to display contributors on entity
+  #[AsApiRoute('GET', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+  ]
   public function getOne(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -129,6 +141,11 @@ class UsersController
     }
   }
 
+  #[AsApiRoute('POST', '/items/create'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function create(
     ServerRequestInterface $request,
     ResponseInterface $response
@@ -202,6 +219,11 @@ class UsersController
     return $response;
   }
 
+  #[AsApiRoute('DELETE', '/items/{itemId}'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -224,6 +246,11 @@ class UsersController
     return $response;
   }
 
+  #[AsApiRoute('PATCH', '/items/{itemId}/block'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function block(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -240,6 +267,11 @@ class UsersController
     return $response;
   }
 
+  #[AsApiRoute('PATCH', '/items/{itemId}/unblock'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function unblock(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -262,6 +294,11 @@ class UsersController
     return $response;
   }
 
+  #[AsApiRoute('PATCH', '/items/{itemId}/request-password-reset'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(EntityMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function requestPasswordReset(
     ServerRequestInterface $request,
     ResponseInterface $response,
