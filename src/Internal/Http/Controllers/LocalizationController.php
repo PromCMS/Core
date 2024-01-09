@@ -117,14 +117,10 @@ class LocalizationController
   #[AsApiRoute('GET', '/locales/{lang}.json')]
   function getLocalization(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
-    if (!isset($args['lang'])) {
-      return $response->withStatus(400);
-    }
-
-    $locales = $this->localizationService->getTranslations($args['lang']);
+    $lang = $request->getAttribute('lang');
+    $locales = $this->localizationService->getTranslations($lang);
 
     return ResponseHelper::withServerResponse($response, $locales)->getResponse();
   }

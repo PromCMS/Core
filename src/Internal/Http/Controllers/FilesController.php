@@ -54,13 +54,14 @@ class FilesController
   ]
   public function getOne(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
+
     try {
       HttpUtils::prepareJsonResponse(
         $response,
-        $this->fileService->getById($args['itemId'])->toArray(),
+        $this->fileService->getById($itemId)->toArray(),
       );
 
       return $response;
@@ -108,15 +109,14 @@ class FilesController
   ]
   public function getOneAsStream(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
-    $id = $args['itemId'];
+    $itemId = $request->getAttribute('itemId');
     $queryParams = $request->getQueryParams();
 
     try {
       $userId = $this->container->get(Session::class)->get('user_id', false);
-      $fileInfo = $this->fileService->getById($id);
+      $fileInfo = $this->fileService->getById($itemId);
       $responseMimeType = $this->fs->withUploads()->mimeType($fileInfo->filepath);
 
       if ($fileInfo->private && !$userId) {
@@ -209,11 +209,11 @@ class FilesController
   ]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
     $parsedBody = $request->getParsedBody();
-    $updatedFile = $this->fileService->updateById($args['itemId'], $parsedBody['data']);
+    $updatedFile = $this->fileService->updateById($itemId, $parsedBody['data']);
 
     HttpUtils::prepareJsonResponse($response, $updatedFile->toArray());
 
@@ -228,12 +228,12 @@ class FilesController
   ]
   public function delete(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
-    $id = $args['itemId'];
+    $itemId = $request->getAttribute('itemId');
+
     try {
-      $this->fileService->deleteById($id);
+      $this->fileService->deleteById($itemId);
 
       return $response->withStatus(200);
     } catch (\Exception $e) {

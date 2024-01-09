@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c78918338ac16c85eaf76dc627431f8f",
+    "content-hash": "fb7fb4d673c1e3bf5329fa6b13154fe2",
     "packages": [
         {
             "name": "bryanjhv/slim-session",
@@ -2219,6 +2219,47 @@
             "time": "2023-11-02T10:04:50+00:00"
         },
         {
+            "name": "php-di/slim-bridge",
+            "version": "3.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHP-DI/Slim-Bridge.git",
+                "reference": "d14c95b34b3c5ba2e8c40020dd93fdcc8f3ba875"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHP-DI/Slim-Bridge/zipball/d14c95b34b3c5ba2e8c40020dd93fdcc8f3ba875",
+                "reference": "d14c95b34b3c5ba2e8c40020dd93fdcc8f3ba875",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1 || ^8.0",
+                "php-di/invoker": "^2.0.0",
+                "php-di/php-di": "^6.0|^7.0",
+                "slim/slim": "^4.2.0"
+            },
+            "require-dev": {
+                "laminas/laminas-diactoros": "^2.1",
+                "phpunit/phpunit": ">= 7.0 < 10"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "DI\\Bridge\\Slim\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP-DI integration in Slim",
+            "support": {
+                "issues": "https://github.com/PHP-DI/Slim-Bridge/issues",
+                "source": "https://github.com/PHP-DI/Slim-Bridge/tree/3.4.0"
+            },
+            "time": "2023-06-29T14:08:47+00:00"
+        },
+        {
             "name": "phpmailer/phpmailer",
             "version": "v6.9.1",
             "source": {
@@ -2723,63 +2764,6 @@
                 "source": "https://github.com/php-fig/log/tree/3.0.0"
             },
             "time": "2021-07-14T16:46:02+00:00"
-        },
-        {
-            "name": "rakibtg/sleekdb",
-            "version": "2.15",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/rakibtg/SleekDB.git",
-                "reference": "957468be56bfc5d23f8f5fa7438e90ede17f9d05"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/rakibtg/SleekDB/zipball/957468be56bfc5d23f8f5fa7438e90ede17f9d05",
-                "reference": "957468be56bfc5d23f8f5fa7438e90ede17f9d05",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": ">=7.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^6.5",
-                "spatie/phpunit-watcher": "^1.8"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "SleekDB\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "rakibtg",
-                    "email": "rakibtg@gmail.com"
-                }
-            ],
-            "description": "SleekDB - A 30Kb NoSQL Database made using PHP",
-            "keywords": [
-                "SleekDB",
-                "api",
-                "database",
-                "flatfile",
-                "framework",
-                "micro",
-                "nosql",
-                "php",
-                "rest"
-            ],
-            "support": {
-                "issues": "https://github.com/rakibtg/SleekDB/issues",
-                "source": "https://github.com/rakibtg/SleekDB/tree/2.15"
-            },
-            "time": "2022-10-16T17:55:55+00:00"
         },
         {
             "name": "ralouphie/getallheaders",

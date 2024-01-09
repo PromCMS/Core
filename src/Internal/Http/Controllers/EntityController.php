@@ -55,7 +55,6 @@ class EntityController
   public function create(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    $args
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -103,8 +102,9 @@ class EntityController
   public function getOne(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    array $args
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
+
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->getRepository($entity->phpName);
@@ -113,7 +113,7 @@ class EntityController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    $item = $query->find(intval($args['itemId']));
+    $item = $query->find(intval($itemId));
     // $query->filterById($args['itemId']);
 
     // if ($request->getAttribute('permission-only-own') === true) {
@@ -148,7 +148,6 @@ class EntityController
   public function getMany(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    $args
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -182,8 +181,9 @@ class EntityController
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    array $args
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
+
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->getRepository($entity->phpName);
@@ -193,7 +193,7 @@ class EntityController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    $item = $query->find(intval($args['itemId']));
+    $item = $query->find(intval($itemId));
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
@@ -240,8 +240,9 @@ class EntityController
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    array $args
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
+
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->createQueryBuilder()->delete($entity->phpName, 'i');
@@ -250,7 +251,7 @@ class EntityController
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
     // }
 
-    $query->where("i.id", intval($args['itemId']));
+    $query->where("i.id", intval($itemId));
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);

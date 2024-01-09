@@ -34,8 +34,7 @@ class SingletonController
   // Merge with getone and update => upsert
   public function create(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    $args
+    ResponseInterface $response
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -82,8 +81,7 @@ class SingletonController
   ]
   public function get(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -109,7 +107,7 @@ class SingletonController
     } catch (\Exception | EntityNotFoundException $error) {
       // If it does not exist then create it
       if ($error instanceof EntityNotFoundException && $entity->isSingleton()) {
-        return $this->create($request, $response, $args);
+        return $this->create($request, $response);
       }
 
       return $response
@@ -125,8 +123,7 @@ class SingletonController
   ]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -178,8 +175,7 @@ class SingletonController
   ]
   public function delete(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);

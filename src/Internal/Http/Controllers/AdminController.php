@@ -22,9 +22,9 @@ class AdminController
   }
 
   #[AsRoute('GET', '/admin[/{routePiece:.*}]')]
-  public function getInfo(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+  public function getInfo(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
   {
-    $routePiece = $args['routePiece'] ?? "";
+    $routePiece = $request->getAttribute('routePiece', '');
     $routePiece = str_replace("..", "", $routePiece);
 
     $adminPath = Path::join($this->container->get('app.root'), 'public', 'admin');

@@ -48,10 +48,9 @@ class UserRolesController
   ]
   public function getOne(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
-    $itemId = $args['itemId'];
+    $itemId = $request->getAttribute('itemId');
     $item = $this->promConfig->getProject()->security->roles->getRoleBySlug($itemId);
 
     if (!$item) {

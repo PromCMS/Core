@@ -27,8 +27,6 @@
     "slim/slim": "4.*",
     "guzzlehttp/psr7": "^2",
     "guzzlehttp/guzzle": "^7.4",
-    "php-di/php-di": "^7",
-    "rakibtg/sleekdb": "^2.13",
     "bryanjhv/slim-session": "^4.0",
     "monolog/monolog": "^3.5",
     "league/flysystem": "^3.15",
@@ -45,7 +43,9 @@
     "symfony/finder": "^5.0",
     "symfony/dotenv": "^6",
     "symfony/yaml": "^5.4",
-    "symfony/cache": "^5.4"
+    "symfony/cache": "^5.4",
+    "php-di/php-di": "^7.0",
+    "php-di/slim-bridge": "^3.4"
   },
   "require-dev": {
     "symfony/console": "^6",

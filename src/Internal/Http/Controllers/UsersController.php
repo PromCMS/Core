@@ -76,13 +76,13 @@ class UsersController
   ]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
+    $itemId = intval($request->getAttribute('itemId'));
     $parsedBody = $request->getParsedBody();
     $currentUser = $this->container->get(Session::class)->get('user');
 
-    if ($currentUser->getId() === intval($args['itemId'])) {
+    if ($currentUser->getId() === $itemId) {
       return $response
         ->withStatus(400)
         ->withHeader('Content-Description', 'cannot change self by this route');
@@ -93,7 +93,7 @@ class UsersController
     }
 
     try {
-      $user = $this->userService->getOneById($args['itemId']);
+      $user = $this->userService->getOneById($itemId);
       $user->fill($parsedBody['data']);
 
       HttpUtils::prepareJsonResponse($response, $user->toArray());
@@ -124,12 +124,13 @@ class UsersController
   ]
   public function getOne(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
+    $itemId = $request->getAttribute('itemId');
+
     try {
       $item = $this->userService->getOneById(
-        $args['itemId'],
+        $itemId,
         $this->currentUser->isAdmin() ? [] : ['id', 'name']
       );
 
@@ -226,10 +227,10 @@ class UsersController
   ]
   public function delete(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    array $args
+    ResponseInterface $response
   ): ResponseInterface {
-    $user = $this->userService->getOneById(intval($args['itemId']));
+    $itemId = $request->getAttribute('itemId');
+    $user = $this->userService->getOneById(intval($itemId));
 
     if ($this->currentUser->getId() === $user->getId()) {
       return $response->withStatus(404);
@@ -253,10 +254,10 @@ class UsersController
   ]
   public function block(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    $args
+    ResponseInterface $response
   ) {
-    $updatedUser = $this->userService->updateById(intval($args['itemId']), [
+    $itemId = $request->getAttribute('itemId');
+    $updatedUser = $this->userService->updateById(intval($itemId), [
       'state' => UserState::BLOCKED,
     ]);
 
@@ -274,10 +275,10 @@ class UsersController
   ]
   public function unblock(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    $args
+    ResponseInterface $response
   ) {
-    $user = $this->userService->getOneById($args['itemId']);
+    $itemId = $request->getAttribute('itemId');
+    $user = $this->userService->getOneById($itemId);
 
     if (!$user->isBlocked()) {
       return $response->withStatus(400);
@@ -301,15 +302,15 @@ class UsersController
   ]
   public function requestPasswordReset(
     ServerRequestInterface $request,
-    ResponseInterface $response,
-    $args
+    ResponseInterface $response
   ) {
+    $itemId = $request->getAttribute('itemId');
     $jwtService = $this->container->get(JWTService::class);
     $emailService = $this->container->get(Mailer::class);
     $twigService = $this->container->get(RenderingService::class);
     $promConfig = $this->container->get(PromConfig::class);
 
-    $user = $this->userService->getOneById(intval($args['itemId']));
+    $user = $this->userService->getOneById(intval($itemId));
 
     if ($user->isBlocked()) {
       return $response->withStatus(400);

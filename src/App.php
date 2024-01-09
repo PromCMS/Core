@@ -5,7 +5,6 @@ namespace PromCMS\Core;
 use DI\Container;
 use PromCMS\Core\Exceptions\AppException;
 use Slim\App as SlimApp;
-use Slim\Factory\AppFactory;
 use Slim\Middleware\Session as SessionMiddleware;
 
 use PromCMS\Core\Internal\Bootstrap\Config as ConfigBootstrap;
@@ -58,10 +57,8 @@ class App
       // Add dependency container
       $container = new Container();
 
-      AppFactory::setContainer($container);
-
       // Create an app
-      $this->app = AppFactory::create();
+      $this->app = \DI\Bridge\Slim\Bridge::create($container);
 
       // Set app root to container
       $container->set('app.root', $this->root);

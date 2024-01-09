@@ -17,8 +17,7 @@ class SettingsController
   public function get(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    PromConfig $promConfig,
-    $args
+    PromConfig $promConfig
   ): ResponseInterface {
     HttpUtils::prepareJsonResponse($response, [
       'php' => [
