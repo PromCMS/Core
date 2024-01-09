@@ -82,12 +82,19 @@ abstract class BaseModel
     $res = [];
 
     foreach ($propers as $proper) {
+      /** @var \ReflectionAttribute */
       $attr = $proper->getAttributes(PromModelColumn::class)[0];
-      $info = new PromModelColumn(...$attr->getArguments());
+      /** @var PromModelColumn */
+      $info = $attr->newInstance();
+      $propertyName = $proper->getName();
+
+      if (!isset($this->{$propertyName})) {
+        continue;
+      }
 
       if (!$info->hide) {
-        $value = $this->${$proper->getName()};
-        $res[$proper->getName()] = $value;
+        $value = $this->{$propertyName};
+        $res[$propertyName] = $value;
       }
     }
 

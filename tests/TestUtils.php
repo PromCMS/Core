@@ -26,7 +26,10 @@ class TestUtils
   public static function clearSession()
   {
     static::ensureSession();
-    session_destroy();
+
+    if (session_status() !== PHP_SESSION_NONE) {
+      session_destroy();
+    }
     $_SESSION = [];
   }
 
