@@ -3,10 +3,10 @@
 namespace PromCMS\Core\Internal\Bootstrap;
 
 use DI\Container;
-use PromCMS\Core\Database\Models\User;
-use PromCMS\Core\Database\Models\File;
-use PromCMS\Core\Database\Models\GeneralTranslation;
-use PromCMS\Core\Database\Models\Setting;
+use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\RouteImplementation;
+use PromCMS\Core\Http\Routing\WithMiddleware;
+use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\RenderingService;
@@ -14,9 +14,11 @@ use PromCMS\Core\Utils\FsUtils;
 use Slim\App;
 use PromCMS\Core\Module;
 use PromCMS\Core\Config;
-use PromCMS\Core\Http\Routes\ApiRoutes;
-use PromCMS\Core\Http\Routes\FrontRoutes;
 use Symfony\Component\Filesystem\Path;
+use Symfony\Component\Finder\Finder;
+use Slim\Routing\RouteCollectorProxy as Router;
+
+use PromCMS\Core\Internal\Http\Controllers as InternalControllers;
 
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
@@ -26,6 +28,7 @@ class Modules implements AppModuleInterface
   public function run(App $app, Container $container)
   {
     $appRoot = $container->get('app.root');
+    $coreRoot = $container->get('core.root');
 
     Module::$modulesRoot = Path::join($appRoot, 'modules');
 
@@ -33,23 +36,11 @@ class Modules implements AppModuleInterface
     $config = $container->get(Config::class);
     $promConfig = $container->get(PromConfig::class);
     $twig = $container->get(RenderingService::class);
+    $logger = $container->get(Logger::class);
     $twigFileLoader = $twig->getLoader();
-
-    $filePathsToApiRoutes = [];
-    $filePathsToFrontRoutes = [];
-
-    // array of loaded model names (names of classes)
-    $coreModels = [
-      User::class,
-      File::class,
-      GeneralTranslation::class,
-      Setting::class
-    ];
-    $loadedModels = $coreModels;
 
     // Simple autoload load module logic
     foreach ($modules as $module) {
-
       // Make sure that plugin has valid info file
       $bootstrapFilepath = Path::join($module->getPath(), Module::$bootstrapFileName);
       $bootstrapAfter = Path::join($module->getPath(), Module::$afterBootstrapFileName);
@@ -63,12 +54,6 @@ class Modules implements AppModuleInterface
         $bootstrapClosure = require_once $bootstrapFilepath;
 
         $bootstrapClosure($app);
-      }
-
-      // Load models beforehand and save these models to array
-      $loadedModuleModels = $module->getDeclaredModels();
-      if ($loadedModuleModels) {
-        $loadedModels = array_merge($loadedModels, $loadedModuleModels);
       }
 
       // If we have folder of views then we add another view namespace
@@ -85,59 +70,89 @@ class Modules implements AppModuleInterface
 
         $module($app);
       }
-
-      // Add api routes definition file to set
-      if (file_exists($apiRoutesFilepath)) {
-        $filePathsToApiRoutes[] = $apiRoutesFilepath;
-      }
-
-      // Add front routes definition file to set
-      if (file_exists($frontRoutesFilepath)) {
-        $filePathsToFrontRoutes[] = $frontRoutesFilepath;
-      }
     }
-
-    // Set some info to memory so modules can access those
-    $container->set('sysinfo', [
-      'loadedModels' => $loadedModels,
-    ]);
 
     $routePrefix = $promConfig->getProject()->url->getPath();
     $supportedLanguages = $promConfig->getProject()->languages;
-    $coreFrontRoutes = new FrontRoutes($container);
-    $coreApiRoutes = new ApiRoutes($container);
+
+    // Staticly prepare controllers, no need to search through folder as with modules
+    $controllerClassNames = [
+      InternalControllers\AdminController::class,
+      InternalControllers\EntityController::class,
+      InternalControllers\EntitiesController::class,
+      InternalControllers\FilesController::class,
+      InternalControllers\FoldersController::class,
+      InternalControllers\LocalizationController::class,
+      InternalControllers\SettingsController::class,
+      InternalControllers\SingletonsController::class,
+      InternalControllers\UserProfileController::class,
+      InternalControllers\UserRolesController::class,
+      InternalControllers\UsersController::class,
+    ];
+
+    $finder = new Finder();
+    $appModulesRoot = Path::join($appRoot, 'modules');
+
+    try {
+      $finder->files()->name('*.php')->in([
+        Path::join($appModulesRoot, '*', 'Controllers'),
+      ])->depth('< 3');
+
+      foreach ($finder as $file) {
+        $classNameWithNamespace = $file->getPathname();
+        $classNameWithNamespace = str_replace($appModulesRoot, '', $classNameWithNamespace);
+        $classNameWithNamespace = str_replace('/', '\\', $classNameWithNamespace);
+        $classNameWithNamespace = str_replace('.php', '', $classNameWithNamespace);
+
+        $controllerClassNames[] = "PromCMS\Modules$classNameWithNamespace";
+      }
+    } catch (\Exception $error) {
+      $logger->error('Failed to find controllers in modules', [
+        'error' => $error
+      ]);
+    }
 
     // Every module should have been bootstrapped by now so we can continue to including custom routes
-    $app->group($routePrefix, function ($router) use ($filePathsToApiRoutes, $filePathsToFrontRoutes, $app, $coreFrontRoutes, $coreApiRoutes, $config) {
-      // attach core front routes
-      $coreFrontRoutes->attachAllHandlers($router);
+    $app->group($routePrefix, function (Router $router) use ($controllerClassNames) {
+      foreach ($controllerClassNames as $className) {
+        $ref = new \ReflectionClass($className);
+        $routesPrefix = "";
 
-      // Load api routes first from prepared set
-      $router
-        ->group('/api', function ($router) use ($filePathsToApiRoutes, $app, $coreApiRoutes, ) {
-          // attach core api routes
-          $coreApiRoutes->attachAllHandlers($router);
+        $classRouteGroups = $ref->getAttributes(AsRouteGroup::class);
+        /** @var \ReflectionAttribute $group */
+        if (isset($classRouteGroups[0])) {
+          $group = $classRouteGroups[0];
 
-          foreach ($filePathsToApiRoutes as $filePath) {
-            $imported = require_once $filePath;
+          /** @var AsRouteGroup */
+          $groupAsInstance = $group->newInstance();
 
-            if (!is_callable($imported)) {
-              throw new \Exception("Route file return at $filePath is not callable");
-            }
-
-            $imported($app, $router);
-          }
-        });
-
-      // Load front routes second - same as api
-      foreach ($filePathsToFrontRoutes as $filePath) {
-        $imported = require_once $filePath;
-
-        if (!is_callable($imported)) {
-          throw new \Exception("Route file return at $filePath is not callable");
+          $routesPrefix = $groupAsInstance->pathnamePrefix;
         }
 
-        $imported($app, $router);
+        $router->group($routesPrefix, function (Router $innerRouter) use ($ref) {
+          $methods = $ref->getMethods();
+          /** @var \ReflectionMethod $method */
+          foreach ($methods as $method) {
+            $routeAttributes = $method->getAttributes(RouteImplementation::class, \ReflectionAttribute::IS_INSTANCEOF);
+            $middlewareClasses = array_map(
+              fn(\ReflectionAttribute $middlewareMedata) => $middlewareMedata->getArguments()[0],
+              array_reverse($method->getAttributes(WithMiddleware::class))
+            );
+            $methodAddress = $ref->getName() . ":" . $method->getName();
+
+            /** @var \ReflectionAttribute $routeAttribute */
+            foreach ($routeAttributes as $routeAttribute) {
+              /** @var RouteImplementation */
+              $routeMetadata = $routeAttribute->newInstance();
+              $route = $routeMetadata->attach($innerRouter, $methodAddress);
+
+              /** @var string $middlewareAttribute */
+              foreach ($middlewareClasses as $middlewareClassName) {
+                $route->add($middlewareClassName);
+              }
+            }
+          }
+        });
       }
     })->add(function ($request, $handler) use ($config) {
       $response = $handler->handle($request);
