@@ -56,7 +56,7 @@
   "scripts": {
     "test": [
       "Composer\\Config::disableProcessTimeout",
-      "phpunit --testdox --stop-on-failure tests"
+      "phpunit --testdox"
     ],
     "database:migrate": "composer run cli orm:schema-tool:update",
     "cli": ["bin/prom-cms"]

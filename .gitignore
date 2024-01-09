@@ -2,3 +2,4 @@ vendor
 .DS_Store
 .test
 .prom-cms/parsed/database.sqlite
+.phpunit*
