@@ -15,75 +15,72 @@ abstract class GeneralTranslation extends BaseModel
 use \PromCMS\Core\Database\Models\Trait\Timestamps;
 use \PromCMS\Core\Database\Models\Trait\NumericId;
 
-                  #[ORM\Column(
-              type: 'string', 
-              unique: true,
-                      name: 'lang',
-              nullable: false,
-            )]
-            #[Mapping\PromModelColumn(
-          title: 'Language', 
-          type: 'string',
-          editable: 'true',
-          hide: 'false',
-          localized: 'false'
-        )]
-        protected string $lang;
-        
-                  #[ORM\Column(
-              type: 'string', 
-              unique: true,
-                      name: 'key',
-              nullable: false,
-            )]
-            #[Mapping\PromModelColumn(
-          title: 'Key', 
-          type: 'string',
-          editable: 'true',
-          hide: 'false',
-          localized: 'false'
-        )]
-        protected string $key;
-        
-                  #[ORM\Column(
-              type: 'string', 
-                              name: 'value',
-              nullable: false,
-            )]
-            #[Mapping\PromModelColumn(
-          title: 'Value', 
-          type: 'string',
-          editable: 'true',
-          hide: 'false',
-          localized: 'false'
-        )]
-        protected string $value;
-        
+                        #[ORM\Column(
+                  type: 'string', 
+                  unique: true,
+                              name: 'lang',
+                  nullable: false,
+                )]
+                #[Mapping\PromModelColumn(
+            title: 'Language', 
+            type: 'string',
+            editable: true,
+            hide: false,
+            localized: false          )]
+          protected string $lang;
+          
+                        #[ORM\Column(
+                  type: 'string', 
+                  unique: true,
+                              name: 'key',
+                  nullable: false,
+                )]
+                #[Mapping\PromModelColumn(
+            title: 'Key', 
+            type: 'string',
+            editable: true,
+            hide: false,
+            localized: false          )]
+          protected string $key;
+          
+                        #[ORM\Column(
+                  type: 'string', 
+                                          name: 'value',
+                  nullable: false,
+                )]
+                #[Mapping\PromModelColumn(
+            title: 'Value', 
+            type: 'string',
+            editable: true,
+            hide: false,
+            localized: false          )]
+          protected string $value;
+          
   
   public function __construct() {
           }
 
     public function getLang() {
-        return $this->lang;
-      }
+          return $this->lang;
+        }
   
-      public function setLang(string $lang) {
-        return $this->lang = $lang;
-      }
+        public function setLang(string $lang) {
+          return $this->lang = $lang;
+        }
   public function getKey() {
-        return $this->key;
-      }
+          return $this->key;
+        }
   
-      public function setKey(string $key) {
-        return $this->key = $key;
-      }
+        public function setKey(string $key) {
+          return $this->key = $key;
+        }
   public function getValue() {
-        return $this->value;
-      }
+          return $this->value;
+        }
   
-      public function setValue(string $value) {
-        return $this->value = $value;
-      }
+        public function setValue(string $value) {
+          return $this->value = $value;
+        }
   
   public function getId(): int|null {
     return $this->id;
