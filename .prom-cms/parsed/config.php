@@ -105,6 +105,7 @@ return [
             'type' => 'longText',
             'title' => 'Password',
             'editable' => false,
+            'hide' => true,
             'admin' => array_merge($defaultColumn['admin'], [
               'isHidden' => true
             ])

@@ -38,7 +38,7 @@ use \PromCMS\Core\Database\Models\Trait\NumericId;
             title: 'Password', 
             type: 'longText',
             editable: true,
-            hide: false,
+            hide: true,
             localized: false          )]
           protected string $password;
           
