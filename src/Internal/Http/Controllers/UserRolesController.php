@@ -50,11 +50,11 @@ class UserRolesController
     $itemId = $request->getAttribute('itemId');
     $item = $this->promConfig->getProject()->security->roles->getRoleBySlug($itemId);
 
-    if (!$item) {
-      throw new EntityNotFoundException();
-    }
-
     try {
+      if (!$item) {
+        throw new EntityNotFoundException();
+      }
+
       HttpUtils::prepareJsonResponse(
         $response,
         $item->__toArray(),
