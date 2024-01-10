@@ -103,7 +103,7 @@ use \PromCMS\Core\Database\Models\Trait\NumericId;
         
                   #[ORM\Column(
               type: 'string', 
-                              name: 'roleslug',
+                              name: 'role',
               nullable: false,
             )]
             #[Mapping\PromModelColumn(
@@ -113,7 +113,7 @@ use \PromCMS\Core\Database\Models\Trait\NumericId;
           hide: 'false',
           localized: 'false'
         )]
-        protected string $roleSlug;
+        protected string $role;
         
   
   public function __construct() {
@@ -161,12 +161,12 @@ use \PromCMS\Core\Database\Models\Trait\NumericId;
       public function setAvatar(\PromCMS\Core\Database\Models\File|null $avatar) {
         return $this->avatar = $avatar;
       }
-  public function getRoleSlug() {
-        return $this->roleSlug;
+  public function getRole() {
+        return $this->role;
       }
   
-      public function setRoleSlug(string $roleSlug) {
-        return $this->roleSlug = $roleSlug;
+      public function setRole(string $role) {
+        return $this->role = $role;
       }
   
   public function getId(): int|null {

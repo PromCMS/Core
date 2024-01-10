@@ -81,7 +81,7 @@ abstract class AppTestCase extends TestCase
     $autorizedUser->setEmail($overrides['email'] ?? static::$faker->email());
     $autorizedUser->setPassword(Password::hash($overrides['password'] ?? 'test1234'));
     // $autorizedUser->setRoleId(0);
-    $autorizedUser->setRoleSlug('admin');
+    $autorizedUser->setRole('admin');
     $autorizedUser->setState($overrides['state'] ?? UserState::ACTIVE);
 
     $em = $this->getContainer()->get(EntityManager::class);

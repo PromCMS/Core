@@ -52,6 +52,22 @@ class User extends Base\User
 
   public function isAdmin(): bool
   {
-    return $this->getRoleSlug() === 'admin';
+    return $this->getRole() === 'admin';
+  }
+
+  public function setPassword(string $password)
+  {
+    $this->password = Password::hash($password);
+
+    return $this;
+  }
+
+  public function fill(array $values)
+  {
+    parent::fill($values);
+
+    if (!empty($newPassword = $values['password'])) {
+      $this->setPassword($newPassword);
+    }
   }
 }

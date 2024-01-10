@@ -42,7 +42,7 @@ class Modules implements AppModuleInterface
       // TODO: add test
       // Load bootstrap for that module
       if (file_exists($bootstrapFilepath)) {
-        $bootstrapClosure = require_once $bootstrapFilepath;
+        $bootstrapClosure = require $bootstrapFilepath;
 
         $bootstrapClosure($app);
       }

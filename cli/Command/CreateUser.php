@@ -3,7 +3,8 @@
 namespace PromCMS\Cli\Command;
 
 use PromCMS\Cli\Application;
-use PromCMS\Core\Password;
+use PromCMS\Core\Database\Models\Base\UserState;
+use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Services\UserService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -51,21 +52,18 @@ class CreateUser extends AbstractCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $email = $input->getOption('email');
-        $password = $input->getOption('password');
-        $name = $input->getOption('name');
+        $newUser = new User();
+        $newUser->setEmail($input->getOption('email'));
+        $newUser->setPassword($input->getOption('password'));
+        $newUser->setName($input->getOption('name'));
+        $newUser->setState(UserState::ACTIVE);
+        $newUser->setRole('admin');
 
         /**
          * @var UserService
          */
         $userService = Application::getPromApp($input->getOption('cwd'))->getSlimApp()->getContainer()->get(UserService::class);
-        $createdUser = $userService->create([
-            'email' => $email,
-            'password' => Password::hash($password),
-            'state' => 'active',
-            'name' => $name,
-            'role' => 'admin'
-        ]);
+        $createdUser = $userService->create($newUser);
         $createdUserEmail = $createdUser->getEmail();
 
         $output->writeln("User with email '$createdUserEmail' has been created!");

@@ -145,7 +145,7 @@ return [
             'foreignKey' => 'id'
           ]),
           array_merge($defaultColumn, [
-            'name' => 'roleSlug',
+            'name' => 'role',
             'type' => 'string',
             'title' => 'Role',
           ]),
