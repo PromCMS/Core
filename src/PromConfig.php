@@ -47,7 +47,7 @@ class PromConfig
 
   public function getProjectModuleRoot()
   {
-    return Path::join($this->applicationRoot, $this->getModuleFolderName());
+    return Path::join($this->applicationRoot, 'modules', $this->getModuleFolderName());
   }
 
   public function getProjectModuleModelsRoot()
