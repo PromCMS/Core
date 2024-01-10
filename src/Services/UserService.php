@@ -96,10 +96,14 @@ class UserService
     return Paginate::fromQuery($userQuery)->execute($page, $perPage);
   }
 
-  public function create(array $payload): User
+  public function create(array|User $payload): User
   {
-    $create = new User();
-    $create->fill($payload);
+    if ($payload instanceof User) {
+      $create = $payload;
+    } else {
+      $create = new User();
+      $create->fill($payload);
+    }
 
     $this->em->persist($create);
     $this->em->flush();
