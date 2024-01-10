@@ -13,9 +13,9 @@ class Role
 
   public function __construct(
     public readonly string $name,
-    public readonly string $description,
     public readonly string $slug,
     private array|string $modelPermissions,
+    public readonly string $description = "",
     public readonly ?bool $hasAccessToAdmin = true,
   ) {
   }
@@ -47,6 +47,7 @@ class Role
     return [
       'name' => $this->name,
       'slug' => $this->slug,
+      'description' => $this->description,
       'hasAccessToAdmin' => $this->hasAccessToAdmin,
       'modelPermissions' => array_map(fn($key) => $this->getPermissionSetForModel($key), array_keys($this->modelPermissions)),
     ];
