@@ -23,8 +23,9 @@ class SettingsController
       'php' => [
         'upload_max_filesize' => ini_get('upload_max_filesize')
       ],
-      'application' => [
-        'languages' => $promConfig->getProject()->languages
+      'i18n' => [
+        'languages' => $promConfig->getProject()->languages,
+        'default' => $promConfig->getProject()->getDefaultLanguage(),
       ]
     ]);
 
