@@ -44,12 +44,20 @@ class Role
 
   public function __toArray()
   {
+    $modelPermissions = [];
+
+    foreach ($this->modelPermissions as $modelTableName => $permissionSet) {
+      $modelPermissions[$modelTableName] = $this->getPermissionSetForModel($modelTableName);
+    }
+
     return [
       'name' => $this->name,
       'slug' => $this->slug,
       'description' => $this->description,
-      'hasAccessToAdmin' => $this->hasAccessToAdmin,
-      'modelPermissions' => array_map(fn($key) => $this->getPermissionSetForModel($key), array_keys($this->modelPermissions)),
+      'permissions' => [
+        'hasAccessToAdmin' => $this->hasAccessToAdmin,
+        'models' => $modelPermissions,
+      ],
     ];
   }
 }
