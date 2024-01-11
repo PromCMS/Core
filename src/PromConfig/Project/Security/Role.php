@@ -56,7 +56,7 @@ class Role
       'description' => $this->description,
       'permissions' => [
         'hasAccessToAdmin' => $this->hasAccessToAdmin,
-        'models' => $modelPermissions,
+        'entities' => $modelPermissions,
       ],
     ];
   }
