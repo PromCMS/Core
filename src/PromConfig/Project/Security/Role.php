@@ -51,6 +51,7 @@ class Role
     }
 
     return [
+      'id' => $this->slug,
       'name' => $this->name,
       'slug' => $this->slug,
       'description' => $this->description,
