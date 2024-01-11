@@ -70,7 +70,7 @@ class EntityController
         $parsedBody['data']['created_by'] = $this->currentUser->getId();
       }
 
-      $instance = (new $entity->phpName);
+      $instance = (new $entity->className);
       $instance->fill($parsedBody['data']);
       $this->em->persist($instance);
       $this->em->flush();
@@ -107,7 +107,7 @@ class EntityController
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->getRepository($entity->phpName);
+    $query = $this->em->getRepository($entity->className);
 
     // if ($this->isLocalizedModel($modelTableMap)) {
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
@@ -151,7 +151,7 @@ class EntityController
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->from($entity->phpName, 'i')->select('i');
+    $query = $this->em->createQueryBuilder()->from($entity->className, 'i')->select('i');
 
     // if ($this->isLocalizedModel($modelTableMap)) {
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
@@ -186,7 +186,7 @@ class EntityController
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->getRepository($entity->phpName);
+    $query = $this->em->getRepository($entity->className);
     $parsedBody = $request->getParsedBody();
 
     // if ($this->isLocalizedModel($modelTableMap)) {
@@ -245,7 +245,7 @@ class EntityController
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->delete($entity->phpName, 'i');
+    $query = $this->em->createQueryBuilder()->delete($entity->className, 'i');
 
     // if ($this->isLocalizedModel($modelTableMap)) {
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));

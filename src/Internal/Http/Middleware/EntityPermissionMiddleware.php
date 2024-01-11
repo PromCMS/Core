@@ -80,7 +80,7 @@ class EntityPermissionMiddleware implements MiddlewareInterface
     if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY->value) {
       if (!$role) {
         $this->logger->error("User logged in, but role under slug $role could not be found. Please check your config or change user role", [
-          'entity' => $entity->phpName,
+          'entity' => $entity->className,
           'route' => $route->getPattern(),
           'user' => [
             'id' => $user->getId(),
