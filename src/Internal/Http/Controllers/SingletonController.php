@@ -47,7 +47,7 @@ class SingletonController
 
     try {
       if ($entity->sharable && $this->currentUser) {
-        $parsedBody['data']['created_by'] = $this->currentUser->getId();
+        $parsedBody['data']['createdBy'] = $this->currentUser->getId();
       }
 
       $instance = (new $entity->className);
@@ -137,7 +137,7 @@ class SingletonController
     $item = $query->findOneBy([]);
 
     if ($entity->sharable && $this->currentUser) {
-      $parsedBody['data']['updated_by'] = $this->currentUser->getId();
+      $parsedBody['data']['updatedBy'] = $this->currentUser->getId();
     }
 
     try {

@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 trait Ordable
 {
-  #[ORM\Column(type: 'integer', nullable: true)]
+  #[ORM\Column(type: 'integer', nullable: true, name: '`order`')]
   #[PromMapping\PromModelColumn(title: 'Order', type: 'number', editable: false)]
   protected int|null $order = null;
 

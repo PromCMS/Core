@@ -38,7 +38,7 @@ class EntityController
   // TODO: Sharable models should have join tables for user ids
   private function filterQueryOnlyToOwners(TableMap $modelTableMap, User $currentUser, &$query)
   {
-    $query->filterBy("created_by", $currentUser->getId());
+    $query->filterBy("createdBy", $currentUser->getId());
 
     if ($this->isSharableModel($modelTableMap)) {
       $query
@@ -67,7 +67,7 @@ class EntityController
 
     try {
       if ($entity->sharable && $this->currentUser) {
-        $parsedBody['data']['created_by'] = $this->currentUser->getId();
+        $parsedBody['data']['createdBy'] = $this->currentUser->getId();
       }
 
       $instance = (new $entity->className);
@@ -167,7 +167,7 @@ class EntityController
 
     // TODO - make it more dynamic
     if (isset($queryParams['orderBy_created_at'])) {
-      $query->orderBy("i.created_at", $queryParams['orderBy_created_at']);
+      $query->orderBy("i.createdAt", $queryParams['orderBy_created_at']);
     }
 
     return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($query)->execute($page, $limit))->getResponse();
@@ -201,7 +201,7 @@ class EntityController
 
 
     if ($entity->sharable && $this->currentUser) {
-      $parsedBody['data']['updated_by'] = $this->currentUser->getId();
+      $parsedBody['data']['updatedBy'] = $this->currentUser->getId();
     }
 
     try {
