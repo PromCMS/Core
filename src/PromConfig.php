@@ -6,6 +6,7 @@ use GuzzleHttp\Psr7\Uri;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\PromConfig\Project;
 use PromCMS\Core\PromConfig\Project\Security;
+use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionValue;
 use PromCMS\Core\PromConfig\Project\Security\Roles;
 use Symfony\Component\Filesystem\Path;
 
@@ -72,7 +73,7 @@ class PromConfig
       'name' => 'Admin',
       'slug' => 'admin',
       'description' => 'Main user role provided by PromCMS Core module',
-      'modelPermissions' => array_fill_keys($this->getEntityTableNames(), 'allow-all')
+      'modelPermissions' => array_fill_keys($this->getEntityTableNames(), RolePermissionOptionValue::ALLOW_ALL->value)
     ];
 
     $this->configuration['project']['security']['roles'] = new Roles($this->configuration['project']['security']['roles']);

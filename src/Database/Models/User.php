@@ -70,4 +70,13 @@ class User extends Base\User
       $this->setPassword($newPassword);
     }
   }
+
+  public function toArray()
+  {
+    $result = parent::toArray();
+
+    $result['name'] = $this->getName();
+
+    return $result;
+  }
 }
