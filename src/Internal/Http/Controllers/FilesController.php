@@ -54,23 +54,55 @@ class FilesController
   ]
   public function getOne(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    Session $session
   ): ResponseInterface {
     $itemId = $request->getAttribute('itemId');
 
     try {
-      HttpUtils::prepareJsonResponse(
-        $response,
-        $this->fileService->getById($itemId)->toArray(),
-      );
+      $userId = $session->get('user_id', false);
+      $fileInfo = $this->fileService->getById($itemId);
+      $responseMimeType = $this->fs->withUploads()->mimeType($fileInfo->getFilepath());
 
-      return $response;
+      if ($fileInfo->getPrivate() && !$userId) {
+        return $response->withStatus(401);
+      }
+
+      // Sometimes user will request information as json, then just return it so
+      if ($request->getHeader('Accept') === 'application/json') {
+        HttpUtils::prepareJsonResponse(
+          $response,
+          $fileInfo->toArray(),
+        );
+
+        return $response;
+      }
+
+      $queryParams = $request->getQueryParams();
+      if (preg_match('/image\/.*/', $fileInfo->getMimeType())) {
+        $imageResource = $this->imageService->getProcessed(
+          $fileInfo,
+          $queryParams,
+        );
+        $stream = new Stream($imageResource['resource']);
+        $responseMimeType = mime_content_type($imageResource['resource']);
+      } else {
+        $stream = $this->fileService->getStream($fileInfo);
+      }
+
+      return $response
+        ->withHeader('Content-Type', $responseMimeType)
+        ->withHeader('Content-Length', $stream->getSize())
+        ->withHeader('Cache-Control', 'max-age=31536000')
+        ->withBody($stream);
     } catch (\Exception $e) {
       if ($e instanceof EntityNotFoundException) {
         return $response->withStatus(404);
       }
 
-      throw $e;
+      return $response
+        ->withStatus(500)
+        ->withHeader('Content-Description', $e->getMessage());
     }
   }
 
@@ -101,53 +133,6 @@ class FilesController
 
     return ResponseHelper::withServerPagedResponse($response, $result)
       ->getResponse();
-  }
-
-  // TODO - merge this one one with getOne and controll content type with http header Accept-Content-Type
-  #[
-    AsRoute('GET', '/{itemId}/raw'),
-  ]
-  public function getOneAsStream(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    $itemId = $request->getAttribute('itemId');
-    $queryParams = $request->getQueryParams();
-
-    try {
-      $userId = $this->container->get(Session::class)->get('user_id', false);
-      $fileInfo = $this->fileService->getById($itemId);
-      $responseMimeType = $this->fs->withUploads()->mimeType($fileInfo->filepath);
-
-      if ($fileInfo->private && !$userId) {
-        return $response->withStatus(401);
-      }
-
-      if (preg_match('/image\/.*/', $fileInfo->getMimeType())) {
-        $imageResource = $this->imageService->getProcessed(
-          $fileInfo,
-          $queryParams,
-        );
-        $stream = new Stream($imageResource['resource']);
-        $responseMimeType = mime_content_type($imageResource['resource']);
-      } else {
-        $stream = $this->fileService->getStream($fileInfo);
-      }
-
-      return $response
-        ->withHeader('Content-Type', $responseMimeType)
-        ->withHeader('Content-Length', $stream->getSize())
-        ->withHeader('Cache-Control', 'max-age=31536000')
-        ->withBody($stream);
-    } catch (\Exception $e) {
-      if ($e instanceof EntityNotFoundException) {
-        return $response->withStatus(404);
-      }
-
-      return $response
-        ->withStatus(500)
-        ->withHeader('Content-Description', $e->getMessage());
-    }
   }
 
   #[

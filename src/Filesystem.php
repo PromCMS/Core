@@ -73,7 +73,7 @@ class Filesystem
   public function withCachedImages(): FlyFilesystem
   {
     if (empty($item = $this->with(static::$IMAGE_CACHE_KEY))) {
-      $this->createLocal(static::$IMAGE_CACHE_KEY, $this->getCachedImagesRoot());
+      $item = $this->createLocal(static::$IMAGE_CACHE_KEY, $this->getCachedImagesRoot());
     }
 
     return $item;

@@ -75,7 +75,7 @@ class ImageService
   {
     $args = $this->parseDirtyParamsToGetProcessed($dirtyParams);
     $fileAsStream = $this->fs->withUploads()->readStream($file->getFilepath());
-    $filepath = Path::makeAbsolute($file->getFilepath(), '');
+    $filepath = Path::makeAbsolute($file->getFilepath(), '/');
     $fileStream = $file;
 
     if (count($args)) {

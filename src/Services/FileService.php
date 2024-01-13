@@ -145,7 +145,7 @@ class FileService
       $createdFile->fill($createFileMetadata);
       $this->em->persist($createdFile);
 
-      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream());
+      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream()->detach());
 
       $this->em->flush();
       $this->em->getConnection()->commit();
