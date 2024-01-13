@@ -34,19 +34,19 @@ class RoutesExtension extends AbstractExtension
 
   // Override to slim twig extension
   public function urlFor(string $routeName, array $data = [], array $queryParams = []): string
-    {
-        $currentLanguage = $this->localizationService->getCurrentLanguage();
-        $defaultLanguage = $this->promConfig->getProjectDefaultLanguage();
-        $finalRoute = $this->container
-          ->get(RouteCollectorService::class)
-          ->getRouteParser()
-          ->urlFor($routeName, $data, $queryParams);
+  {
+    $currentLanguage = $this->localizationService->getCurrentLanguage();
+    $defaultLanguage = $this->promConfig->getProject()->getDefaultLanguage();
+    $finalRoute = $this->container
+      ->get(RouteCollectorService::class)
+      ->getRouteParser()
+      ->urlFor($routeName, $data, $queryParams);
 
-        // if current language is not the same as default one then we prepend current language
-        if ($currentLanguage !== $defaultLanguage) {
-            $finalRoute = "/$currentLanguage" . $finalRoute;
-        }
-
-        return $finalRoute;
+    // if current language is not the same as default one then we prepend current language
+    if ($currentLanguage !== $defaultLanguage) {
+      $finalRoute = "/$currentLanguage" . $finalRoute;
     }
+
+    return $finalRoute;
+  }
 }
