@@ -16,7 +16,7 @@ use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use GuzzleHttp\Psr7\Stream;
-use GuzzleHttp\Psr7\UploadedFile;
+use Slim\Psr7\UploadedFile;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
 

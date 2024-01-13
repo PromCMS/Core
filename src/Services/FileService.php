@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Andx;
 use GuzzleHttp\Psr7\MimeType;
-use GuzzleHttp\Psr7\UploadedFile;
+use Slim\Psr7\UploadedFile;
 use PromCMS\Core\Config;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
