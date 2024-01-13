@@ -29,7 +29,7 @@ class Filesystem
   {
     $adapter = new LocalFilesystemAdapter(location: $root);
     $filesystem = new FlyFilesystem($adapter, [
-      'public_url' => $this->promConfig->getProjectUri()->__toString()
+      'public_url' => $this->promConfig->getProject()->url->__toString()
     ]);
 
     $this->fsInstances[$name] = $filesystem;
@@ -56,7 +56,7 @@ class Filesystem
   public function withUploads(): FlyFilesystem
   {
     if (empty($item = $this->with(static::$UPLOADS_KEY))) {
-      $this->createLocal(static::$UPLOADS_KEY, $this->getUploadsRoot());
+      $item = $this->createLocal(static::$UPLOADS_KEY, $this->getUploadsRoot());
     }
 
     return $item;
