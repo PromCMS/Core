@@ -69,7 +69,7 @@ class FilesController
       }
 
       // Sometimes user will request information as json, then just return it so
-      if ($request->getHeader('Accept') === 'application/json') {
+      if ($request->getHeader('accept')[0] === 'application/json') {
         HttpUtils::prepareJsonResponse(
           $response,
           $fileInfo->toArray(),
