@@ -151,7 +151,7 @@ class FilesController
   }
 
   #[
-    AsApiRoute('POST', '/items'),
+    AsApiRoute('POST', '/items/create'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
