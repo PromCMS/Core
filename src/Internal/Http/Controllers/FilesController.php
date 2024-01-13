@@ -28,7 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-#[AsRouteGroup('/entry-types/{modelId:files|prom__files}')]
+#[AsRouteGroup('/library/{modelId:files}')]
 class FilesController
 {
   private $container;

@@ -49,7 +49,7 @@ class EntityPermissionMiddleware implements MiddlewareInterface
     $modelIdParam = $route->getArgument('modelId');
 
     // For viewing roles you just need to be logged in, managing roles d
-    if (in_array($modelIdParam, ['user-roles', 'userRoles', 'prom__user_roles'])) {
+    if (in_array($modelIdParam ?? '', ['user-roles', 'userRoles', 'prom__user_roles'])) {
       return $handler->handle($request);
     }
 

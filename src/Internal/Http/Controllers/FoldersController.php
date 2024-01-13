@@ -18,7 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-#[AsRouteGroup('/entry-types')]
+#[AsRouteGroup('/library')]
 class FoldersController
 {
   private Filesystem $fs;
