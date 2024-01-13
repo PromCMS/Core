@@ -51,7 +51,7 @@ class SingletonController
       }
 
       $instance = (new $entity->className);
-      $instance->fill($parsedBody['data']);
+      $instance->fill($parsedBody['data'] ?? []);
       $this->em->persist($instance);
       $this->em->flush();
 

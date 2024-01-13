@@ -47,7 +47,7 @@ class EntityController
     }
   }
 
-  #[AsApiRoute('POST', '/entry-types/{modelId}/items'),
+  #[AsApiRoute('POST', '/entry-types/{modelId}/items/create'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
@@ -67,7 +67,7 @@ class EntityController
 
     try {
       if ($entity->sharable && $this->currentUser) {
-        $parsedBody['data']['createdBy'] = $this->currentUser->getId();
+        $parsedBody['data']['createdBy'] = $this->currentUser;
       }
 
       $instance = (new $entity->className);
@@ -201,7 +201,7 @@ class EntityController
 
 
     if ($entity->sharable && $this->currentUser) {
-      $parsedBody['data']['updatedBy'] = $this->currentUser->getId();
+      $parsedBody['data']['updatedBy'] = $this->currentUser;
     }
 
     try {
@@ -324,8 +324,8 @@ class EntityController
 
     try {
       if ($entity->sharable && $this->currentUser) {
-        $fromEntry->setUpdatedBy($this->currentUser->getId());
-        $toEntry->setUpdatedBy($this->currentUser->getId());
+        $fromEntry->setUpdatedBy($this->currentUser);
+        $toEntry->setUpdatedBy($this->currentUser);
       }
 
       $fromEntry->setOrder($toEntry);
