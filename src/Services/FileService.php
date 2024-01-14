@@ -3,10 +3,8 @@
 namespace PromCMS\Core\Services;
 
 use DI\Container;
-use Doctrine\Common\Collections\Expr\Comparison;
-use Doctrine\ORM\Query\Expr;
-use Doctrine\ORM\Query\Expr\Andx;
 use GuzzleHttp\Psr7\MimeType;
+use League\Flysystem\StorageAttributes;
 use Slim\Psr7\UploadedFile;
 use PromCMS\Core\Config;
 use PromCMS\Core\Database\EntityManager;
@@ -22,12 +20,14 @@ class FileService
   private Filesystem $fs;
   private Config $config;
   private EntityManager $em;
+  private \League\Flysystem\Filesystem $uploadsFs;
 
   public function __construct(Container $container)
   {
     $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
     $this->em = $container->get(EntityManager::class);
+    $this->uploadsFs = $container->get(Filesystem::class)->withUploads();
   }
 
   private function createQb()
@@ -43,16 +43,12 @@ class FileService
     return $this->em->getRepository(File::class)->find($id);
   }
 
-  public function getManyPaged(int $page, int $perPage = 15, Expr|WhereQueryParam|Comparison|Andx|null $where = null)
+  public function getManyPaged(int $page, int $perPage = 15, WhereQueryParam|null $where = null)
   {
     $filesQuery = $this->createQb()->from(File::class, 'f')->select('f');
 
     if (!empty($where)) {
-      if ($where instanceof WhereQueryParam) {
-        $where->toQuery($filesQuery, 'f');
-      } else {
-        $filesQuery->where($where);
-      }
+      $where->toQuery($filesQuery, 'f');
     }
 
     return Paginate::fromQuery($filesQuery)->execute($page, $perPage);
@@ -61,28 +57,19 @@ class FileService
   /**
    * Get many files from defined directory
    */
-  public function getManyInDirectoryPaged(string $directoryPath, int|null $page = null, int|null $perPage = null, Expr|WhereQueryParam|Comparison|Andx|null $where = null)
+  public function getManyInDirectoryPaged(string $directoryPath, int|null $page = null, int|null $perPage = null, WhereQueryParam|null $where = null)
   {
-    $regexPart =
-      $directoryPath . ($directoryPath !== '/' ? '/' : '');
-
-
-    // $regexPart = str_replace('/', '\/', $fixedDirectoryPath);
-    // $where[] = function ($file) use ($regexPart) {
-    //   $pattern = '(' . $regexPart . ')[^\/]*(\.).*';
-    //   $pattern = '/^' . $pattern . "$/m";
-    //   return !!preg_match($pattern, $file['filepath']);
-    // };
-
     if (empty($where)) {
-      $where = $this->em->getExpressionBuilder();
+      $where = new WhereQueryParam("");
     }
 
-    if ($where instanceof WhereQueryParam) {
-      $where->add(name: 'filepath', criteria: 'LIKE', value: "$regexPart%");
-    } else {
-      $where->andX($where->like('filepath', "$regexPart%"));
-    }
+    $filesInCurrentDirectory = $this->uploadsFs
+      ->listContents($directoryPath)
+      ->filter(fn(StorageAttributes $attributes) => $attributes->isFile())
+      ->map(fn(StorageAttributes $attributes) => "/" . $attributes->path())
+      ->toArray();
+
+    $where->add(name: 'filepath', criteria: 'IN', value: $filesInCurrentDirectory);
 
     return $this->getManyPaged($page, $perPage, $where);
   }
@@ -110,10 +97,6 @@ class FileService
   public function create(UploadedFile $uploadedFile, array $fileMetadata)
   {
     $fileRoot = $fileMetadata['root'];
-
-    if ($fileRoot === '/') {
-      $fileRoot = '';
-    }
 
     $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
     $newBasename = bin2hex(random_bytes(8)) . '-' . time();
@@ -145,10 +128,9 @@ class FileService
       $createdFile->fill($createFileMetadata);
       $this->em->persist($createdFile);
 
-      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream()->detach());
-
       $this->em->flush();
       $this->em->getConnection()->commit();
+      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream()->detach());
     } catch (\Exception $error) {
       $this->em->getConnection()->rollBack();
 
@@ -190,6 +172,8 @@ class FileService
   public function deleteById(string $id)
   {
     $fileInfo = $this->getById($id);
+
+    $this->em->getConnection()->beginTransaction();
 
     try {
       $this->em->remove($fileInfo);

@@ -46,6 +46,15 @@ abstract class EntityMiddleware implements MiddlewareInterface
         $route = $routeContext->getRoute();
         $modelTableName = $route->getArgument('modelId');
 
+        // Files cannot be served from this route
+        if (($modelTableName === 'files' || $modelTableName === 'prom__files') && str_contains($request->getUri()->getPath(), '/entry-types')) {
+            $response = new Response();
+
+            return $response
+                ->withStatus(404)
+                ->withHeader('Content-Description', 'Model does not exist');
+        }
+
         if (!in_array($modelTableName, $this->tableNames)) {
             // TODO: this should be dropped
             // TODO: remove this after you have ensured that everything works correctly as we probably dont want this check to be here and take models from url as is

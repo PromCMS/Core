@@ -12,6 +12,7 @@ class WhereQueryParam
     '>' => 'qt',
     '<' => 'lt',
     'LIKE' => 'like',
+    'NOTLIKE' => 'notLike',
     'IN' => 'in',
     'NOT IN' => 'notIn'
   ];

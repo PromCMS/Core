@@ -7,7 +7,6 @@ use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\Routing\AsApiRoute;
-use PromCMS\Core\Http\Routing\AsRoute;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
@@ -222,7 +221,7 @@ class FilesController
 
       return $response->withStatus(200);
     } catch (\Exception $e) {
-      return $response->withStatus(404);
+      return $response->withStatus(404)->withHeader('Content-Description', $e->getMessage());
     }
   }
 }

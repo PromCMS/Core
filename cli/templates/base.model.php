@@ -24,8 +24,8 @@ abstract class <?php echo $entity->phpName ?> extends BaseModel
 <?php echo "\n"; ?>
 
   <?php foreach ($entity->getColumns() as $column): ?>
+    <?php $entityIsRequired = $entity->isSingleton() ? false : $column->required ?>
       <?php if ($column instanceof RelationshipColumn): ?>
-          <?php $entityIsRequired = $entity->isSingleton() ? false : $column->required ?>
             <?php if ($column->isManyToOne()): ?>
                 /**
                 * @var Collection<int, <?php echo $column->getReferencedEntity()->className ?>>
