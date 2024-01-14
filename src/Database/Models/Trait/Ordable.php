@@ -23,7 +23,7 @@ trait Ordable
    *
    * @param int|null $v New value
    */
-  public function setOrder(int $v)
+  public function setOrder(int|null $v)
   {
     if ($this->order !== $v) {
       $this->order = $v;
