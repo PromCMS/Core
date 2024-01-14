@@ -55,4 +55,10 @@ trait Ordable
 
     return $this;
   }
+
+  #[ORM\PostPersist]
+  public function __prom_createOrder(): void
+  {
+    $this->order = $this->getId();
+  }
 }

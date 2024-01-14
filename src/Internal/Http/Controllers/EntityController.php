@@ -228,8 +228,8 @@ class EntityController
         $toEntry->setUpdatedBy($this->currentUser);
       }
 
-      $fromEntry->setOrder($toEntry->getOrder());
-      $toEntry->setOrder($fromEntry->getOrder());
+      $fromEntry->setOrder($toEntry->getOrder() ?? $toEntry->getId());
+      $toEntry->setOrder($fromEntry->getOrder() ?? $fromEntry->getId());
 
       $this->em->flush();
       $this->em->getConnection()->commit();
