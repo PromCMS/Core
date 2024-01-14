@@ -173,6 +173,80 @@ class EntityController
     return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($query)->execute($page, $limit))->getResponse();
   }
 
+  #[AsApiRoute('PATCH', '/entry-types/{modelId}/items/reorder'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
+  public function swapTwo(
+    ServerRequestInterface $request,
+    ResponseInterface $response
+  ): ResponseInterface {
+    /** @var Entity */
+    $entity = $request->getAttribute(Entity::class);
+
+    $query = $this->em->getRepository($entity->className);
+    $data = $request->getParsedBody();
+
+    if (
+      !$entity->sorting ||
+      empty($fromId = $data['fromId']) ||
+      empty($toId = $data['toId']) ||
+      $data['fromId'] === $data['toId']
+    ) {
+      return $response->withStatus(400);
+    }
+
+    $fromId = intval($fromId);
+    $toId = intval($toId);
+
+    // if ($request->getAttribute('permission-only-own', false) === true) {
+    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
+    // }
+
+    $items = new ArrayCollection($query->findBy([
+      'id' => [$fromId, $toId]
+    ]));
+
+    if ($items->count() !== 2) {
+      return $response->withStatus(400);
+    }
+
+    $this->em->getConnection()->beginTransaction();
+
+    foreach ($items as $result) {
+      if ($result->getId() === $fromId) {
+        $fromEntry = $result;
+      } else {
+        $toEntry = $result;
+      }
+    }
+
+    try {
+      if ($entity->sharable && $this->currentUser) {
+        $fromEntry->setUpdatedBy($this->currentUser);
+        $toEntry->setUpdatedBy($this->currentUser);
+      }
+
+      $fromEntry->setOrder($toEntry);
+      $toEntry->setOrder($fromEntry);
+
+      $this->em->flush();
+      $this->em->getConnection()->commit();
+
+      HttpUtils::prepareJsonResponse($response, [], '', 'success');
+    } catch (\Exception $e) {
+      $this->em->getConnection()->rollBack();
+
+      return $response
+        ->withStatus(500)
+        ->withHeader('x-custom-message', $e->getMessage())
+        ->withHeader('x-custom-trace', $e->getTraceAsString());
+    }
+
+    return $response;
+  }
+
   #[AsApiRoute('PATCH', '/entry-types/{modelId}/items/{itemId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
@@ -268,81 +342,6 @@ class EntityController
     }
 
     HttpUtils::prepareJsonResponse($response, [], 'Item deleted');
-
-    return $response;
-  }
-
-  #[AsApiRoute('DELETE', '/entry-types/{modelId}/items/reorder'),
-    WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(ModelMiddleware::class),
-    WithMiddleware(EntityPermissionMiddleware::class),
-  ]
-  public function swapTwo(
-    ServerRequestInterface $request,
-    ResponseInterface $response
-  ): ResponseInterface {
-    /** @var Entity */
-    $entity = $request->getAttribute(Entity::class);
-
-    $query = $this->em->getRepository($entity->tableName);
-    $parsedBody = $request->getParsedBody();
-    $data = $parsedBody['data'];
-
-    if (
-      !$entity->sorting ||
-      empty($fromId = $data['fromId']) ||
-      empty($toId = $data['toId']) ||
-      $data['fromId'] === $data['toId']
-    ) {
-      return $response->withStatus(400);
-    }
-
-    $fromId = intval($fromId);
-    $toId = intval($toId);
-
-    // if ($request->getAttribute('permission-only-own', false) === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
-
-    $items = new ArrayCollection($query->findBy([
-      'id' => [$fromId, $toId]
-    ]));
-
-    if ($items->count() !== 2) {
-      return $response->withStatus(400);
-    }
-
-    $this->em->getConnection()->beginTransaction();
-
-    foreach ($items as $result) {
-      if ($result->getId() === $fromId) {
-        $fromEntry = $result;
-      } else {
-        $toEntry = $result;
-      }
-    }
-
-    try {
-      if ($entity->sharable && $this->currentUser) {
-        $fromEntry->setUpdatedBy($this->currentUser);
-        $toEntry->setUpdatedBy($this->currentUser);
-      }
-
-      $fromEntry->setOrder($toEntry);
-      $toEntry->setOrder($fromEntry);
-
-      $this->em->flush();
-      $this->em->getConnection()->commit();
-
-      HttpUtils::prepareJsonResponse($response, [], '', 'success');
-    } catch (\Exception $e) {
-      $this->em->getConnection()->rollBack();
-
-      return $response
-        ->withStatus(500)
-        ->withHeader('x-custom-message', $e->getMessage())
-        ->withHeader('x-custom-trace', $e->getTraceAsString());
-    }
 
     return $response;
   }

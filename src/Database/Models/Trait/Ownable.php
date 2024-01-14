@@ -14,7 +14,17 @@ trait Ownable
   protected User|null $createdBy = null;
 
   #[ORM\ManyToOne(targetEntity: User::class)]
-  #[ORM\JoinColumn(name: 'owned_by_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-  #[PromMapping\PromModelColumn(title: 'Owned by', type: 'relationship')]
-  protected User|null $ownedBy = null;
+  #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+  #[PromMapping\PromModelColumn(title: 'Updated by', type: 'relationship')]
+  protected User|null $updateBy = null;
+
+  public function setUpdatedBy(User $user)
+  {
+    $this->updateBy = $user;
+  }
+
+  public function setCreatedBy(User $user)
+  {
+    $this->createdBy = $user;
+  }
 }
