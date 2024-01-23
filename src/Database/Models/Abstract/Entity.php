@@ -19,7 +19,7 @@ abstract class Entity
   /**
    * returns metadata for current model, provide prom config to also include some data from prom config
    */
-  private function getMetadata(PromConfig $promConfig)
+  protected function getMetadata(PromConfig $promConfig)
   {
     if ($this->cachedMetadata) {
       return $this->cachedMetadata;
@@ -55,7 +55,7 @@ abstract class Entity
   /**
    * @return array<string, \ReflectionProperty>
    */
-  private function getPromFields()
+  protected function getPromFields()
   {
     $ref = new \ReflectionClass(static::class);
     $propers = $ref->getProperties();
@@ -101,22 +101,44 @@ abstract class Entity
     return $res;
   }
 
-  public function fill(array $values)
+
+  /**
+   * Compares incomming values with existing fields and returns filtered columns with PromModelColumn instances
+   * 
+   *@return array<PromModelColumn>
+   */
+  protected function getColumnsForValues(array $values): array
   {
     $propers = $this->getPromFields();
     $incommingValuesAsKeys = array_keys($values);
+    $newValue = [];
 
     foreach ($propers as $propertyName => $proper) {
       if (!in_array($propertyName, $incommingValuesAsKeys)) {
         continue;
       }
 
+      /** @var \ReflectionAttribute */
       $attr = $proper->getAttributes(PromModelColumn::class)[0];
-      $info = new PromModelColumn(...$attr->getArguments());
-
-      if ($info->editable) {
-        $this->{$propertyName} = $values[$propertyName];
+      if (!$attr) {
+        continue;
       }
+
+      /** @var PromModelColumn */
+      $info = $attr->newInstance();
+
+      $newValue[] = $info;
+    }
+
+    return $newValue;
+  }
+
+  public function fill(array $values)
+  {
+    $columns = $this->getColumnsForValues($values);
+
+    foreach ($columns as $propertyName => $proper) {
+      $this->{$propertyName} = $values[$propertyName];
     }
 
     return $this;

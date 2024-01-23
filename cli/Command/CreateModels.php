@@ -88,12 +88,23 @@ class CreateModels extends AbstractCommand
       ];
       $baseFoldername = Path::join($modelsRoot, 'Base');
 
-      $mutableFilaname = Path::join($modelsRoot, $modelFilename);
-      if (!file_exists($mutableFilaname)) {
-        Template::create(Path::join($templatesRoot, 'generic.model.php'))->renderTo($mutableFilaname, $templateVars);
+      $mutableFilename = Path::join($modelsRoot, $modelFilename);
+      if (!file_exists($mutableFilename)) {
+        Template::create(Path::join($templatesRoot, 'generic.model.php'))->renderTo($mutableFilename, $templateVars);
       }
 
       Template::create(Path::join($templatesRoot, 'base.model.php'))->renderTo(Path::join($baseFoldername, $modelFilename), $templateVars);
+
+      if ($entity->localized) {
+        $localizedModelFilename = $modalClassName . "Translation.php";
+
+        $localizedMutableFilename = Path::join($modelsRoot, $localizedModelFilename);
+        if (!file_exists($localizedMutableFilename)) {
+          Template::create(Path::join($templatesRoot, 'generic-translation.model.php'))->renderTo($localizedMutableFilename, $templateVars);
+        }
+
+        Template::create(Path::join($templatesRoot, 'base-translation.model.php'))->renderTo(Path::join($baseFoldername, $localizedModelFilename), $templateVars);
+      }
 
       $enumColumns = $entity->getEnumColumns();
       foreach ($enumColumns as $column) {

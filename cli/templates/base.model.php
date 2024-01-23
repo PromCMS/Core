@@ -6,7 +6,7 @@
 use PromCMS\Core\PromConfig\RelationshipColumn;
 
 $localizedColumns = $entity->getLocalizedColumns();
-$isLocalizedEntity = count($localizedColumns) > 0;
+$isLocalizedEntity = $entity->localized;
 
 echo "<?php\n";
 ?>
@@ -19,12 +19,13 @@ namespace <?php echo $entity->namespace; ?>\Base;
 
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
-use PromCMS\Core\Database\Models\Abstract\BaseModel;
+use PromCMS\Core\Database\Models\Abstract\Entity;
 <?php if ($isLocalizedEntity): ?>
 use Gedmo\Mapping\Annotation as GedmoMapping;
+use Doctrine\Common\Collections\ArrayCollection;
 <?php endif; ?>
 
-abstract class <?php echo $entity->phpName ?> extends BaseModel {
+abstract class <?php echo $entity->phpName ?> extends Entity {
   <?php echo implode("\n  ", array_map(fn($trait) => "use \\$trait;", $entity->traits)); ?>
   <?php echo "\n"; ?>
 
@@ -77,10 +78,16 @@ abstract class <?php echo $entity->phpName ?> extends BaseModel {
   protected <?php if (!$column->required):echo '?';endif; ?><?php echo $column->getPhpType() ?> $<?php echo $column->name; ?><?php if ($column->defaultValue): ?> = <?php echo $column->defaultValue; endif; ?>;<?php echo "\n\n"; ?>
 <?php endforeach; ?>
   public function __construct() {
-    <?php $manyToOneColumns = array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()); ?>
-    <?php foreach ($manyToOneColumns as $column): ?>
+<?php $manyToOneColumns = array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()); 
+      if (!empty($manyToOneColumns)):
+        foreach ($manyToOneColumns as $column): ?>
     $this-><?php $column->name; ?> = new Doctrine\Common\Collections\ArrayCollection();
-    <?php endforeach; echo "\n"; ?>
+<?php   endforeach; 
+        echo "\n";
+      endif; 
+      if ($isLocalizedEntity): ?>
+    $this->translations = new ArrayCollection();
+<?php endif; ?>
   }
 
 <?php $publicColumns = $entity->getColumns() ?>
@@ -93,6 +100,35 @@ abstract class <?php echo $entity->phpName ?> extends BaseModel {
     return $this-><?php echo $column->name ?> = $<?php echo $column->name ?>;
   }
 <?php endforeach; ?>
+<?php if ($isLocalizedEntity): ?>
+<?php $translationEntity = $entity->getTranslationClassName(); ?>
+  
+  #[ORM\OneToMany(targetEntity: \<?php echo $translationEntity; ?>::class, mappedBy: 'object', cascade: ['persist', 'remove'])]
+  private $translations;
+
+  public function addTranslation(\<?php echo $translationEntity; ?> $t)
+  {
+      if (!$this->translations->contains($t)) {
+          $this->translations[] = $t;
+          $t->setObject($this);
+      }
+  }
+
+  public function fill(array $values, ?string $language = null)
+  {
+    $columns = $this->getColumnsForValues($values);
+
+    foreach ($columns as $propertyName => $proper) {
+      if ($language && $proper->localized) {
+        $this->addTranslation(new \<?php echo $translationEntity; ?>($language, $propertyName, $values[$propertyName]));
+      } else {
+        $this->{$propertyName} = $values[$propertyName];
+      }
+    }
+
+    return $this;
+  }
+<?php endif; ?>
 
   public function getId(): int|null {
     return $this->id;

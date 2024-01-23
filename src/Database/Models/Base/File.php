@@ -139,6 +139,21 @@ abstract class File extends Entity {
       }
   }
 
+  public function fill(array $values, ?string $language = null)
+  {
+    $columns = $this->getColumnsForValues($values);
+
+    foreach ($columns as $propertyName => $proper) {
+      if ($language && $proper->localized) {
+        $this->addTranslation(new \PromCMS\Core\Database\Models\FileTranslation($language, $propertyName, $values[$propertyName]));
+      } else {
+        $this->{$propertyName} = $values[$propertyName];
+      }
+    }
+
+    return $this;
+  }
+
   public function getId(): int|null {
     return $this->id;
   }

@@ -2,6 +2,10 @@
 
 namespace PromCMS\Core\Internal\Http\Controllers;
 
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
+use Gedmo\Translatable\Query\TreeWalker\TranslationWalker;
+use Gedmo\Translatable\TranslatableListener;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
@@ -11,6 +15,7 @@ use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\SingletonMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
+use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -29,6 +34,20 @@ class SingletonController
   public function __construct(Container $container, private PromConfig $promConfig, protected EntityManager $em)
   {
     $this->currentUser = $container->get(Session::class)->get('user', false);
+  }
+
+  private function getLocalizedQuery(QueryBuilder $query, ServerRequestInterface $request)
+  {
+    $compiledQuery = $query->getQuery();
+
+    $compiledQuery
+      ->setHint(
+        Query::HINT_CUSTOM_OUTPUT_WALKER,
+        TranslationWalker::class
+      )
+      ->setHint(TranslatableListener::HINT_TRANSLATABLE_LOCALE, $request->getAttribute('lang'));
+
+    return $compiledQuery;
   }
 
   // Merge with getone and update => upsert
@@ -81,17 +100,21 @@ class SingletonController
   ]
   public function get(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    LocalizationService $localizationService
   ): ResponseInterface {
+    $language = $request->getAttribute('lang');
+
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->getRepository($entity->className);
+    $query = $this->em->createQueryBuilder()
+      ->from($entity->className, 'i')
+      ->select('i')
+      ->setMaxResults(1);
 
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
-
-    $item = $query->findOneBy([]);
+    $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
+    $compiledQuery = $localize ? $this->getLocalizedQuery($query, $request) : $query->getQuery();
+    $item = $compiledQuery->getOneOrNullResult();
 
     try {
       if (!$item) {
@@ -123,7 +146,8 @@ class SingletonController
   ]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    LocalizationService $localizationService
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
@@ -145,7 +169,15 @@ class SingletonController
         throw new EntityNotFoundException();
       }
 
-      $item->fill($parsedBody['data']);
+      $language = $request->getAttribute('lang');
+      $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
+
+      if ($localize) {
+        $item->fill($parsedBody['data'], $language);
+      } else {
+        $item->fill($parsedBody['data']);
+      }
+
       $this->em->flush();
 
       HttpUtils::prepareJsonResponse($response, $item->toArray());

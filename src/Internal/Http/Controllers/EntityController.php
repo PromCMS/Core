@@ -3,6 +3,10 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
+use Gedmo\Translatable\Query\TreeWalker\TranslationWalker;
+use Gedmo\Translatable\TranslatableListener;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Database\Models\User;
@@ -13,6 +17,7 @@ use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
+use PromCMS\Core\Services\LocalizationService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -47,6 +52,20 @@ class EntityController
     }
   }
 
+  private function getLocalizedQuery(QueryBuilder $query, ServerRequestInterface $request)
+  {
+    $compiledQuery = $query->getQuery();
+
+    $compiledQuery
+      ->setHint(
+        Query::HINT_CUSTOM_OUTPUT_WALKER,
+        TranslationWalker::class
+      )
+      ->setHint(TranslatableListener::HINT_TRANSLATABLE_LOCALE, $request->getAttribute('lang'));
+
+    return $compiledQuery;
+  }
+
   #[AsApiRoute('POST', '/entry-types/{modelId}/items/create'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
@@ -59,9 +78,7 @@ class EntityController
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
 
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $modelInstance->setLocale($this->getCurrentLanguage($request, $args));
-    // }
+    // There is no need to set language on create as create should take default language
 
     $parsedBody = $request->getParsedBody();
 
@@ -102,24 +119,27 @@ class EntityController
   public function getOne(
     ServerRequestInterface $request,
     ResponseInterface $response,
+    LocalizationService $localizationService
   ): ResponseInterface {
     $itemId = $request->getAttribute('itemId');
+    $language = $request->getAttribute('lang');
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->getRepository($entity->className);
+    $query = $this->em->createQueryBuilder()
+      ->from($entity->className, 'i')
+      ->select('i')
+      ->setMaxResults(1)
+      ->where('i.id', ':id')
+      ->setParameter(':id', intval($itemId));
 
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
-
-    $item = $query->find(intval($itemId));
-    // $query->filterById($args['itemId']);
+    $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
+    $compiledQuery = $localize ? $this->getLocalizedQuery($query, $request) : $query->getQuery();
+    $item = $compiledQuery->getOneOrNullResult();
 
     // if ($request->getAttribute('permission-only-own') === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
     // }
-
 
     try {
       if (!$item) {
@@ -153,10 +173,6 @@ class EntityController
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->createQueryBuilder()->from($entity->className, 'i')->select('i');
 
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
-
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
@@ -170,7 +186,7 @@ class EntityController
       $query->orderBy("i.createdAt", $queryParams['orderBy_created_at']);
     }
 
-    return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($query)->execute($page, $limit))->getResponse();
+    return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($this->getLocalizedQuery($query, $request))->execute($page, $limit))->getResponse();
   }
 
   #[AsApiRoute('PATCH', '/entry-types/{modelId}/items/reorder'),
@@ -255,6 +271,7 @@ class EntityController
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
+    LocalizationService $localizationService
   ): ResponseInterface {
     $itemId = $request->getAttribute('itemId');
 
@@ -262,17 +279,11 @@ class EntityController
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->getRepository($entity->className);
     $parsedBody = $request->getParsedBody();
-
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
-
     $item = $query->find(intval($itemId));
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
     // }
-
 
     if ($entity->sharable && $this->currentUser) {
       $parsedBody['data']['updatedBy'] = $this->currentUser;
@@ -283,7 +294,15 @@ class EntityController
         throw new EntityNotFoundException();
       }
 
-      $item->fill($parsedBody['data']);
+      $language = $request->getAttribute('lang');
+      $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
+
+      if ($localize) {
+        $item->fill($parsedBody['data'], $language);
+      } else {
+        $item->fill($parsedBody['data']);
+      }
+
       $this->em->flush();
 
       HttpUtils::prepareJsonResponse($response, $item->toArray());
@@ -319,13 +338,10 @@ class EntityController
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->delete($entity->className, 'i');
-
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
-
-    $query->where("i.id", intval($itemId));
+    $query = $this->em->createQueryBuilder()
+      ->delete($entity->className, 'i')
+      ->setMaxResults(1)
+      ->where("i.id", ':id')->setParameter(':id', intval($itemId));
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);

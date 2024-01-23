@@ -57,7 +57,8 @@ class ResponseHelper
     }
 
     $itemsAsArray = [];
-    foreach ($body->getItems() as $item) {
+    $items = $body->getItems();
+    foreach ($items as $item) {
       if (!is_array($item)) {
         $itemsAsArray[] = $item->toArray();
 

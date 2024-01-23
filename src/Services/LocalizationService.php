@@ -161,6 +161,11 @@ class LocalizationService
     return $this->supportedLanguages;
   }
 
+  function isDefaultLanguage(string $language)
+  {
+    return $this->getDefaultLanguage() === $language;
+  }
+
   function setCurrentLanguage(string $nextLanguage, ?bool $throw = true)
   {
     if (!$this->languageIsSupported($nextLanguage)) {
