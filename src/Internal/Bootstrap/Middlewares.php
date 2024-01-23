@@ -36,8 +36,7 @@ class Middlewares implements AppModuleInterface
         $localizationService->setCurrentLanguage($languageFromQuery, false);
       }
 
-      $request->withAttribute('lang', $localizationService->getCurrentLanguage());
-      return $handler->handle($request);
+      return $handler->handle($request->withAttribute('lang', $localizationService->getCurrentLanguage()));
     };
 
     $app->add($localizationMiddleware);
