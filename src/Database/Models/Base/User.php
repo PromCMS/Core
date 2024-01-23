@@ -115,7 +115,6 @@ abstract class User extends BaseModel {
   protected string $role;
 
   public function __construct() {
-        
   }
 
   public function getEmail() {

@@ -59,7 +59,6 @@ abstract class Setting extends BaseModel {
   protected ?string $description;
 
   public function __construct() {
-        
   }
 
   public function getName() {

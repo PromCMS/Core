@@ -59,7 +59,6 @@ abstract class GeneralTranslation extends BaseModel {
   protected string $value;
 
   public function __construct() {
-        
   }
 
   public function getLang() {
