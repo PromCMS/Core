@@ -135,4 +135,9 @@ class Entity
   {
     return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->localized);
   }
+
+  function isLocalized()
+  {
+    return !!count($this->getLocalizedColumns());
+  }
 }
