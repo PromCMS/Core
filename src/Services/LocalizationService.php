@@ -161,10 +161,14 @@ class LocalizationService
     return $this->supportedLanguages;
   }
 
-  function setCurrentLanguage(string $nextLanguage)
+  function setCurrentLanguage(string $nextLanguage, ?bool $throw = true)
   {
     if (!$this->languageIsSupported($nextLanguage)) {
-      throw new Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+      if ($throw) {
+        throw new Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+      }
+
+      return;
     }
 
     $this->currentLanguage = $nextLanguage;

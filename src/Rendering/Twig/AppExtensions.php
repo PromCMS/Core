@@ -98,7 +98,7 @@ class AppExtensions extends AbstractExtension
     int $quality = null
   ): array {
     $imageInfo = $this->fileService->getById($id);
-    $imageResult = $this->imageService->getProcessed($imageInfo->getData(), [
+    $imageResult = $this->imageService->getProcessed($imageInfo, [
       'w' => $width,
       'h' => $height,
       'q' => $quality,
