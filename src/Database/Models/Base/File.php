@@ -8,10 +8,11 @@ namespace PromCMS\Core\Database\Models\Base;
 
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
-use PromCMS\Core\Database\Models\Abstract\BaseModel;
+use PromCMS\Core\Database\Models\Abstract\Entity;
 use Gedmo\Mapping\Annotation as GedmoMapping;
+use Doctrine\Common\Collections\ArrayCollection;
 
-abstract class File extends BaseModel {
+abstract class File extends Entity {
   use \PromCMS\Core\Database\Models\Trait\Timestamps;
   use \PromCMS\Core\Database\Models\Trait\Localized;
   use \PromCMS\Core\Database\Models\Trait\NumericId;  
@@ -88,7 +89,7 @@ abstract class File extends BaseModel {
   protected ?string $description;
 
   public function __construct() {
-        
+    $this->translations = new ArrayCollection();
   }
 
   public function getFilename() {
@@ -125,6 +126,17 @@ abstract class File extends BaseModel {
   
   public function setDescription(string|null $description) {
     return $this->description = $description;
+  }
+  
+  #[ORM\OneToMany(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, mappedBy: 'object', cascade: ['persist', 'remove'])]
+  private $translations;
+
+  public function addTranslation(\PromCMS\Core\Database\Models\FileTranslation $t)
+  {
+      if (!$this->translations->contains($t)) {
+          $this->translations[] = $t;
+          $t->setObject($this);
+      }
   }
 
   public function getId(): int|null {

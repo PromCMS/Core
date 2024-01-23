@@ -16,6 +16,7 @@ use PromCMS\Core\PromConfig\Entity\RelationshipColumn;
 class Entity
 {
   public string $className;
+  public readonly bool $localized;
   public array $traits = [];
 
   private function initializeTraits()
@@ -71,6 +72,7 @@ class Entity
     $this->phpName = $this->phpName ?? str_replace('_', '', ucwords($this->tableName, '_'));
     $this->className = $this->namespace . '\\' . $this->phpName;
     $this->initializeTraits();
+    $this->localized = in_array(Localized::class, $this->traits);
   }
 
   /**
@@ -136,8 +138,30 @@ class Entity
     return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->localized);
   }
 
-  function isLocalized()
+  function getTranslationTableName(): ?string
   {
-    return !!count($this->getLocalizedColumns());
+    if (!$this->localized) {
+      return null;
+    }
+
+    return $this->tableName . '_translations';
+  }
+
+  function getTranslationPhpName(): ?string
+  {
+    if (!$this->localized) {
+      return null;
+    }
+
+    return $this->phpName . 'Translation';
+  }
+
+  function getTranslationClassName(): ?string
+  {
+    if (!$this->localized) {
+      return null;
+    }
+
+    return $this->className . 'Translation';
   }
 }

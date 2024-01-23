@@ -12,7 +12,7 @@ use PromCMS\Core\Database\Models\Trait\Sharable;
 use PromCMS\Core\Database\Models\Trait\Timestamps;
 use PromCMS\Core\PromConfig;
 
-abstract class BaseModel
+abstract class Entity
 {
   private array $cachedMetadata;
 

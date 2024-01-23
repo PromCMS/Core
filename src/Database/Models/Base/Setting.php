@@ -8,9 +8,9 @@ namespace PromCMS\Core\Database\Models\Base;
 
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
-use PromCMS\Core\Database\Models\Abstract\BaseModel;
+use PromCMS\Core\Database\Models\Abstract\Entity;
 
-abstract class Setting extends BaseModel {
+abstract class Setting extends Entity {
   use \PromCMS\Core\Database\Models\Trait\Timestamps;
   use \PromCMS\Core\Database\Models\Trait\Ownable;
   use \PromCMS\Core\Database\Models\Trait\NumericId;  
