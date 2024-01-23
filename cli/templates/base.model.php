@@ -5,6 +5,9 @@
 
 use PromCMS\Core\PromConfig\RelationshipColumn;
 
+$localizedColumns = $entity->getLocalizedColumns();
+$isLocalizedEntity = count($localizedColumns) > 0;
+
 echo "<?php\n";
 ?>
 /**
@@ -17,75 +20,79 @@ namespace <?php echo $entity->namespace; ?>\Base;
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
 use PromCMS\Core\Database\Models\Abstract\BaseModel;
+<?php if ($isLocalizedEntity): ?>
+use Gedmo\Mapping\Annotation as GedmoMapping;
+<?php endif; ?>
 
-abstract class <?php echo $entity->phpName ?> extends BaseModel
-{
-<?php echo implode("\n", array_map(fn($trait) => "use \\$trait;", $entity->traits)); ?>
-<?php echo "\n"; ?>
+abstract class <?php echo $entity->phpName ?> extends BaseModel {
+  <?php echo implode("\n  ", array_map(fn($trait) => "use \\$trait;", $entity->traits)); ?>
+  <?php echo "\n"; ?>
 
-  <?php foreach ($entity->getColumns() as $column): ?>
-    <?php $entityIsRequired = $entity->isSingleton() ? false : $column->required ?>
-      <?php if ($column instanceof RelationshipColumn): ?>
-            <?php if ($column->isManyToOne()): ?>
-                /**
-                * @var Collection<int, <?php echo $column->getReferencedEntity()->className ?>>
-                */
-                #[ManyToOne(targetEntity: <?php echo $column->getReferencedEntity()->className ?>::class)]
-            <?php elseif ($column->isOneToOne()): ?>
-                        #[OneToOne(targetEntity: <?php echo $column->getReferencedEntity()->className ?>::class)]
-                      <?php endif; ?>
-                      <?php
-                      // In many-to-one relationship there are two sides, owning and reflecting side.
-                      // If user defineds it, the reflecting side now have collection of its that references current item.
-                      // Other side must be marked as readonly othervise it will be a database collumn which should not happen
-                      if (!$column->readonly): ?>
-                        #[ORM\JoinColumn(
-                          name: '<?php echo $column->getDatabaseColumName() ?>',
-                          referencedColumnName: '<?php echo $column->getReferenceFieldName() ?>',
-                        <?php if (is_bool($column->unique) && $column->unique): ?>      unique: <?php echo json_encode($column->unique) ?>,<?php endif; ?>
-                          nullable: <?php echo json_encode(!$entityIsRequired) ?>,
-                        )]
-                      <?php endif; ?>
-            <?php else: ?>
-                #[ORM\Column(
-                      type: '<?php echo $column->getDoctrineType() ?>', 
-                <?php if (is_bool($column->unique) && $column->unique): ?>      unique: <?php echo json_encode($column->unique) ?>,<?php echo "\n"; endif; ?>
-                <?php if ($column->isEnumColumn()): ?>      enumType: <?php echo $column->getPhpType() ?>::class,<?php echo "\n"; endif; ?>
-                      name: '<?php echo $column->getDatabaseColumName() ?>',
-                      nullable: <?php echo json_encode(!$entityIsRequired) ?>,
-                    )]
-            <?php endif; ?>
-        #[Mapping\PromModelColumn(
-              title: '<?php echo $column->title; ?>', 
-              type: '<?php echo $column->type; ?>',
-              editable: <?php echo json_encode(!$column->readonly); ?>,
-              hide: <?php echo json_encode($column->hide); ?>,
-              localized: <?php echo json_encode($column->localized); ?>
-            )]
-            protected <?php if (!$column->required):
-              echo '?';
-            endif; ?><?php echo $column->getPhpType() ?> $<?php echo $column->name; ?><?php if ($column->defaultValue): ?> = <?php echo $column->defaultValue; endif; ?>;
-            <?php echo "\n"; ?>
-  <?php endforeach; ?>
-
+<?php 
+  foreach ($entity->getColumns() as $column): 
+    $entityIsRequired = $entity->isSingleton() ? false : $column->required;
+      if ($column instanceof RelationshipColumn): 
+        if ($column->isManyToOne()): ?>
+  /**
+  * @var Collection<int, <?php echo $column->getReferencedEntity()->className ?>>
+  */
+  #[ManyToOne(targetEntity: <?php echo $column->getReferencedEntity()->className ?>::class)]
+<?php   elseif ($column->isOneToOne()): ?>
+  #[OneToOne(targetEntity: <?php echo $column->getReferencedEntity()->className ?>::class)]
+<?php   endif; 
+  // In many-to-one relationship there are two sides, owning and reflecting side.
+  // If user defineds it, the reflecting side now have collection of its that references current item.
+  // Other side must be marked as readonly othervise it will be a database collumn which should not happen
+        if (!$column->readonly): ?>
+  #[ORM\JoinColumn(
+    name: '<?php echo $column->getDatabaseColumName() ?>',
+    referencedColumnName: '<?php echo $column->getReferenceFieldName() ?>',
+    <?php if (is_bool($column->unique) && $column->unique): ?>unique: <?php echo json_encode($column->unique) ?>,<?php endif; ?>
+    nullable: <?php echo json_encode(!$entityIsRequired) ?>,
+  )]
+<?php   endif; ?>
+<?php else: ?>
+  #[ORM\Column(
+    type: '<?php echo $column->getDoctrineType() ?>', 
+<?php if (is_bool($column->unique) && $column->unique): ?>
+    unique: <?php echo json_encode($column->unique) ?>,<?php echo "\n"; ?>
+<?php endif; ?>
+<?php if ($column->isEnumColumn()): ?>
+    enumType: <?php echo $column->getPhpType() ?>::class,<?php echo "\n"; ?>
+<?php endif; ?>
+    name: '<?php echo $column->getDatabaseColumName() ?>',
+    nullable: <?php echo json_encode(!$entityIsRequired) ?>,
+  )]
+<?php endif; ?>
+  #[Mapping\PromModelColumn(
+    title: '<?php echo $column->title; ?>', 
+    type: '<?php echo $column->type; ?>',
+    editable: <?php echo json_encode(!$column->readonly); ?>,
+    hide: <?php echo json_encode($column->hide); ?>,
+    localized: <?php echo json_encode($column->localized); echo "\n"; ?>
+  )]
+<?php if ($column->localized): ?>
+  #[GedmoMapping\Translatable()]
+<?php endif; ?>
+  protected <?php if (!$column->required):echo '?';endif; ?><?php echo $column->getPhpType() ?> $<?php echo $column->name; ?><?php if ($column->defaultValue): ?> = <?php echo $column->defaultValue; endif; ?>;<?php echo "\n\n"; ?>
+<?php endforeach; ?>
   public function __construct() {
-    <?php $manyToOneColumns = array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()) ?>
+    <?php $manyToOneColumns = array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()); ?>
     <?php foreach ($manyToOneColumns as $column): ?>
-        $this-><?php $column->name; ?> = new Doctrine\Common\Collections\ArrayCollection();
-    <?php endforeach; ?>
+    $this-><?php $column->name; ?> = new Doctrine\Common\Collections\ArrayCollection();
+    <?php endforeach; echo "\n"; ?>
   }
 
-  <?php $publicColumns = $entity->getColumns() ?>
-  <?php foreach ($publicColumns as $column): ?>public function get<?php echo ucfirst($column->name) ?>() {
-            return $this-><?php echo $column->name ?>;
-          }
+<?php $publicColumns = $entity->getColumns() ?>
+<?php foreach ($publicColumns as $column): ?>
+  public function get<?php echo ucfirst($column->name) ?>() {
+    return $this-><?php echo $column->name ?>;
+  }
   
-          public function set<?php echo ucfirst($column->name) ?>(<?php echo $column->getPhpType() ?><?php if (!$column->required):
-                  echo '|null';
-                endif; ?> $<?php echo $column->name ?>) {
-            return $this-><?php echo $column->name ?> = $<?php echo $column->name ?>;
-          }
-  <?php endforeach; ?>
+  public function set<?php echo ucfirst($column->name) ?>(<?php echo $column->getPhpType() ?><?php if (!$column->required): echo '|null';endif; ?> $<?php echo $column->name ?>) {
+    return $this-><?php echo $column->name ?> = $<?php echo $column->name ?>;
+  }
+<?php endforeach; ?>
 
   public function getId(): int|null {
     return $this->id;
