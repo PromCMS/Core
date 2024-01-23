@@ -43,6 +43,7 @@
     "symfony/finder": "^5.0",
     "symfony/dotenv": "^6",
     "symfony/yaml": "^5.4",
+    "gedmo/doctrine-extensions": "^3.14",
     "symfony/cache": "^5.4",
     "php-di/php-di": "^7.0",
     "php-di/slim-bridge": "^3.4"
@@ -58,7 +59,7 @@
       "Composer\\Config::disableProcessTimeout",
       "phpunit --testdox"
     ],
-    "database:migrate": "composer run cli orm:schema-tool:update",
+    "database:migrate": "composer run cli orm:schema-tool:update -- --force --complete",
     "cli": ["bin/prom-cms"]
   }
 }
