@@ -41,33 +41,37 @@ final class UserRoleRoutesTest extends AppTestCase
     $this->assertEqualsCanonicalizing(
       [
         "data" => [
+          "id" => "admin",
           "name" => "Admin",
           "slug" => "admin",
-          "hasAccessToAdmin" => true,
-          "modelPermissions" => [
-            [
-              "c" => "allow-all",
-              "r" => "allow-all",
-              "u" => "allow-all",
-              "d" => "allow-all"
-            ],
-            [
-              "c" => "allow-all",
-              "r" => "allow-all",
-              "u" => "allow-all",
-              "d" => "allow-all"
-            ],
-            [
-              "c" => "allow-all",
-              "r" => "allow-all",
-              "u" => "allow-all",
-              "d" => "allow-all"
-            ],
-            [
-              "c" => "allow-all",
-              "r" => "allow-all",
-              "u" => "allow-all",
-              "d" => "allow-all"
+          'description' => 'Main user role provided by PromCMS Core module',
+          'permissions' => [
+            "hasAccessToAdmin" => true,
+            "entities" => [
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ]
             ]
           ]
         ],
