@@ -9,117 +9,124 @@ namespace PromCMS\Core\Database\Models\Base;
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
 use PromCMS\Core\Database\Models\Abstract\BaseModel;
+use Gedmo\Mapping\Annotation as GedmoMapping;
 
-abstract class File extends BaseModel
-{
-use \PromCMS\Core\Database\Models\Trait\Timestamps;
-use \PromCMS\Core\Database\Models\Trait\NumericId;
+abstract class File extends BaseModel {
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\Localized;
+  use \PromCMS\Core\Database\Models\Trait\NumericId;  
 
-                        #[ORM\Column(
-                  type: 'string', 
-                                          name: 'filename',
-                  nullable: false,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Filename', 
-            type: 'string',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected string $filename;
-          
-                        #[ORM\Column(
-                  type: 'string', 
-                                          name: 'mimetype',
-                  nullable: false,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Mime type', 
-            type: 'string',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected string $mimeType;
-          
-                        #[ORM\Column(
-                  type: 'text', 
-                                          name: 'filepath',
-                  nullable: false,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Filepath', 
-            type: 'longText',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected string $filepath;
-          
-                        #[ORM\Column(
-                  type: 'boolean', 
-                                          name: 'private',
-                  nullable: true,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Private', 
-            type: 'boolean',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected ?bool $private = false;
-          
-                        #[ORM\Column(
-                  type: 'text', 
-                                          name: 'description',
-                  nullable: true,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Description', 
-            type: 'longText',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected ?string $description;
-          
-  
+  #[ORM\Column(
+    type: 'string', 
+    name: 'filename',
+    nullable: false,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Filename', 
+    type: 'string',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected string $filename;
+
+  #[ORM\Column(
+    type: 'string', 
+    name: 'mimetype',
+    nullable: false,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Mime type', 
+    type: 'string',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected string $mimeType;
+
+  #[ORM\Column(
+    type: 'text', 
+    name: 'filepath',
+    nullable: false,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Filepath', 
+    type: 'longText',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected string $filepath;
+
+  #[ORM\Column(
+    type: 'boolean', 
+    name: 'private',
+    nullable: true,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Private', 
+    type: 'boolean',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected ?bool $private = false;
+
+  #[ORM\Column(
+    type: 'text', 
+    name: 'description',
+    nullable: true,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Description', 
+    type: 'longText',
+    editable: true,
+    hide: false,
+    localized: true
+  )]
+  #[GedmoMapping\Translatable()]
+  protected ?string $description;
+
   public function __construct() {
-          }
+        
+  }
 
-    public function getFilename() {
-          return $this->filename;
-        }
+  public function getFilename() {
+    return $this->filename;
+  }
   
-        public function setFilename(string $filename) {
-          return $this->filename = $filename;
-        }
+  public function setFilename(string $filename) {
+    return $this->filename = $filename;
+  }
   public function getMimeType() {
-          return $this->mimeType;
-        }
+    return $this->mimeType;
+  }
   
-        public function setMimeType(string $mimeType) {
-          return $this->mimeType = $mimeType;
-        }
+  public function setMimeType(string $mimeType) {
+    return $this->mimeType = $mimeType;
+  }
   public function getFilepath() {
-          return $this->filepath;
-        }
+    return $this->filepath;
+  }
   
-        public function setFilepath(string $filepath) {
-          return $this->filepath = $filepath;
-        }
+  public function setFilepath(string $filepath) {
+    return $this->filepath = $filepath;
+  }
   public function getPrivate() {
-          return $this->private;
-        }
+    return $this->private;
+  }
   
-        public function setPrivate(bool|null $private) {
-          return $this->private = $private;
-        }
+  public function setPrivate(bool|null $private) {
+    return $this->private = $private;
+  }
   public function getDescription() {
-          return $this->description;
-        }
+    return $this->description;
+  }
   
-        public function setDescription(string|null $description) {
-          return $this->description = $description;
-        }
-  
+  public function setDescription(string|null $description) {
+    return $this->description = $description;
+  }
+
   public function getId(): int|null {
     return $this->id;
   }

@@ -80,6 +80,7 @@ return [
             'name' => 'description',
             'type' => 'longText',
             'title' => 'Description',
+            'localized' => true,
             'required' => false
           ]),
         ]

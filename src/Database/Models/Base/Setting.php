@@ -10,78 +10,80 @@ use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as Mapping;
 use PromCMS\Core\Database\Models\Abstract\BaseModel;
 
-abstract class Setting extends BaseModel
-{
-use \PromCMS\Core\Database\Models\Trait\Timestamps;
-use \PromCMS\Core\Database\Models\Trait\Ownable;
-use \PromCMS\Core\Database\Models\Trait\NumericId;
+abstract class Setting extends BaseModel {
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\Ownable;
+  use \PromCMS\Core\Database\Models\Trait\NumericId;  
 
-                        #[ORM\Column(
-                  type: 'string', 
-                  unique: true,
-                              name: 'name',
-                  nullable: false,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Name', 
-            type: 'string',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected string $name;
-          
-                        #[ORM\Column(
-                  type: 'array', 
-                                          name: 'content',
-                  nullable: true,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Content', 
-            type: 'json',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected ?array $content = [];
-          
-                        #[ORM\Column(
-                  type: 'text', 
-                                          name: 'description',
-                  nullable: true,
-                )]
-                #[Mapping\PromModelColumn(
-            title: 'Description', 
-            type: 'longText',
-            editable: true,
-            hide: false,
-            localized: false          )]
-          protected ?string $description;
-          
-  
+  #[ORM\Column(
+    type: 'string', 
+    unique: true,
+    name: 'name',
+    nullable: false,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Name', 
+    type: 'string',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected string $name;
+
+  #[ORM\Column(
+    type: 'array', 
+    name: 'content',
+    nullable: true,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Content', 
+    type: 'json',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected ?array $content = [];
+
+  #[ORM\Column(
+    type: 'text', 
+    name: 'description',
+    nullable: true,
+  )]
+  #[Mapping\PromModelColumn(
+    title: 'Description', 
+    type: 'longText',
+    editable: true,
+    hide: false,
+    localized: false
+  )]
+  protected ?string $description;
+
   public function __construct() {
-          }
+        
+  }
 
-    public function getName() {
-          return $this->name;
-        }
+  public function getName() {
+    return $this->name;
+  }
   
-        public function setName(string $name) {
-          return $this->name = $name;
-        }
+  public function setName(string $name) {
+    return $this->name = $name;
+  }
   public function getContent() {
-          return $this->content;
-        }
+    return $this->content;
+  }
   
-        public function setContent(array|null $content) {
-          return $this->content = $content;
-        }
+  public function setContent(array|null $content) {
+    return $this->content = $content;
+  }
   public function getDescription() {
-          return $this->description;
-        }
+    return $this->description;
+  }
   
-        public function setDescription(string|null $description) {
-          return $this->description = $description;
-        }
-  
+  public function setDescription(string|null $description) {
+    return $this->description = $description;
+  }
+
   public function getId(): int|null {
     return $this->id;
   }
