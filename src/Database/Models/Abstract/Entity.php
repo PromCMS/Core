@@ -127,7 +127,7 @@ abstract class Entity
       /** @var PromModelColumn */
       $info = $attr->newInstance();
 
-      $newValue[] = $info;
+      $newValue[$propertyName] = $info;
     }
 
     return $newValue;
