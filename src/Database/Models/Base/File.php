@@ -154,6 +154,11 @@ abstract class File extends Entity {
     return $this;
   }
 
+  #[ORM\PostLoad]
+  public function __prom__initCollections() {
+    $this->translations ??= new ArrayCollection();
+  }
+
   public function getId(): int|null {
     return $this->id;
   }

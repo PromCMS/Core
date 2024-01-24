@@ -128,6 +128,20 @@ abstract class <?php echo $entity->phpName ?> extends Entity {
 
     return $this;
   }
+
+  #[ORM\PostLoad]
+  public function __prom__initCollections() {
+<?php $manyToOneColumns = array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()); 
+      if (!empty($manyToOneColumns)):
+        foreach ($manyToOneColumns as $column): ?>
+    $this-><?php $column->name; ?> ??= new Doctrine\Common\Collections\ArrayCollection();
+<?php   endforeach; 
+        echo "\n";
+      endif; 
+      if ($isLocalizedEntity): ?>
+    $this->translations ??= new ArrayCollection();
+<?php endif; ?>
+  }
 <?php endif; ?>
 
   public function getId(): int|null {
