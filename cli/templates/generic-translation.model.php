@@ -6,7 +6,7 @@ echo "<?php\n";
 $entityName = $entity->getTranslationPhpName();
 
 $attributesAsArray = [
-  "ORM\Entity(repositoryClass: TranslationRepository::class))",
+  "ORM\Entity(repositoryClass: TranslationRepository::class)",
   "ORM\Table(name: '" . $entity->getTranslationTableName() . "')",
   "ORM\UniqueConstraint(name: '" . $entity->getTranslationTableName() . "_unique_idx', columns: ['locale', 'object_id', 'field'])",
   "ORM\HasLifecycleCallbacks"
