@@ -130,7 +130,7 @@ class EntityController
       ->from($entity->className, 'i')
       ->select('i')
       ->setMaxResults(1)
-      ->where('i.id', ':id')
+      ->where('i.id = :id')
       ->setParameter(':id', intval($itemId));
 
     $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
