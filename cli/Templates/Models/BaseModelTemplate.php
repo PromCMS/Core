@@ -128,10 +128,10 @@ class BaseModelTemplate extends ModelTemplate
             new Node\Attribute(
               name: new Node\Name('ORM\JoinColumn'),
               args: [
-                new Node\Arg(
-                  name: new Node\Identifier('type'),
-                  value: new Node\Scalar\String_('string'),
-                ),
+                // new Node\Arg(
+                //   name: new Node\Identifier('type'),
+                //   value: new Node\Scalar\String_('string'),
+                // ),
                 new Node\Arg(
                   name: new Node\Identifier('name'),
                   value: new Node\Scalar\String_('object_id'),

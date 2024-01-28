@@ -19,23 +19,55 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
       ->addLine('as this file will be just checked for presence of class in next models sync.');
   }
 
-  private function getNamespaceFromAst()
+  protected function getNamespace()
   {
     $possibleNamespace = $this->ast[0];
 
-    if ($possibleNamespace instanceof Stmt\Namespace_) {
-      return $possibleNamespace;
+    // Create anew if it does not exist yet
+    if (($possibleNamespace instanceof Stmt\Namespace_) === false) {
+      $possibleNamespace = $this->ast[] = parent::getNamespace();
     }
 
-    // Create new namespace instead if it does not exist
-    return $this->ast[] = new Stmt\Namespace_(
-      name: new Node\Name($this->entity->namespace)
-    );
+    /** @var array<Stmt\Use_> */
+    $useStmts = array_filter($possibleNamespace->stmts, fn($stmt) => $stmt instanceof Stmt\Use_);
+    $otherStmts = array_filter($possibleNamespace->stmts, fn($stmt) => ($stmt instanceof Stmt\Use_) === false);
+
+    $enforcedUses = parent::getUseStatements($this->entity);
+    $existingUsesAsArray = [];
+    foreach ($useStmts as $stmt) {
+      foreach ($stmt->uses as $stmtUse) {
+        $existingUsesAsArray[$stmtUse->name->name] = $stmtUse->alias;
+      }
+    }
+
+    // Unsets enforced
+    foreach ($enforcedUses as $stmt) {
+      foreach ($stmt->uses as $stmtUse) {
+        $useName = $stmtUse->name->name;
+
+        if (isset($existingUsesAsArray[$useName])) {
+          unset($existingUsesAsArray[$useName]);
+        }
+      }
+    }
+
+    $uses = $enforcedUses;
+    foreach ($existingUsesAsArray as $name => $alias) {
+      $uses[] = new Stmt\Use_(
+        uses: [
+          new Stmt\UseUse(new Node\Name($name), $alias)
+        ]
+      );
+    }
+
+    $possibleNamespace->stmts = [...$uses, ...$otherStmts];
+
+    return $possibleNamespace;
   }
 
   private function getClassFromAst()
   {
-    $namespace = $this->getNamespaceFromAst();
+    $namespace = $this->getNamespace();
     $isOutputLocalized = $this->mode === ModelTemplateMode::LOCALIZED;
     $phpName = $isOutputLocalized ? $this->entity->getTranslationPhpName() : $this->entity->phpName;
     $class = null;

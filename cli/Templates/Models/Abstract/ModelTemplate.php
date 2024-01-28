@@ -28,23 +28,28 @@ abstract class ModelTemplate extends AbstractTemplate
     $this->namespace = $entity->namespace;
   }
 
-  public function generateAst()
+  protected function getNamespace()
   {
     $headerAsExpression = $this->header->toExpression();
 
+    return new Stmt\Namespace_(
+      name: new Node\Name($this->namespace),
+      stmts: [
+        ...$this->getUseStatements($this->entity),
+        $this->getClass()
+      ],
+      attributes: $headerAsExpression ? [
+        'comments' => [
+          $headerAsExpression
+        ]
+      ] : []
+    );
+  }
+
+  public function generateAst()
+  {
     $this->ast = [
-      new Stmt\Namespace_(
-        name: new Node\Name($this->namespace),
-        stmts: [
-          ...$this->getUseStatements($this->entity),
-          $this->getClass()
-        ],
-        attributes: $headerAsExpression ? [
-          'comments' => [
-            $headerAsExpression
-          ]
-        ] : []
-      )
+      $this->getNamespace()
     ];
   }
 
@@ -205,7 +210,7 @@ abstract class ModelTemplate extends AbstractTemplate
                   value: new Node\Scalar\String_('object'),
                 ),
                 new Node\Arg(
-                  name: new Node\Identifier('mappedBy'),
+                  name: new Node\Identifier('cascade'),
                   value: new Node\Expr\Array_([
                     new Node\Expr\ArrayItem(
                       new Node\Scalar\String_('persist')
