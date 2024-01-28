@@ -8,8 +8,8 @@ namespace PromCMS\Core\Database\Models\Base;
 
 enum UserState : string
 {
-    case ACTIVE = 'active';
-    case INVITED = 'invited';
-    case BLOCKED = 'blocked';
-    case PASSWORD_RESET = 'password-reset';
+  case ACTIVE = 'active';
+  case INVITED = 'invited';
+  case BLOCKED = 'blocked';
+  case PASSWORD_RESET = 'password-reset';
 }

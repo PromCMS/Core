@@ -14,113 +14,113 @@ use PromCMS\Core\Database\Models\Abstract\Entity;
 #[ORM\MappedSuperclass]
 class User extends Entity
 {
-    use \PromCMS\Core\Database\Models\Trait\Timestamps;
-    use \PromCMS\Core\Database\Models\Trait\NumericId;
-    
-    #[ORM\Column(name: 'email', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Email', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $email;
-    
-    #[ORM\Column(name: 'password', nullable: false, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Password', type: 'longText', editable: false, hide: true, localized: false)]
-    protected ?string $password;
-    
-    #[ORM\Column(name: 'firstname', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'First name', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $firstname;
-    
-    #[ORM\Column(name: 'lastname', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Last name', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $lastname;
-    
-    #[ORM\Column(name: 'state', nullable: false, unique: false, type: 'string', enumType: UserState::class), PROM\PromModelColumn(title: 'State', type: 'enum', editable: false, hide: false, localized: false)]
-    protected ?UserState $state;
-    
-    #[ORM\Column(name: 'avatar_id', nullable: true, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Avatar', type: 'relationship', editable: false, hide: false, localized: false)]
-    protected ?\PromCMS\Core\Database\Models\File $avatar;
-    
-    #[ORM\Column(name: 'role', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Role', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $role;
-    
-    function __construct()
-    {
-    }
-    
-    #[ORM\PostLoad]
-    function __prom__initCollections()
-    {
-    }
-    
-    function getEmail(): string
-    {
-        return $this->email;
-    }
-    
-    function setEmail(string $email): static
-    {
-        $this->email = $email;
-        return $this;
-    }
-    
-    function getPassword(): string
-    {
-        return $this->password;
-    }
-    
-    function setPassword(string $password): static
-    {
-        $this->password = $password;
-        return $this;
-    }
-    
-    function getFirstname(): string
-    {
-        return $this->firstname;
-    }
-    
-    function setFirstname(string $firstname): static
-    {
-        $this->firstname = $firstname;
-        return $this;
-    }
-    
-    function getLastname(): string
-    {
-        return $this->lastname;
-    }
-    
-    function setLastname(string $lastname): static
-    {
-        $this->lastname = $lastname;
-        return $this;
-    }
-    
-    function getState(): UserState
-    {
-        return $this->state;
-    }
-    
-    function setState(UserState $state): static
-    {
-        $this->state = $state;
-        return $this;
-    }
-    
-    function getAvatar(): ?\PromCMS\Core\Database\Models\File
-    {
-        return $this->avatar;
-    }
-    
-    function setAvatar(?\PromCMS\Core\Database\Models\File $avatar): static
-    {
-        $this->avatar = $avatar;
-        return $this;
-    }
-    
-    function getRole(): string
-    {
-        return $this->role;
-    }
-    
-    function setRole(string $role): static
-    {
-        $this->role = $role;
-        return $this;
-    }
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\NumericId;
+  
+  #[ORM\Column(name: 'email', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Email', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $email;
+  
+  #[ORM\Column(name: 'password', nullable: false, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Password', type: 'longText', editable: false, hide: true, localized: false)]
+  protected ?string $password;
+  
+  #[ORM\Column(name: 'firstname', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'First name', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $firstname;
+  
+  #[ORM\Column(name: 'lastname', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Last name', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $lastname;
+  
+  #[ORM\Column(name: 'state', nullable: false, unique: false, type: 'string', enumType: UserState::class), PROM\PromModelColumn(title: 'State', type: 'enum', editable: false, hide: false, localized: false)]
+  protected ?UserState $state;
+  
+  #[ORM\Column(name: 'avatar_id', nullable: true, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Avatar', type: 'relationship', editable: false, hide: false, localized: false)]
+  protected ?\PromCMS\Core\Database\Models\File $avatar;
+  
+  #[ORM\Column(name: 'role', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Role', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $role;
+  
+  function __construct()
+  {
+  }
+  
+  #[ORM\PostLoad]
+  function __prom__initCollections()
+  {
+  }
+  
+  function getEmail(): string
+  {
+    return $this->email;
+  }
+  
+  function setEmail(string $email): static
+  {
+    $this->email = $email;
+    return $this;
+  }
+  
+  function getPassword(): string
+  {
+    return $this->password;
+  }
+  
+  function setPassword(string $password): static
+  {
+    $this->password = $password;
+    return $this;
+  }
+  
+  function getFirstname(): string
+  {
+    return $this->firstname;
+  }
+  
+  function setFirstname(string $firstname): static
+  {
+    $this->firstname = $firstname;
+    return $this;
+  }
+  
+  function getLastname(): string
+  {
+    return $this->lastname;
+  }
+  
+  function setLastname(string $lastname): static
+  {
+    $this->lastname = $lastname;
+    return $this;
+  }
+  
+  function getState(): UserState
+  {
+    return $this->state;
+  }
+  
+  function setState(UserState $state): static
+  {
+    $this->state = $state;
+    return $this;
+  }
+  
+  function getAvatar(): ?\PromCMS\Core\Database\Models\File
+  {
+    return $this->avatar;
+  }
+  
+  function setAvatar(?\PromCMS\Core\Database\Models\File $avatar): static
+  {
+    $this->avatar = $avatar;
+    return $this;
+  }
+  
+  function getRole(): string
+  {
+    return $this->role;
+  }
+  
+  function setRole(string $role): static
+  {
+    $this->role = $role;
+    return $this;
+  }
 }

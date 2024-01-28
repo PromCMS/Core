@@ -15,38 +15,38 @@ use PromCMS\Core\Database\Models\Abstract\Entity;
 #[ORM\MappedSuperclass]
 class FileTranslation extends Entity
 {
-    use \PromCMS\Core\Database\Models\Trait\Timestamps;
-    use \PromCMS\Core\Database\Models\Trait\Localized {
-        getTranslations as protected getTranslationsOriginal;
-    }
-    use \PromCMS\Core\Database\Models\Trait\NumericId;
-    
-    #[ORM\Column(type: 'string', name: 'locale', nullable: false)]
-    protected string $locale;
-    
-    #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, inversedBy: 'translations'), ORM\JoinColumn(name: 'object_id', nullable: false)]
-    protected \PromCMS\Core\Database\Models\FileTranslation $object;
-    
-    #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: true)]
-    protected ?string $description;
-    
-    function __construct()
-    {
-    }
-    
-    #[ORM\PostLoad]
-    function __prom__initCollections()
-    {
-    }
-    
-    function getDescription(): ?string
-    {
-        return $this->description;
-    }
-    
-    function setDescription(?string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\Localized {
+    getTranslations as protected getTranslationsOriginal;
+  }
+  use \PromCMS\Core\Database\Models\Trait\NumericId;
+  
+  #[ORM\Column(type: 'string', name: 'locale', nullable: false)]
+  protected string $locale;
+  
+  #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, inversedBy: 'translations'), ORM\JoinColumn(name: 'object_id', nullable: false)]
+  protected \PromCMS\Core\Database\Models\FileTranslation $object;
+  
+  #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: true)]
+  protected ?string $description;
+  
+  function __construct()
+  {
+  }
+  
+  #[ORM\PostLoad]
+  function __prom__initCollections()
+  {
+  }
+  
+  function getDescription(): ?string
+  {
+    return $this->description;
+  }
+  
+  function setDescription(?string $description): static
+  {
+    $this->description = $description;
+    return $this;
+  }
 }

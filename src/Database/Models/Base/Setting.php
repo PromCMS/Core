@@ -14,58 +14,58 @@ use PromCMS\Core\Database\Models\Abstract\Entity;
 #[ORM\MappedSuperclass]
 class Setting extends Entity
 {
-    use \PromCMS\Core\Database\Models\Trait\Timestamps;
-    use \PromCMS\Core\Database\Models\Trait\Ownable;
-    use \PromCMS\Core\Database\Models\Trait\NumericId;
-    
-    #[ORM\Column(name: 'name', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Name', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $name;
-    
-    #[ORM\Column(name: 'content', nullable: true, unique: true, type: 'array'), PROM\PromModelColumn(title: 'Content', type: 'json', editable: false, hide: false, localized: false)]
-    protected ?array $content;
-    
-    #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: false)]
-    protected ?string $description;
-    
-    function __construct()
-    {
-    }
-    
-    #[ORM\PostLoad]
-    function __prom__initCollections()
-    {
-    }
-    
-    function getName(): string
-    {
-        return $this->name;
-    }
-    
-    function setName(string $name): static
-    {
-        $this->name = $name;
-        return $this;
-    }
-    
-    function getContent(): ?array
-    {
-        return $this->content;
-    }
-    
-    function setContent(?array $content): static
-    {
-        $this->content = $content;
-        return $this;
-    }
-    
-    function getDescription(): ?string
-    {
-        return $this->description;
-    }
-    
-    function setDescription(?string $description): static
-    {
-        $this->description = $description;
-        return $this;
-    }
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\Ownable;
+  use \PromCMS\Core\Database\Models\Trait\NumericId;
+  
+  #[ORM\Column(name: 'name', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Name', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $name;
+  
+  #[ORM\Column(name: 'content', nullable: true, unique: true, type: 'array'), PROM\PromModelColumn(title: 'Content', type: 'json', editable: false, hide: false, localized: false)]
+  protected ?array $content;
+  
+  #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: false)]
+  protected ?string $description;
+  
+  function __construct()
+  {
+  }
+  
+  #[ORM\PostLoad]
+  function __prom__initCollections()
+  {
+  }
+  
+  function getName(): string
+  {
+    return $this->name;
+  }
+  
+  function setName(string $name): static
+  {
+    $this->name = $name;
+    return $this;
+  }
+  
+  function getContent(): ?array
+  {
+    return $this->content;
+  }
+  
+  function setContent(?array $content): static
+  {
+    $this->content = $content;
+    return $this;
+  }
+  
+  function getDescription(): ?string
+  {
+    return $this->description;
+  }
+  
+  function setDescription(?string $description): static
+  {
+    $this->description = $description;
+    return $this;
+  }
 }

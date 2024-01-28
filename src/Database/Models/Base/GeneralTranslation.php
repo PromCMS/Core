@@ -14,57 +14,57 @@ use PromCMS\Core\Database\Models\Abstract\Entity;
 #[ORM\MappedSuperclass]
 class GeneralTranslation extends Entity
 {
-    use \PromCMS\Core\Database\Models\Trait\Timestamps;
-    use \PromCMS\Core\Database\Models\Trait\NumericId;
-    
-    #[ORM\Column(name: 'lang', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Language', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $lang;
-    
-    #[ORM\Column(name: 'key', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Key', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $key;
-    
-    #[ORM\Column(name: 'value', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Value', type: 'string', editable: false, hide: false, localized: false)]
-    protected ?string $value;
-    
-    function __construct()
-    {
-    }
-    
-    #[ORM\PostLoad]
-    function __prom__initCollections()
-    {
-    }
-    
-    function getLang(): string
-    {
-        return $this->lang;
-    }
-    
-    function setLang(string $lang): static
-    {
-        $this->lang = $lang;
-        return $this;
-    }
-    
-    function getKey(): string
-    {
-        return $this->key;
-    }
-    
-    function setKey(string $key): static
-    {
-        $this->key = $key;
-        return $this;
-    }
-    
-    function getValue(): string
-    {
-        return $this->value;
-    }
-    
-    function setValue(string $value): static
-    {
-        $this->value = $value;
-        return $this;
-    }
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
+  use \PromCMS\Core\Database\Models\Trait\NumericId;
+  
+  #[ORM\Column(name: 'lang', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Language', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $lang;
+  
+  #[ORM\Column(name: 'key', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Key', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $key;
+  
+  #[ORM\Column(name: 'value', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Value', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $value;
+  
+  function __construct()
+  {
+  }
+  
+  #[ORM\PostLoad]
+  function __prom__initCollections()
+  {
+  }
+  
+  function getLang(): string
+  {
+    return $this->lang;
+  }
+  
+  function setLang(string $lang): static
+  {
+    $this->lang = $lang;
+    return $this;
+  }
+  
+  function getKey(): string
+  {
+    return $this->key;
+  }
+  
+  function setKey(string $key): static
+  {
+    $this->key = $key;
+    return $this;
+  }
+  
+  function getValue(): string
+  {
+    return $this->value;
+  }
+  
+  function setValue(string $value): static
+  {
+    $this->value = $value;
+    return $this;
+  }
 }

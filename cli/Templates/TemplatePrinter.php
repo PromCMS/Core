@@ -7,6 +7,20 @@ use PhpParser\Node\Stmt;
 
 class TemplatePrinter extends PrettyPrinter\Standard
 {
+  protected function indent(): void
+  {
+    $this->indentLevel += 2;
+    $this->nl .= '  ';
+  }
+
+  protected function outdent(): void
+  {
+    assert($this->indentLevel >= 2);
+    $this->indentLevel -= 2;
+    $this->nl = $this->newline . str_repeat(' ', $this->indentLevel);
+  }
+
+
   protected function pStmt_Property(Stmt\Property $node): string
   {
     $output = parent::pStmt_Property($node);
