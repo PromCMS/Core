@@ -52,7 +52,8 @@
     "symfony/console": "^6",
     "spatie/phpunit-watcher": "^1.8",
     "phpunit/phpunit": "^10",
-    "fakerphp/faker": "^1.23"
+    "fakerphp/faker": "^1.23",
+    "nikic/php-parser": "^5.0"
   },
   "scripts": {
     "test": [

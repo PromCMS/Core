@@ -299,6 +299,10 @@ class EntityController
 
       if ($localize) {
         $item->fill($parsedBody['data'], $language);
+
+        foreach ($item->getTranslations() as $translation) {
+          $this->em->persist($translation);
+        }
       } else {
         $item->fill($parsedBody['data']);
       }

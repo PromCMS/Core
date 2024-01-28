@@ -3,7 +3,11 @@
 namespace PromCMS\Cli\Command;
 
 use PromCMS\Cli\Application;
-use PromCMS\Cli\Template;
+use PromCMS\Cli\Templates\Models\BaseModelTemplate;
+use PromCMS\Cli\Templates\Models\EnumTemplate;
+use PromCMS\Cli\Templates\Models\EnumTemplate\EnumTemplateItem;
+use PromCMS\Cli\Templates\Models\ModelTemplate;
+use PromCMS\Cli\Templates\Models\ModelTemplateMode;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -16,7 +20,7 @@ use Symfony\Component\Filesystem\Path;
   description: 'Creates models defined in prom config.',
   hidden: false,
 )]
-class CreateModels extends AbstractCommand
+class ModelsCreate extends AbstractCommand
 {
   /**
    * {@inheritDoc}
@@ -74,46 +78,37 @@ class CreateModels extends AbstractCommand
     }
 
     $entities = $promConfig->getEntities();
-    $templatesRoot = Path::join(__DIR__, '..', 'templates');
 
     foreach ($entities as $entity) {
       if ($entity->referenceOnly) {
         continue;
       }
 
-      $modalClassName = $entity->phpName;
-      $modelFilename = "$modalClassName.php";
-      $templateVars = [
-        'entity' => $entity
-      ];
-      $baseFoldername = Path::join($modelsRoot, 'Base');
-
-      $mutableFilename = Path::join($modelsRoot, $modelFilename);
-      if (!file_exists($mutableFilename)) {
-        Template::create(Path::join($templatesRoot, 'generic.model.php'))->renderTo($mutableFilename, $templateVars);
-      }
-
-      Template::create(Path::join($templatesRoot, 'base.model.php'))->renderTo(Path::join($baseFoldername, $modelFilename), $templateVars);
-
-      if ($entity->localized) {
-        $localizedModelFilename = $modalClassName . "Translation.php";
-
-        $localizedMutableFilename = Path::join($modelsRoot, $localizedModelFilename);
-        if (!file_exists($localizedMutableFilename)) {
-          Template::create(Path::join($templatesRoot, 'generic-translation.model.php'))->renderTo($localizedMutableFilename, $templateVars);
+      foreach (ModelTemplateMode::cases() as $mode) {
+        if ($mode === ModelTemplateMode::LOCALIZED && !$entity->localized) {
+          continue;
         }
 
-        Template::create(Path::join($templatesRoot, 'base-translation.model.php'))->renderTo(Path::join($baseFoldername, $localizedModelFilename), $templateVars);
+        BaseModelTemplate::from($modelsRoot, $entity, $mode)->save();
+
+        ModelTemplate::from(
+          $modelsRoot,
+          $entity,
+          $mode
+        )->save();
       }
 
       $enumColumns = $entity->getEnumColumns();
       foreach ($enumColumns as $column) {
-        $phpName = $column->getPhpType();
+        ['name' => $enumName, 'values' => $enumValues] = $column->otherMetadata['enum'];
 
-        Template::create(Path::join($templatesRoot, 'generic.enum.php'))->renderTo(Path::join($baseFoldername, "$phpName.php"), [
-          'enum' => $column->otherMetadata['enum'],
-          'entity' => $entity
-        ]);
+        EnumTemplate::from($modelsRoot)
+          ->setup(
+            name: $enumName,
+            namespace: $entity->namespace . '\\Base',
+            items: array_map(fn($value, $key) => new EnumTemplateItem($key, $value), $enumValues, array_keys($enumValues))
+          )
+          ->save();
       }
     }
 

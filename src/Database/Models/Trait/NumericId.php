@@ -11,5 +11,10 @@ trait NumericId
   #[ORM\Column(type: 'integer')]
   #[ORM\GeneratedValue]
   #[PromMapping\PromModelColumn(title: 'ID', type: 'number', editable: false)]
-  protected int|null $id = null;
+  protected ?int $id = null;
+
+  public function getId(): ?int
+  {
+    return $this->id;
+  }
 }
