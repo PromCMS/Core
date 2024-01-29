@@ -190,7 +190,7 @@ abstract class ModelTemplate extends AbstractTemplate
     // Adds $translations reference property
     if ($this->mode !== ModelTemplateMode::LOCALIZED && $entity->localized) {
       $properties[] = new Stmt\Property(
-        type: new Node\NullableType(new Node\Identifier('ArrayCollection')),
+        // type: new Node\NullableType(new Node\Identifier('ArrayCollection')),
         flags: Modifiers::PROTECTED ,
         props: [
           new Stmt\PropertyProperty(
