@@ -15,11 +15,8 @@ use PromCMS\Core\Database\Models\Abstract\Entity;
 #[ORM\MappedSuperclass]
 class FileTranslation extends Entity
 {
-  use \PromCMS\Core\Database\Models\Trait\Timestamps;
-  use \PromCMS\Core\Database\Models\Trait\Localized {
-    getTranslations as protected getTranslationsOriginal;
-  }
   use \PromCMS\Core\Database\Models\Trait\NumericId;
+  use \PromCMS\Core\Database\Models\Trait\Timestamps;
   
   #[ORM\Column(type: 'string', name: 'locale', nullable: false)]
   protected string $locale;
