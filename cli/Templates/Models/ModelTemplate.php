@@ -21,16 +21,61 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
 
   protected function getNamespace()
   {
-    $possibleNamespace = $this->ast[0];
+    $possibleNamespace = null;
+    foreach ($this->ast as $stmt) {
+      if ($stmt instanceof Stmt\Namespace_) {
+        $possibleNamespace = $stmt;
+      }
+    }
 
     // Create anew if it does not exist yet
     if (($possibleNamespace instanceof Stmt\Namespace_) === false) {
-      $possibleNamespace = $this->ast[] = parent::getNamespace();
+      $headerAsExpression = $this->header->toExpression();
+      $possibleNamespace = $this->ast[] = new Stmt\Namespace_(
+        name: new Node\Name($this->namespace),
+        attributes: $headerAsExpression ? [
+          'comments' => [
+            $headerAsExpression
+          ]
+        ] : []
+      );
     }
 
+    return $possibleNamespace;
+  }
+
+  /**
+   * Gets existing class or creates a new one
+   */
+  protected function getClass(): Stmt\Class_
+  {
+    $namespace = $this->getNamespace();
+
+    $isOutputLocalized = $this->mode === ModelTemplateMode::LOCALIZED;
+    $phpName = $isOutputLocalized ? $this->entity->getTranslationPhpName() : $this->entity->phpName;
+    $class = null;
+
+    foreach ($namespace->stmts as $stmt) {
+      if ($stmt instanceof Stmt\Class_ && $stmt->name->name === $phpName) {
+        $class = $stmt;
+      }
+    }
+
+    if ($class === null) {
+      $class = new Stmt\Class_($phpName);
+      $namespace->stmts[] = $class;
+    }
+
+    return $class;
+  }
+
+  private function updateNamespace()
+  {
+    $namespace = $this->getNamespace();
+
     /** @var array<Stmt\Use_> */
-    $useStmts = array_filter($possibleNamespace->stmts, fn($stmt) => $stmt instanceof Stmt\Use_);
-    $otherStmts = array_filter($possibleNamespace->stmts, fn($stmt) => ($stmt instanceof Stmt\Use_) === false);
+    $useStmts = array_filter($namespace->stmts, fn($stmt) => $stmt instanceof Stmt\Use_);
+    $otherStmts = array_filter($namespace->stmts, fn($stmt) => ($stmt instanceof Stmt\Use_) === false);
 
     $enforcedUses = parent::getUseStatements($this->entity);
     $existingUsesAsArray = [];
@@ -60,35 +105,12 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
       );
     }
 
-    $possibleNamespace->stmts = [...$uses, ...$otherStmts];
-
-    return $possibleNamespace;
+    $namespace->stmts = [...$uses, ...$otherStmts];
   }
 
-  private function getClassFromAst()
+  private function updateClass(): void
   {
-    $namespace = $this->getNamespace();
-    $isOutputLocalized = $this->mode === ModelTemplateMode::LOCALIZED;
-    $phpName = $isOutputLocalized ? $this->entity->getTranslationPhpName() : $this->entity->phpName;
-    $class = null;
-
-    foreach ($namespace->stmts as $stmt) {
-      if ($stmt instanceof Stmt\Class_ && $stmt->name->name === $phpName) {
-        $class = $stmt;
-      }
-    }
-
-    if ($class === null) {
-      $class = new Stmt\Class_($phpName);
-      $namespace->stmts[] = $class;
-    }
-
-    return $class;
-  }
-
-  protected function getClass(): Stmt\Class_
-  {
-    $class = $this->getClassFromAst();
+    $class = $this->getClass();
 
     $isOutputLocalized = $this->mode === ModelTemplateMode::LOCALIZED;
 
@@ -149,7 +171,11 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
     $class->attrGroups = [
       new Node\AttributeGroup($attributes)
     ];
-
-    return $class;
+  }
+  public function generateAst()
+  {
+    $this->updateNamespace();
+    $this->updateClass();
+    parent::generateAst();
   }
 }
