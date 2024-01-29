@@ -7,7 +7,6 @@ use Doctrine\Common\EventManager;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\ORMSetup;
-use Gedmo\Translatable\TranslatableListener;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
@@ -32,19 +31,10 @@ class Database implements AppModuleInterface
       isDevMode: true,
     );
 
-    $eventManager = new EventManager();
-    $appDefaultLanguage = $promConfig->getProject()->getDefaultLanguage();
-
-    $translatableListener = new TranslatableListener();
-    $translatableListener->setTranslatableLocale($appDefaultLanguage);
-    $translatableListener->setDefaultLocale($appDefaultLanguage);
-    $eventManager->addEventSubscriber($translatableListener);
-
     $dsnParser = new DsnParser(['mysql' => 'mysqli', 'postgres' => 'pdo_pgsql', 'sqlite' => 'pdo_sqlite']);
     $connection = DriverManager::getConnection(
       $dsnParser->parse($databaseConnections[0]['uri']),
       $config,
-      $eventManager
     );
 
     $container->set(EntityManager::class, new EntityManager($connection, $config));

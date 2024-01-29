@@ -5,11 +5,10 @@ namespace PromCMS\Core\Internal\Http\Controllers;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
-use Gedmo\Translatable\Query\TreeWalker\TranslationWalker;
-use Gedmo\Translatable\TranslatableListener;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Database\Models\User;
+use PromCMS\Core\Database\Query\TranslationWalker;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\Routing\AsApiRoute;
@@ -61,7 +60,7 @@ class EntityController
         Query::HINT_CUSTOM_OUTPUT_WALKER,
         TranslationWalker::class
       )
-      ->setHint(TranslatableListener::HINT_TRANSLATABLE_LOCALE, $request->getAttribute('lang'));
+      ->setHint(TranslationWalker::HINT_LOCALE, $request->getAttribute('lang'));
 
     return $compiledQuery;
   }
