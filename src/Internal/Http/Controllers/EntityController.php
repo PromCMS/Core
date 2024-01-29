@@ -277,7 +277,7 @@ class EntityController
   }
   private function getPayloadForLocalizedFields(Entity $entity, array $payload)
   {
-    $columns = array_filter($entity->getColumns(), fn($column) => !$column->localized);
+    $columns = array_filter($entity->getColumns(), fn($column) => $column->localized);
     $final = [];
 
     foreach ($columns as $column) {
