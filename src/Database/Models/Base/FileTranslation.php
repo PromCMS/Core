@@ -27,7 +27,7 @@ class FileTranslation extends Entity
   #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, inversedBy: 'translations'), ORM\JoinColumn(name: 'object_id', nullable: false)]
   protected \PromCMS\Core\Database\Models\FileTranslation $object;
   
-  #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: true)]
+  #[ORM\Column(name: 'description', nullable: true, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: true)]
   protected ?string $description;
   
   function __construct()

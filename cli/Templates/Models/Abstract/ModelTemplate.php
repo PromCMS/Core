@@ -252,7 +252,7 @@ abstract class ModelTemplate extends AbstractTemplate
       ),
       new Node\Arg(
         name: new Node\Identifier('unique'),
-        value: new Node\Expr\ConstFetch(new Node\Name(json_encode(!$column->required)))
+        value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->unique)))
       ),
     ];
 

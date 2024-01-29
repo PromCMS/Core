@@ -18,13 +18,13 @@ class Setting extends Entity
   use \PromCMS\Core\Database\Models\Trait\Ownable;
   use \PromCMS\Core\Database\Models\Trait\NumericId;
   
-  #[ORM\Column(name: 'name', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Name', type: 'string', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'name', nullable: false, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Name', type: 'string', editable: false, hide: false, localized: false)]
   protected ?string $name;
   
-  #[ORM\Column(name: 'content', nullable: true, unique: true, type: 'array'), PROM\PromModelColumn(title: 'Content', type: 'json', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'content', nullable: true, unique: false, type: 'array'), PROM\PromModelColumn(title: 'Content', type: 'json', editable: false, hide: false, localized: false)]
   protected ?array $content;
   
-  #[ORM\Column(name: 'description', nullable: true, unique: true, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'description', nullable: true, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: false)]
   protected ?string $description;
   
   function __construct()

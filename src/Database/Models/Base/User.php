@@ -17,7 +17,7 @@ class User extends Entity
   use \PromCMS\Core\Database\Models\Trait\Timestamps;
   use \PromCMS\Core\Database\Models\Trait\NumericId;
   
-  #[ORM\Column(name: 'email', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Email', type: 'string', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'email', nullable: false, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Email', type: 'string', editable: false, hide: false, localized: false)]
   protected ?string $email;
   
   #[ORM\Column(name: 'password', nullable: false, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Password', type: 'longText', editable: false, hide: true, localized: false)]
@@ -32,7 +32,7 @@ class User extends Entity
   #[ORM\Column(name: 'state', nullable: false, unique: false, type: 'string', enumType: UserState::class), PROM\PromModelColumn(title: 'State', type: 'enum', editable: false, hide: false, localized: false)]
   protected ?UserState $state;
   
-  #[ORM\Column(name: 'avatar_id', nullable: true, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Avatar', type: 'relationship', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'avatar_id', nullable: true, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Avatar', type: 'relationship', editable: false, hide: false, localized: false)]
   protected ?\PromCMS\Core\Database\Models\File $avatar;
   
   #[ORM\Column(name: 'role', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Role', type: 'string', editable: false, hide: false, localized: false)]
