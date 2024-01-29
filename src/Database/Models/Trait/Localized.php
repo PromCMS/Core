@@ -10,7 +10,7 @@ trait Localized
   {
     $result = [];
     foreach ($this->translations as $translation) {
-      $result[$translation['locale']] = $translation;
+      $result[$translation->getLocale()] = $translation;
     }
 
     return new ArrayCollection($result);
