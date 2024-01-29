@@ -43,6 +43,90 @@ class BaseModelTemplate extends ModelTemplate
     return parent::getClassTraits();
   }
 
+  protected function getContructorStmt(): Stmt\ClassMethod
+  {
+    $method = parent::getContructorStmt();
+
+    if ($this->mode === ModelTemplateMode::LOCALIZED) {
+      $localeParamName = new Node\Expr\Variable('locale');
+      $method->params = [
+        new Node\Param(
+          var: $localeParamName,
+          type: new Node\Name('string')
+        ),
+      ];
+
+      $method->stmts = [
+        ...$method->stmts,
+        new Stmt\Expression(
+          new Node\Expr\Assign(
+            var: new Node\Expr\PropertyFetch(
+              var: new Node\Expr\Variable('this'),
+              name: new Node\Identifier('locale')
+            ),
+            expr: $localeParamName
+          )
+        )
+      ];
+    }
+
+    return $method;
+  }
+
+  protected function getMethods(Entity $entity)
+  {
+    $methods = parent::getMethods($entity);
+
+    // Adds setObject method for translation table
+    if ($this->mode === ModelTemplateMode::LOCALIZED && $entity->localized) {
+      $paramObject = new Node\Expr\Variable('object');
+      $methods[] = new Stmt\ClassMethod(
+        'setObject',
+        [
+          'params' => [
+            new Node\Param(
+              var: $paramObject,
+              type: new Node\Name('\\' . $entity->className)
+            )
+          ],
+          'returnType' => new Node\Name('static'),
+          'stmts' => [
+            new Stmt\Expression(
+              new Node\Expr\Assign(
+                var: new Node\Expr\PropertyFetch(
+                  var: new Node\Expr\Variable('this'),
+                  name: new Node\Identifier('object'),
+                ),
+                expr: $paramObject
+              )
+            ),
+            new Stmt\Return_(
+              new Node\Expr\Variable('this')
+            )
+          ]
+        ]
+      );
+
+      $methods[] = new Stmt\ClassMethod(
+        'getLocale',
+        [
+          'returnType' => new Node\Name('string'),
+          'stmts' => [
+            new Stmt\Return_(
+              new Node\Expr\PropertyFetch(
+                var: new Node\Expr\Variable('this'),
+                name: new Node\Identifier('locale'),
+              )
+            )
+          ]
+        ]
+      );
+    }
+
+
+    return $methods;
+  }
+
   protected function getClass(): Stmt\Class_
   {
     $class = parent::getClass();
@@ -114,7 +198,7 @@ class BaseModelTemplate extends ModelTemplate
       );
 
       $properties[] = new Stmt\Property(
-        type: new Node\Name\FullyQualified($this->entity->getTranslationClassName()),
+        type: new Node\Name\FullyQualified($this->entity->className),
         flags: Modifiers::PROTECTED ,
         props: [
           new Stmt\PropertyProperty(
@@ -130,7 +214,7 @@ class BaseModelTemplate extends ModelTemplate
                   name: new Node\Identifier('targetEntity'),
                   value: new Node\Expr\ClassConstFetch(
                     name: new Node\Identifier('class'),
-                    class: new Node\Name\FullyQualified($this->entity->getTranslationClassName())
+                    class: new Node\Name\FullyQualified($this->entity->className)
                   ),
                 ),
                 new Node\Arg(

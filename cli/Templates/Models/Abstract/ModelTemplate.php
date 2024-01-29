@@ -421,10 +421,75 @@ abstract class ModelTemplate extends AbstractTemplate
         attributes: [
           'comments' => [
             new Comment\Doc('/**
-* @var ArrayCollection<string, \\' . $entity->getTranslationClassName() . '>
+* @return ArrayCollection<string, \\' . $entity->getTranslationClassName() . '>
 */')
           ]
         ]
+      );
+
+      $addTranslationParam = new Node\Expr\Variable('translation');
+      $thisVariable = new Node\Expr\Variable('this');
+      $methods[] = new Stmt\ClassMethod(
+        name: new Node\Identifier('addTranslation'),
+        subNodes: [
+          'returnType' => new Node\Identifier('static'),
+          'params' => [
+            new Node\Param(
+              var: $addTranslationParam,
+              type: new Node\Name('\\' . $entity->getTranslationClassName())
+            )
+          ],
+          'stmts' => [
+            new Stmt\If_(
+              new Node\Expr\BooleanNot(
+                new Node\Expr\MethodCall(
+                  var: new Node\Expr\PropertyFetch(
+                    var: $thisVariable,
+                    name: new Node\Identifier('translations')
+                  ),
+                  name: new Node\Identifier('contains'),
+                  args: [
+                    new Node\Arg($addTranslationParam)
+                  ]
+                )
+              ),
+              [
+                'stmts' => [
+                  new Stmt\Expression(
+                    new Node\Expr\MethodCall(
+                      var: new Node\Expr\Variable('translation'),
+                      name: new Node\Identifier('setObject'),
+                      args: [
+                        new Node\Arg($thisVariable)
+                      ]
+                    )
+                  ),
+                  new Stmt\Expression(
+                    new Node\Expr\MethodCall(
+                      var: new Node\Expr\PropertyFetch(
+                        var: $thisVariable,
+                        name: new Node\Identifier('translations')
+                      ),
+                      name: new Node\Identifier('set'),
+                      args: [
+                        new Node\Arg(
+                          new Node\Expr\MethodCall(
+                            var: new Node\Expr\Variable('translation'),
+                            name: new Node\Identifier('getLocale'),
+                          )
+                        ),
+                        new Node\Arg($addTranslationParam)
+                      ]
+                    )
+                  )
+                ]
+              ]
+            ),
+            new Stmt\Return_(
+              $thisVariable
+            )
+          ]
+        ],
       );
     }
 
