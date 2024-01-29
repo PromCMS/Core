@@ -163,7 +163,7 @@ class BaseModelTemplate extends ModelTemplate
 
     $originalProperties = parent::getProperties($entity);
     $originalProperties = array_map(function ($property) {
-      if (($property->type instanceof Node\NullableType) === false) {
+      if ($property->type && ($property->type instanceof Node\NullableType) === false) {
         $property->type = new Node\NullableType($property->type);
       }
 
