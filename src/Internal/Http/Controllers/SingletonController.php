@@ -138,6 +138,33 @@ class SingletonController
     }
   }
 
+  private function getPayloadForUnlocalizedFields(Entity $entity, array $payload)
+  {
+    $columns = array_filter($entity->getColumns(), fn($column) => !$column->localized);
+    $final = [];
+
+    foreach ($columns as $column) {
+      if (isset($payload[$column->name])) {
+        $final[$column->name] = $payload[$column->name];
+      }
+    }
+
+    return $final;
+  }
+  private function getPayloadForLocalizedFields(Entity $entity, array $payload)
+  {
+    $columns = array_filter($entity->getColumns(), fn($column) => !$column->localized);
+    $final = [];
+
+    foreach ($columns as $column) {
+      if (isset($payload[$column->name])) {
+        $final[$column->name] = $payload[$column->name];
+      }
+    }
+
+    return $final;
+  }
+
   #[AsApiRoute('PATCH', '/singletons/{modelId}'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(SingletonMiddleware::class),
@@ -152,6 +179,7 @@ class SingletonController
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->getRepository($entity->className);
     $parsedBody = $request->getParsedBody();
+    $data = $parsedBody['data'];
 
     // if ($this->isLocalizedModel($modelTableMap)) {
     //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
@@ -160,7 +188,7 @@ class SingletonController
     $item = $query->findOneBy([]);
 
     if ($entity->sharable && $this->currentUser) {
-      $parsedBody['data']['updatedBy'] = $this->currentUser->getId();
+      $data['updatedBy'] = $this->currentUser->getId();
     }
 
     try {
@@ -172,9 +200,23 @@ class SingletonController
       $localize = $entity->localized && !$localizationService->isDefaultLanguage($language);
 
       if ($localize) {
-        $item->fill($parsedBody['data'], $language);
+        $unlocalizedDataPayload = $this->getPayloadForUnlocalizedFields($entity, $data);
+        $localizedDataPayload = $this->getPayloadForLocalizedFields($entity, $data);
+
+        $item->fill($unlocalizedDataPayload);
+        $existingTranslations = $item->getTranslations();
+
+        if (!isset($existingTranslations[$language])) {
+          $translation = new($entity->getTranslationClassName());
+          $translation->fill($item->toArray()); // Is it really necessary to fill it? Does every mutation need required fields to be copied?
+        } else {
+          $translation = $existingTranslations[$language];
+        }
+
+        $translation->fill($localizedDataPayload);
+        $this->em->persist($translation);
       } else {
-        $item->fill($parsedBody['data']);
+        $item->fill($data);
       }
 
       $this->em->flush();
