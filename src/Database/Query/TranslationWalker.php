@@ -4,9 +4,6 @@ namespace PromCMS\Core\Database\Query;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MySQLPlatform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\AST\FromClause;
@@ -22,41 +19,18 @@ class TranslationWalker extends SqlWalker
 {
   public const HINT_LOCALE = '__prom.translations.locale';
 
-
-  /**
-   * Stores all component references from select clause
-   *
-   * @var array<string, array<string, mixed>>
-   *
-   * @phpstan-var array<string, array{metadata: ClassMetadata}>
-   */
   private array $translatedComponents = [];
 
-  /**
-   * DBAL database platform
-   *
-   * @var AbstractPlatform
-   */
-  private $platform;
+  private AbstractPlatform $platform;
+
+  private Connection $conn;
 
   /**
-   * DBAL database connection
-   *
-   * @var Connection
-   */
-  private $conn;
-
-  /**
-   * List of aliases to replace with translation
-   * content reference
-   *
    * @var array<string, string>
    */
   private array $replacements = [];
 
   /**
-   * List of joins for translated components in query
-   *
    * @var array<string, string>
    */
   private array $components = [];
@@ -89,6 +63,7 @@ class TranslationWalker extends SqlWalker
    */
   public function walkSelectClause($selectClause)
   {
+
     $result = parent::walkSelectClause($selectClause);
 
     return $this->replace($this->replacements, $result);
@@ -237,33 +212,33 @@ class TranslationWalker extends SqlWalker
       $transMeta = $em->getClassMetadata($transClass);
       $transTable = $quoteStrategy->getTableName($transMeta, $this->platform);
       $staticFields = ['id', 'locale', 'field'];
+      $compTblAlias = $this->walkIdentificationVariable($dqlAlias);
+      $tblAlias = $this->getSQLTableAlias('trans' . $compTblAlias);
 
-      // // Join...
-      // $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
-      // // ON locale = $locale
-      // $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
-      //   . ' = ' . $this->conn->quote($locale);
-      // $identifier = $meta->getSingleIdentifierFieldName();
-      // $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
-      // // AND object_id = $idColName
-      // $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
-      //   . ' = ' . $compTblAlias . '.' . $idColName;
+      // Join...
+      $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
+      // ON locale = $locale
+      $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
+        . ' = ' . $this->conn->quote($locale);
+      $identifier = $meta->getSingleIdentifierFieldName();
+      $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
+      // AND object_id = $idColName
+      $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
+        . ' = ' . $compTblAlias . '.' . $idColName;
+      isset($this->components[$dqlAlias]) ? $this->components[$dqlAlias] .= $sql : $this->components[$dqlAlias] = $sql;
 
       foreach ($transMeta->getFieldNames() as $field) {
         if (in_array($field, $staticFields)) {
           continue;
         }
 
-        $compTblAlias = $this->walkIdentificationVariable($dqlAlias, $field);
-        $tblAlias = $this->getSQLTableAlias('trans' . $compTblAlias . $field);
-        $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
-        $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
-          . ' = ' . $this->conn->quote($locale);
-        $identifier = $meta->getSingleIdentifierFieldName();
-        $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
-        $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
-          . ' = ' . $compTblAlias . '.' . $idColName;
-        isset($this->components[$dqlAlias]) ? $this->components[$dqlAlias] .= $sql : $this->components[$dqlAlias] = $sql;
+        // $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
+        // $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
+        //   . ' = ' . $this->conn->quote($locale);
+        // $identifier = $meta->getSingleIdentifierFieldName();
+        // $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
+        // $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
+        //   . ' = ' . $compTblAlias . '.' . $idColName;
 
         $originalField = $compTblAlias . '.' . $quoteStrategy->getColumnName($field, $meta, $this->platform);
         $substituteField = $tblAlias . '.' . $quoteStrategy->getColumnName($field, $transMeta, $this->platform);
@@ -316,40 +291,5 @@ class TranslationWalker extends SqlWalker
     }
 
     return $str;
-  }
-
-  /**
-   * Casts a foreign key if needed
-   *
-   * @NOTE: personal translations manages that for themselves.
-   *
-   * @param string $component a column with an alias to cast
-   * @param string $typeFK    translation table foreign key type
-   * @param string $typePK    primary key type which references translation table
-   *
-   * @return string modified $component if needed
-   */
-  private function getCastedForeignKey(string $component, string $typeFK, string $typePK): string
-  {
-    // the keys are of same type
-    if ($typeFK === $typePK) {
-      return $component;
-    }
-
-    // try to look at postgres casting
-    if ($this->platform instanceof PostgreSQLPlatform) {
-      switch ($typeFK) {
-        case 'string':
-        case 'guid':
-          // need to cast to VARCHAR
-          $component .= '::VARCHAR';
-
-          break;
-      }
-    }
-
-    // @TODO may add the same thing for MySQL for performance to match index
-
-    return $component;
   }
 }
