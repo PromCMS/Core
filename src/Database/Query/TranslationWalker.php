@@ -231,14 +231,24 @@ class TranslationWalker extends SqlWalker
     $joinStrategy = 'LEFT';
 
     foreach ($this->translatedComponents as $dqlAlias => $comp) {
-      echo " - aka - ";
       /** @var ClassMetadata $meta */
       $meta = $comp['metadata'];
       $transClass = $meta->getName() . 'Translation'; // TODO
       $transMeta = $em->getClassMetadata($transClass);
       $transTable = $quoteStrategy->getTableName($transMeta, $this->platform);
-
       $staticFields = ['id', 'locale', 'field'];
+
+      // // Join...
+      // $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
+      // // ON locale = $locale
+      // $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
+      //   . ' = ' . $this->conn->quote($locale);
+      // $identifier = $meta->getSingleIdentifierFieldName();
+      // $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
+      // // AND object_id = $idColName
+      // $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
+      //   . ' = ' . $compTblAlias . '.' . $idColName;
+
       foreach ($transMeta->getFieldNames() as $field) {
         if (in_array($field, $staticFields)) {
           continue;
@@ -249,8 +259,6 @@ class TranslationWalker extends SqlWalker
         $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
         $sql .= ' ON ' . $tblAlias . '.' . $quoteStrategy->getColumnName('locale', $transMeta, $this->platform)
           . ' = ' . $this->conn->quote($locale);
-        $sql .= ' AND ' . $tblAlias . '.' . $quoteStrategy->getColumnName('field', $transMeta, $this->platform)
-          . ' = ' . $this->conn->quote($field);
         $identifier = $meta->getSingleIdentifierFieldName();
         $idColName = $quoteStrategy->getColumnName($identifier, $meta, $this->platform);
         $sql .= ' AND ' . $tblAlias . '.' . $transMeta->getSingleAssociationJoinColumnName('object')
@@ -258,26 +266,9 @@ class TranslationWalker extends SqlWalker
         isset($this->components[$dqlAlias]) ? $this->components[$dqlAlias] .= $sql : $this->components[$dqlAlias] = $sql;
 
         $originalField = $compTblAlias . '.' . $quoteStrategy->getColumnName($field, $meta, $this->platform);
-        $substituteField = $tblAlias . '.' . $quoteStrategy->getColumnName('content', $transMeta, $this->platform);
+        $substituteField = $tblAlias . '.' . $quoteStrategy->getColumnName($field, $transMeta, $this->platform);
 
-        // Treat translation as original field type
-        $fieldMapping = $meta->getFieldMapping($field);
-        if (
-          (($this->platform instanceof MySQLPlatform)
-            && in_array($fieldMapping['type'], ['decimal'], true))
-          || (!($this->platform instanceof MySQLPlatform)
-            && !in_array($fieldMapping['type'], ['datetime', 'datetimetz', 'date', 'time'], true))
-        ) {
-          $type = Type::getType($fieldMapping['type']);
-          $substituteField = 'CAST(' . $substituteField . ' AS ' . $type->getSQLDeclaration($fieldMapping, $this->platform) . ')';
-        }
-
-        // Fallback to original if was asked for
-        if (
-          !isset($config['fallback'][$field]) || $config['fallback'][$field]
-        ) {
-          $substituteField = 'COALESCE(' . $substituteField . ', ' . $originalField . ')';
-        }
+        $substituteField = 'COALESCE(' . $substituteField . ', ' . $originalField . ')';
 
         $this->replacements[$originalField] = $substituteField;
       }

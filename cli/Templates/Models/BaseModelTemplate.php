@@ -5,6 +5,8 @@ namespace PromCMS\Cli\Templates\Models;
 use PhpParser\Modifiers;
 use PromCMS\Cli\Templates\Models\Abstract\ModelTemplate;
 use PromCMS\Cli\Templates\Models\ModelTemplateMode;
+use PromCMS\Core\Database\Models\Trait\NumericId;
+use PromCMS\Core\Database\Models\Trait\Timestamps;
 use PromCMS\Core\PromConfig\Entity;
 use Symfony\Component\Filesystem\Path;
 use PhpParser\Node;
@@ -29,13 +31,25 @@ class BaseModelTemplate extends ModelTemplate
       ->addLine('Updates should be made to ../' . $phpName . '.php as that is not overriden.');
   }
 
+  protected function getClassTraits()
+  {
+    if ($this->mode === ModelTemplateMode::LOCALIZED) {
+      return [
+        NumericId::class,
+        Timestamps::class
+      ];
+    }
+
+    return parent::getClassTraits();
+  }
+
   protected function getClass(): Stmt\Class_
   {
     $class = parent::getClass();
 
     $class->stmts = [
       ...$class->stmts,
-      ...$this->getTraits($this->entity),
+      ...$this->createTraitStmts($this->entity),
       ...$this->getProperties($this->entity),
       $this->getContructorStmt(),
       ...$this->getMethods($this->entity),

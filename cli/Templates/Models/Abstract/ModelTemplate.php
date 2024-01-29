@@ -114,11 +114,16 @@ abstract class ModelTemplate extends AbstractTemplate
     ]);
   }
 
-  protected function getTraits(Entity $entity)
+  protected function getClassTraits()
+  {
+    return $this->entity->traits;
+  }
+
+  protected function createTraitStmts(Entity $entity)
   {
     $uses = [];
 
-    foreach ($entity->traits as $traitClass) {
+    foreach ($this->getClassTraits() as $traitClass) {
       $adaptations = [];
 
       if ($traitClass === Localized::class) {
