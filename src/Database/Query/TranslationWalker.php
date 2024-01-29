@@ -231,12 +231,19 @@ class TranslationWalker extends SqlWalker
     $joinStrategy = 'LEFT';
 
     foreach ($this->translatedComponents as $dqlAlias => $comp) {
+      echo " - aka - ";
       /** @var ClassMetadata $meta */
       $meta = $comp['metadata'];
-      $transClass = $meta->getName() . 'Translations'; // TODO
+      $transClass = $meta->getName() . 'Translation'; // TODO
       $transMeta = $em->getClassMetadata($transClass);
       $transTable = $quoteStrategy->getTableName($transMeta, $this->platform);
-      foreach ($config['fields'] as $field) {
+
+      $staticFields = ['id', 'locale', 'field'];
+      foreach ($transMeta->getFieldNames() as $field) {
+        if (in_array($field, $staticFields)) {
+          continue;
+        }
+
         $compTblAlias = $this->walkIdentificationVariable($dqlAlias, $field);
         $tblAlias = $this->getSQLTableAlias('trans' . $compTblAlias . $field);
         $sql = " {$joinStrategy} JOIN " . $transTable . ' ' . $tblAlias;
@@ -292,9 +299,12 @@ class TranslationWalker extends SqlWalker
       if (!isset($comp['metadata'])) {
         continue;
       }
-      $meta = $comp['metadata'];
+      $classMeta = $comp['metadata'];
 
-      echo $meta->getReflectionClass()->getName();
+      // TODO - extract translation classname from prom attribute instead
+      if (class_exists($classMeta->getReflectionClass()->getName() . 'Translation')) {
+        $this->translatedComponents[$alias] = $comp;
+      }
 
       // if ($config && isset($config['fields'])) {
       //   $this->translatedComponents[$alias] = $comp;
