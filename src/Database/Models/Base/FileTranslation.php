@@ -21,14 +21,15 @@ class FileTranslation extends Entity
   #[ORM\Column(type: 'string', name: 'locale', nullable: false)]
   protected string $locale;
   
-  #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, inversedBy: 'translations'), ORM\JoinColumn(name: 'object_id', nullable: false)]
-  protected \PromCMS\Core\Database\Models\FileTranslation $object;
+  #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\File::class, inversedBy: 'translations'), ORM\JoinColumn(name: 'object_id', nullable: false)]
+  protected \PromCMS\Core\Database\Models\File $object;
   
   #[ORM\Column(name: 'description', nullable: true, unique: false, type: 'text'), PROM\PromModelColumn(title: 'Description', type: 'longText', editable: false, hide: false, localized: true)]
   protected ?string $description;
   
-  function __construct()
+  function __construct(string $locale)
   {
+    $this->locale = $locale;
   }
   
   #[ORM\PostLoad]
@@ -45,5 +46,16 @@ class FileTranslation extends Entity
   {
     $this->description = $description;
     return $this;
+  }
+  
+  function setObject(\PromCMS\Core\Database\Models\File $object): static
+  {
+    $this->object = $object;
+    return $this;
+  }
+  
+  function getLocale(): string
+  {
+    return $this->locale;
   }
 }

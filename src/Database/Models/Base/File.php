@@ -40,7 +40,7 @@ class File extends Entity
   */
   
   #[ORM\OneToMany(targetEntity: \PromCMS\Core\Database\Models\FileTranslation::class, mappedBy: 'object', cascade: ['persist', 'remove'])]
-  protected ?ArrayCollection $translations;
+  protected $translations;
   
   function __construct()
   {
@@ -53,12 +53,21 @@ class File extends Entity
     $this->translations ??= new ArrayCollection();
   }
   /**
-  * @var ArrayCollection<string, \PromCMS\Core\Database\Models\FileTranslation>
+  * @return ArrayCollection<string, \PromCMS\Core\Database\Models\FileTranslation>
   */
   
   function getTranslations(): ArrayCollection
   {
     return $this->getTranslationsOriginal();
+  }
+  
+  function addTranslation(\PromCMS\Core\Database\Models\FileTranslation $translation): static
+  {
+    if (!$this->translations->contains($translation)) {
+      $translation->setObject($this);
+      $this->translations->set($translation->getLocale(), $translation);
+    }
+    return $this;
   }
   
   function getFilename(): string
