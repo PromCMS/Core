@@ -69,7 +69,7 @@ class App
       if (file_exists($appBootstrapFilepath)) {
         $bootstrapClosure = require $appBootstrapFilepath;
 
-        $bootstrapClosure($app);
+        $bootstrapClosure($this->app);
       }
 
       (new Bootstrap\Routes())->run($this->app, $container);
