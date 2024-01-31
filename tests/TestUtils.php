@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PromCMS\Tests;
 
+use PromCMS\Core\App;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Models\User;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
@@ -11,7 +14,6 @@ use Symfony\Component\Filesystem\Path;
 class TestUtils
 {
 
-  public static $propelFolder = "";
   public static $sqliteInitial = "";
 
   public static function ensureSession()
@@ -24,23 +26,22 @@ class TestUtils
   public static function clearSession()
   {
     static::ensureSession();
-    session_destroy();
+
+    if (session_status() !== PHP_SESSION_NONE) {
+      session_destroy();
+    }
     $_SESSION = [];
   }
 
-  public static function ensureEmptyDatabase()
+  public static function ensureEmptyDatabase(App $app)
   {
-    if (empty(static::$sqliteInitial)) {
-      if (file_exists(static::getSqlitePath())) {
-        unlink(static::getSqlitePath());
-      }
-
-      shell_exec("composer run database:migrate");
-
-      static::$sqliteInitial = file_get_contents(static::getSqlitePath());
+    try {
+      /** @var EntityManager */
+      $em = $app->getSlimApp()->getContainer()->get(EntityManager::class);
+      $em->createQueryBuilder()->delete(User::class)->getQuery()->execute();
+    } catch (\Exception $error) {
+      echo "messing: " . $error->getMessage();
     }
-
-    file_put_contents(static::getSqlitePath(), static::$sqliteInitial);
   }
 
   public static function prepareSystemForTests(string $root)
@@ -50,11 +51,7 @@ class TestUtils
     }
     mkdir($root);
     file_put_contents(Path::join($root, ".env"), "
-      APP_NAME=\"PromCMS Test Project\"
       APP_DEBUG=true
-      APP_URL=http://localhost:3004
-      LANGUAGE=\"en\"
-      MORE_LANG=\"cs,fr\"
       
       MAIL_HOST=\"test\"
       MAIL_PORT=2525
@@ -70,9 +67,9 @@ class TestUtils
     $fileSystem->mirror(Path::join(__DIR__, '..', '.prom-cms'), Path::join($root, '.prom-cms'));
   }
 
-  private static function getSqlitePath()
+  private static function getSqlitePath(string $root)
   {
-    return Path::join(static::$propelFolder, 'db.sq3');
+    return Path::join($root, '.prom-cms', 'parsed', 'database.sqlite');
   }
 
   public static function generalCleanup(string $root)
@@ -93,5 +90,3 @@ class TestUtils
     rmdir($dir);
   }
 }
-
-TestUtils::$propelFolder = Path::join(__DIR__, "../.prom-cms/propel");

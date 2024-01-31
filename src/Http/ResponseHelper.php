@@ -2,25 +2,23 @@
 
 namespace PromCMS\Core\Http;
 
-use PromCMS\Core\Http\Enums\HttpContentType;
-use Propel\Runtime\Map\TableMap;
-use Propel\Runtime\Util\PropelModelPager;
+use PromCMS\Core\Database\Paginate;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseHelper
 {
   private ResponseInterface $response;
-  private HttpContentType $contentType;
+  private ContentType $contentType;
 
   public static function withServerResponse(
     ResponseInterface &$serverResponse,
     string|array $body,
     int $httpStatus = 200
   ) {
-    $contentType = HttpContentType::HTML;
+    $contentType = ContentType::HTML;
 
     if (is_array($body)) {
-      $contentType = HttpContentType::JSON;
+      $contentType = ContentType::JSON;
     }
 
     $instance = new self($serverResponse, $contentType);
@@ -33,10 +31,10 @@ class ResponseHelper
 
   public static function withServerPagedResponse(
     ResponseInterface &$serverResponse,
-    PropelModelPager $body,
+    Paginate $body,
     int $httpStatus = 200
   ) {
-    $contentType = HttpContentType::JSON;
+    $contentType = ContentType::JSON;
 
     $instance = new self($serverResponse, $contentType);
 
@@ -46,21 +44,21 @@ class ResponseHelper
     return $instance;
   }
 
-  function __construct(ResponseInterface $serverResponse, HttpContentType $contentType)
+  function __construct(ResponseInterface $serverResponse, ContentType $contentType)
   {
     $this->response = $serverResponse;
     $this->contentType = $contentType;
   }
 
-  public function setPagedBody(array|PropelModelPager $body)
+  public function setPagedBody(array|Paginate $body)
   {
-    if ($this->contentType !== HttpContentType::JSON) {
+    if ($this->contentType !== ContentType::JSON) {
       throw new \Exception("Response content type must be json for paged body");
     }
 
     $itemsAsArray = [];
-
-    foreach ($body->getResults()->getData() as $item) {
+    $items = $body->getItems();
+    foreach ($items as $item) {
       if (!is_array($item)) {
         $itemsAsArray[] = $item->toArray();
 
@@ -70,15 +68,11 @@ class ResponseHelper
       return $itemsAsArray;
     }
 
-    $indexOfFirstFromResult = ($body->getPage() - 1) * $body->getMaxPerPage() + 1;
-
     $responseBody = [
       'data' => $itemsAsArray,
+      'current_page' => $body->getCurrentPage(),
       'last_page' => $body->getLastPage(),
-      'per_page' => $body->getMaxPerPage(),
-      'total' => $body->getNbResults(),
-      'from' => $indexOfFirstFromResult,
-      'to' => $indexOfFirstFromResult + count($itemsAsArray) - 1,
+      'total' => $body->getTotal(),
     ];
 
     $this->response->getBody()->write(json_encode($responseBody));
@@ -90,7 +84,7 @@ class ResponseHelper
 
   public function setBody(string|array $body)
   {
-    if ($this->contentType === HttpContentType::JSON && is_string($body)) {
+    if ($this->contentType === ContentType::JSON && is_string($body)) {
       throw new \Exception("Response content type is json and you are trying to return string. Please pass array to setBody instead or change content type to HTML");
     }
 

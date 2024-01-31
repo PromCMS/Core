@@ -3,14 +3,12 @@
 namespace PromCMS\Core\Services;
 
 use DI\Container;
+use Doctrine\ORM\QueryBuilder;
 use Exception;
-use PromCMS\Core\Config;
+use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
-use PromCMS\Core\Models\Base\GeneralTranslationQuery;
-use PromCMS\Core\Models\GeneralTranslation;
-use PromCMS\Core\Models\GeneralTranslations;
-use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\Map\TableMap;
+use PromCMS\Core\Database\Models\GeneralTranslation;
+use PromCMS\Core\PromConfig;
 
 class LocalizationService
 {
@@ -18,17 +16,19 @@ class LocalizationService
   private array $supportedLanguages;
   private string $defaultLanguage;
   private string $currentLanguage;
+  private EntityManager $em;
 
   public function __construct(Container $container)
   {
     $this->container = $container;
-    $config = $this->container->get(
-      Config::class,
+    $promConfig = $this->container->get(
+      PromConfig::class,
     );
 
-    $this->supportedLanguages = $config->i18n->languages;
-    $this->defaultLanguage = $config->i18n->default;
+    $this->supportedLanguages = $promConfig->getProject()->languages;
+    $this->defaultLanguage = $promConfig->getProject()->getDefaultLanguage();
     $this->currentLanguage = $this->defaultLanguage;
+    $this->em = $container->get(EntityManager::class);
   }
 
   function languageIsSupported($lang)
@@ -36,26 +36,41 @@ class LocalizationService
     return in_array($lang, $this->supportedLanguages);
   }
 
+  private function createQb()
+  {
+    return $this->em->createQueryBuilder();
+  }
+
   /**
    * Gets all translations for selected language
    */
   function getTranslations($language, $includeUnknown = false)
   {
-
-    $localizations = GeneralTranslationQuery::create()
-      ->filterBy('lang', $language, Criteria::EQUAL)
-      ->orderBy("key", Criteria::DESC)
-      ->find();
+    $r = $this->em->getRepository(GeneralTranslation::class);
+    $qb = $this->createQb();
+    $localizations = $r
+      ->findBy(
+        [
+          'lang' => $language,
+        ],
+        [
+          'key' => "DESC"
+        ]
+      );
 
     $items = [];
+    /**
+     * @var GeneralTranslation $item
+     */
     foreach ($localizations as $item) {
       $items[$item->getKey()] = $item->getValue();
     }
 
     if ($includeUnknown) {
-      $otherTranslations = GeneralTranslationQuery::create()
-        ->filterBy("key", array_keys($items), Criteria::NOT_IN)
-        ->find();
+      $otherTranslations = $qb->from(GeneralTranslation::class, 't')->select('t')
+        ->where($qb->expr()->notIn('t.key', array_keys($items)))
+        ->getQuery()
+        ->execute();
 
       foreach ($otherTranslations as $item) {
         $items[$item->getKey()] = "";
@@ -65,13 +80,15 @@ class LocalizationService
     return $items;
   }
 
-  function getTranslation($lang, $key)
+  function getTranslation($lang, $key): ?GeneralTranslation
   {
+    $r = $this->em->getRepository(GeneralTranslation::class);
+
     try {
-      $result = GeneralTranslationQuery::create()
-        ->filterByLang($lang, Criteria::EQUAL)
-        ->filterByKey($key, Criteria::EQUAL)
-        ->findOne();
+      $result = $r->findOneBy([
+        'lang' => $lang,
+        'key' => $key
+      ]);
 
       if (!$result) {
         throw new EntityNotFoundException();
@@ -84,12 +101,14 @@ class LocalizationService
   }
 
 
-  function translationExists($countryCode, $key): bool
+  function translationExists($lang, $key): bool
   {
-    return GeneralTranslationQuery::create()
-      ->filterByLang($countryCode, Criteria::EQUAL)
-      ->filterByKey($key, Criteria::EQUAL)
-      ->exists();
+    try {
+      $this->getTranslation($lang, $key);
+      return true;
+    } catch (Exception $error) {
+      return false;
+    }
   }
 
   function updateTranslation($language, $key, $value)
@@ -104,31 +123,30 @@ class LocalizationService
 
     if ($translation = $this->getTranslation($language, $key)) {
       if (strlen($value) > 0) {
-        $item = $translation->fromArray(['value' => $value]);
-        $item->save();
+        $item = $translation->setValue($value);
       } else {
         $item = $translation;
-        $translation->delete();
+
+        $this->em->remove($translation);
       }
     } else {
       $item = new GeneralTranslation();
 
-      $item->fromArray([
+      $item->fill([
         'lang' => $language,
         'key' => $key,
         'value' => $value
       ]);
-
-      $item->save();
     }
 
-    return $item->toArray(TableMap::TYPE_CAMELNAME);
+    $this->em->flush();
+
+    return $item->toArray();
   }
 
   function deleteTranslationKey($key)
   {
-    // TODO - delete many and return deleted
-    GeneralTranslationQuery::create()->filterByKey($key)->delete();
+    $this->createQb()->delete(GeneralTranslation::class, 't')->where('t.key = :key')->setParameter('key', $key)->getQuery()->execute();
 
     return true;
   }
@@ -143,10 +161,19 @@ class LocalizationService
     return $this->supportedLanguages;
   }
 
-  function setCurrentLanguage(string $nextLanguage)
+  function isDefaultLanguage(string $language)
+  {
+    return $this->getDefaultLanguage() === $language;
+  }
+
+  function setCurrentLanguage(string $nextLanguage, ?bool $throw = true)
   {
     if (!$this->languageIsSupported($nextLanguage)) {
-      throw new Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+      if ($throw) {
+        throw new Exception("Cannot set language '$nextLanguage' as current language as it is not supported.");
+      }
+
+      return;
     }
 
     $this->currentLanguage = $nextLanguage;

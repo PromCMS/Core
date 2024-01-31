@@ -3,107 +3,125 @@
 namespace PromCMS\Core\Services;
 
 use DI\Container;
+use Doctrine\ORM\Query\Expr;
+use Doctrine\ORM\Query\Expr\Andx;
+use Doctrine\ORM\Query\Expr\Comparison;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
-use PromCMS\Core\Models\Map\UserTableMap;
-use PromCMS\Core\Models\UserQuery;
-use PromCMS\Core\Models\User;
-use Propel\Runtime\Formatter\ObjectFormatter;
-use Propel\Runtime\Map\TableMap;
+use PromCMS\Core\Http\WhereQueryParam;
+use PromCMS\Core\Database\Models\User;
 
 
 class UserService
 {
+  private EntityManager $em;
 
   public function __construct(Container $container)
   {
+    $this->em = $container->get(EntityManager::class);
   }
 
-  public function findOneBy(array $where, array $select = []): User
+  private function createQb()
   {
-    $userQuery = UserQuery::create();
+    return $this->em->createQueryBuilder();
+  }
 
-    if (count($select)) {
-      $userQuery->select($select);
+  private function getRepository()
+  {
+    return $this->em->getRepository(User::class);
+  }
+
+  public function findOneBy(Expr|WhereQueryParam|Comparison|Andx $where, array $select = []): User
+  {
+    $query = $this->createQb()->from(User::class, 'u')->select(empty($select) ? 'u' : implode(', ', array_map(fn($item) => "u.$item", $select)));
+
+    if ($where instanceof WhereQueryParam) {
+      $where->toQuery($query, 'u');
+    } else {
+      $query->where($where);
     }
 
-    $result = $userQuery->filterByArray($where)->findOne();
+    $results = $query->getQuery()->getResult();
 
-    if (!$result) {
+    if (count($results) === 0) {
       throw new EntityNotFoundException();
     }
 
-    // This usually is true since we use select and that is formatted to array in propel
-    if (is_array($result)) {
-      $result = (new User())->hydrate($result, 0, false, TableMap::TYPE_PHPNAME);
-    }
-
-    return $result;
+    return $results[0];
   }
 
   public function getOneBy(string $field, $fieldValue, array $select = []): User
   {
-    return $this->findOneBy([
-      ucfirst($field) => $fieldValue
-    ], $select);
+    return $this->findOneBy(
+      new WhereQueryParam("$field.=.$fieldValue"),
+      $select
+    );
   }
 
   public function getOneById($id, array $select = [])
   {
-    return $this->getOneBy("Id", $id);
+    return $this->getOneBy("id", $id, $select);
   }
 
   public function updateById(string|int $id, array $payload = []): User
   {
     $user = $this->getOneById($id);
 
-    $user->fromArray($payload);
-    $user->save();
+    $user->fill($payload);
+    $this->em->flush();
 
     return $user;
   }
 
-  public function getManyPaged($page, $perPage = 15, array $where = [], array $select = [])
-  {
-    $userQuery = UserQuery::create();
+  public function getManyPaged(
+    $page,
+    $perPage = 15,
+    Expr|WhereQueryParam|Comparison|Andx|null $where = null,
+    /**
+     * @deprec
+     */
+    array $select = []
+  ) {
+    $userQuery = $this->createQb()->from(User::class, 'u')->select('u');
 
-    if (count($where) > 0) {
-      $userQuery->filterByArray($where);
+    if (!empty($where)) {
+      if ($where instanceof WhereQueryParam) {
+        $where->toQuery($userQuery, 'u');
+      } else {
+        $userQuery->where($where);
+      }
     }
 
-    if (count($select) === 0) {
-      $select = UserTableMap::getFieldNames();
-    }
-
-    $select = array_filter($select, fn($fieldName) => strtolower($fieldName) !== "password");
-
-    // TODO: this kind of breaks formatting because with select the actual results uses simplearrayformatter which works in  a wierd way (adds "" around every field name)
-    // $userQuery->select($select);
-
-    $userQuery->setFormatter(ObjectFormatter::class);
-
-    return $userQuery->paginate($page, $perPage);
+    return Paginate::fromQuery($userQuery)->execute($page, $perPage);
   }
 
-  public function create(array $payload): User
+  public function create(array|User $payload): User
   {
-    $create = new User();
+    if ($payload instanceof User) {
+      $create = $payload;
+    } else {
+      $create = new User();
+      $create->fill($payload);
+    }
 
-    $create->fromArray($payload);
-    $create->save();
+    $this->em->persist($create);
+    $this->em->flush();
 
     // TODO: implement ensuring duplicates
 
     return $create;
   }
 
-  public function deleteBy(array $where): void
+  public function deleteBy(Expr|WhereQueryParam|Comparison|Andx $where): void
   {
-    $userQuery = UserQuery::create();
+    $foundUser = $this->findOneBy($where);
 
-    $deletedUsers = $userQuery->filterByArray($where)->delete();
-
-    if ($deletedUsers === 0) {
+    if (!$foundUser) {
       throw new EntityNotFoundException();
     }
+
+    $this->em->remove($foundUser);
+    $this->em->flush();
   }
 }

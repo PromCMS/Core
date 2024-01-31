@@ -2,9 +2,7 @@
 
 use DI\Container;
 use PromCMS\Core\App;
-use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\UserState;
-use PromCMS\Core\Services\PasswordService;
+use PromCMS\Core\PromConfig;
 use PromCMS\Tests\AppTestCase;
 
 final class UserRoutesTest extends AppTestCase
@@ -32,19 +30,28 @@ final class UserRoutesTest extends AppTestCase
   {
     $request = $this->createRequest('GET', '/api/entry-types/users/items');
     $newUser = $this->createUser();
+    /**
+     * @var PromConfig
+     */
+    $promConfig = static::$app->getSlimApp()->getContainer()->get(PromConfig::class);
 
     $this->logUserIn($newUser);
 
     $response = static::$app->getSlimApp()->handle($request);
     $bodyAsString = $response->getBody()->__toString();
     $body = (array) json_decode($bodyAsString);
-    $expectedKeys = ['data', 'last_page', 'per_page', 'total', 'from', 'to'];
+    $expectedKeys = ['data', 'current_page', 'last_page', 'total'];
 
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertEquals($expectedKeys, array_keys($body));
+    $entity = $promConfig->getEntity('prom__users');
 
-    foreach (User::getPrivateFields() as $privateField) {
-      $this->assertStringNotContainsString($privateField, $bodyAsString);
+    if (!$entity) {
+      throw new Exception("Users table not in config");
+    }
+
+    foreach ($entity->getPrivateColumns() as $privateField) {
+      $this->assertStringNotContainsString($privateField->name, $bodyAsString);
     }
   }
 }

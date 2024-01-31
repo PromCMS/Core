@@ -4,8 +4,9 @@ namespace PromCMS\Tests\Bootstrap;
 
 use DI\Container;
 use PromCMS\Tests\AppTestCase;
-use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
+use PromCMS\Core\Internal\Bootstrap\Config as ConfigBootstrap;
 use PromCMS\Core\Config as AppConfig;
+use Symfony\Component\Filesystem\Path;
 
 final class ConfigTest extends AppTestCase
 {
@@ -20,16 +21,10 @@ final class ConfigTest extends AppTestCase
     {
         $container = new Container();
         $container->set('app.root', static::$testProjectRoot);
+        $container->set('core.root', Path::join(__DIR__, "..", ".."));
         (new ConfigBootstrap())->run(null, $container);
 
         $this->assertEqualsCanonicalizing($container->get(AppConfig::class)->__toArray(), [
-            'app' => [
-                'prefix' => '',
-                'name' => 'PromCMS Test Project',
-                'root' => static::$testProjectRoot,
-                'url' => 'http://localhost:3004',
-                'baseUrl' => 'http://localhost:3004',
-            ],
             'security' => [
                 'session' => [
                     // These are the defaults
@@ -40,34 +35,10 @@ final class ConfigTest extends AppTestCase
                     'lifetime' => 86400,
                 ],
             ],
-            'db' => [
-                'root' => static::$testProjectRoot . '/.database',
-                'storeConfig' => [
-                    'auto_cache' => false,
-                    'cache_lifetime' => null,
-                    'timeout' => false,
-                    'primary_key' => 'id',
-                    'search' => [
-                        'min_length' => 2,
-                        'mode' => 'or',
-                        'score_key' => 'scoreKey',
-                        'algorithm' => 1,
-                    ],
-                ],
-            ],
             'env' => [
                 'development' => true,
                 'debug' => true,
                 'env' => 'development',
-            ],
-            'fs' => [
-                'cachePath' => static::$testProjectRoot . '/cache/files',
-                'localesPath' => static::$testProjectRoot . '/locales',
-                'uploadsPath' => static::$testProjectRoot . '/uploads',
-            ],
-            'i18n' => [
-                'default' => 'en',
-                'languages' => ['en'],
             ],
             'system' => [
                 'modules' => [

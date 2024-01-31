@@ -2,6 +2,7 @@
 
 namespace PromCMS\Cli\Command;
 
+use PromCMS\Cli\Application;
 use PromCMS\Core\Services\UserService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -45,14 +46,14 @@ class DeleteUser extends AbstractCommand
      * {@inheritDoc}
      *
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $email = $input->getOption('email');
 
         /**
          * @var UserService
          */
-        $userService = $this->getPromApp($input->getOption('cwd'))->getSlimApp()->getContainer()->get(UserService::class);
+        $userService = Application::getPromApp($input->getOption('cwd'))->getSlimApp()->getContainer()->get(UserService::class);
         $userService->deleteBy([
             ["email", $email]
         ]);

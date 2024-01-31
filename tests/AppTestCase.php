@@ -4,11 +4,11 @@ namespace PromCMS\Tests;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
-use PromCMS\Core\Models\User;
-use PromCMS\Core\Models\UserState;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Models\Base\UserState;
+use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Module;
 use PromCMS\Core\Password;
-use PromCMS\Core\Services\PasswordService;
 use PromCMS\Core\Utils\FsUtils;
 use PromCMS\Tests\TestUtils;
 use Psr\Http\Message\ServerRequestInterface;
@@ -35,10 +35,10 @@ abstract class AppTestCase extends TestCase
 
     TestUtils::prepareSystemForTests(static::$testProjectRoot);
     TestUtils::ensureSession();
-    TestUtils::ensureEmptyDatabase();
 
     static::$app = new App(static::$testProjectRoot);
     static::$app->init(true);
+    TestUtils::ensureEmptyDatabase(static::$app);
     static::$faker = Factory::create();
   }
 
@@ -81,8 +81,12 @@ abstract class AppTestCase extends TestCase
     $autorizedUser->setEmail($overrides['email'] ?? static::$faker->email());
     $autorizedUser->setPassword(Password::hash($overrides['password'] ?? 'test1234'));
     // $autorizedUser->setRoleId(0);
-    $autorizedUser->setState($overrides['state'] ?? UserState::$ACTIVE);
-    $autorizedUser->save();
+    $autorizedUser->setRole('admin');
+    $autorizedUser->setState($overrides['state'] ?? UserState::ACTIVE);
+
+    $em = $this->getContainer()->get(EntityManager::class);
+    $em->persist($autorizedUser);
+    $em->flush();
 
     return $autorizedUser;
   }

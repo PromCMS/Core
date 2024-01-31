@@ -4,72 +4,72 @@ namespace PromCMS\Core\Services;
 
 use DI\Container;
 use GuzzleHttp\Psr7\MimeType;
-use GuzzleHttp\Psr7\UploadedFile;
+use League\Flysystem\StorageAttributes;
+use Slim\Psr7\UploadedFile;
 use PromCMS\Core\Config;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Filesystem;
-use PromCMS\Core\Models\Map\FileTableMap;
-use Propel\Runtime\Propel;
 use GuzzleHttp\Psr7\Stream;
-use PromCMS\Core\Models\FileQuery;
-use PromCMS\Core\Models\File;
-use Propel\Runtime\ActiveQuery\Criteria;
+use PromCMS\Core\Http\WhereQueryParam;
+use PromCMS\Core\Database\Models\File;
 use Symfony\Component\Filesystem\Path;
 
 class FileService
 {
   private Filesystem $fs;
   private Config $config;
+  private EntityManager $em;
+  private \League\Flysystem\Filesystem $uploadsFs;
 
   public function __construct(Container $container)
   {
     $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
+    $this->em = $container->get(EntityManager::class);
+    $this->uploadsFs = $container->get(Filesystem::class)->withUploads();
+  }
+
+  private function createQb()
+  {
+    return $this->em->createQueryBuilder();
   }
 
   /**
    * Get one specific file from database
    */
-  public function getById(string $id, $where = []): File
+  public function getById(string $id): File
   {
-    // TODO
-    $andWhere = [];
-    $orWhere = [];
-
-    return FileQuery::create()->findPk($id);
+    return $this->em->getRepository(File::class)->find($id);
   }
 
-  public function getManyPaged(int $page, int $perPage = 15, array $where = [])
+  public function getManyPaged(int $page, int $perPage = 15, WhereQueryParam|null $where = null)
   {
-    $filesQuery = FileQuery::create();
+    $filesQuery = $this->createQb()->from(File::class, 'f')->select('f');
 
-    foreach ($where as [$field, $criteria, $fieldValue]) {
-      $filesQuery->filterBy($field, $fieldValue, $criteria);
+    if (!empty($where)) {
+      $where->toQuery($filesQuery, 'f');
     }
 
-    return $filesQuery->paginate($page, $perPage);
+    return Paginate::fromQuery($filesQuery)->execute($page, $perPage);
   }
 
   /**
    * Get many files from defined directory
    */
-  public function getManyInDirectoryPaged(string $directoryPath, int|null $page = null, int|null $perPage = null, array $where = [])
+  public function getManyInDirectoryPaged(string $directoryPath, int|null $page = null, int|null $perPage = null, WhereQueryParam|null $where = null)
   {
-    if (isset($where['pathname'])) {
-      unset($where['pathname']);
+    if (empty($where)) {
+      $where = new WhereQueryParam("");
     }
 
-    $regexPart =
-      $directoryPath . ($directoryPath !== '/' ? '/' : '');
+    $filesInCurrentDirectory = $this->uploadsFs
+      ->listContents($directoryPath)
+      ->filter(fn(StorageAttributes $attributes) => $attributes->isFile())
+      ->map(fn(StorageAttributes $attributes) => "/" . $attributes->path())
+      ->toArray();
 
-
-    // $regexPart = str_replace('/', '\/', $fixedDirectoryPath);
-    // $where[] = function ($file) use ($regexPart) {
-    //   $pattern = '(' . $regexPart . ')[^\/]*(\.).*';
-    //   $pattern = '/^' . $pattern . "$/m";
-    //   return !!preg_match($pattern, $file['filepath']);
-    // };
-
-    $where[] = ["filepath", Criteria::LIKE, "$regexPart%"];
+    $where->add(name: 'filepath', criteria: 'IN', value: $filesInCurrentDirectory);
 
     return $this->getManyPaged($page, $perPage, $where);
   }
@@ -81,28 +81,22 @@ class FileService
   {
     $fileInfo = $this->getById($id);
 
-    return $this->getStream($fileInfo->getData());
+    return $this->getStream($fileInfo);
   }
 
   /**
    * Convert file from database to a GuzzleHttp Stream
    */
-  public function getStream(array $fileInfo): Stream
+  public function getStream(File $file): Stream
   {
-    $file = $this->fs->withUploads()->readStream($fileInfo['filepath']);
+    $file = $this->fs->withUploads()->readStream($file->getFilepath());
 
     return new Stream($file);
   }
 
   public function create(UploadedFile $uploadedFile, array $fileMetadata)
   {
-    $fileConnection = Propel::getWriteConnection(FileTableMap::DATABASE_NAME);
-
     $fileRoot = $fileMetadata['root'];
-
-    if ($fileRoot === '/') {
-      $fileRoot = '';
-    }
 
     $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
     $newBasename = bin2hex(random_bytes(8)) . '-' . time();
@@ -127,17 +121,18 @@ class FileService
       $createFileMetadata['private'] = false;
     }
 
+    $this->em->getConnection()->beginTransaction();
+
     try {
       $createdFile = new File();
+      $createdFile->fill($createFileMetadata);
+      $this->em->persist($createdFile);
 
-      $createdFile->fromArray($createFileMetadata);
-      $createdFile->save($fileConnection);
-
-      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream());
-
-      $fileConnection->commit();
+      $this->em->flush();
+      $this->em->getConnection()->commit();
+      $this->fs->withUploads()->writeStream($newFilePath, $uploadedFile->getStream()->detach());
     } catch (\Exception $error) {
-      $fileConnection->rollBack();
+      $this->em->getConnection()->rollBack();
 
       throw $error;
     }
@@ -147,8 +142,9 @@ class FileService
 
   public function updateById(string $id, array $payload)
   {
-    $fileConnection = Propel::getWriteConnection(FileTableMap::DATABASE_NAME);
     $existingFileMetadata = $this->getById($id);
+
+    $this->em->getConnection()->beginTransaction();
 
     try {
       // TODO: Update its filepath to different root
@@ -160,11 +156,12 @@ class FileService
         $payload["filename"] = Path::changeExtension($newFilename, Path::getExtension($existingFileMetadata->getFilename()));
       }
 
-      $existingFileMetadata->fromArray($payload);
-      $existingFileMetadata->save($fileConnection);
-      $fileConnection->commit();
+      $existingFileMetadata->fill($payload);
+
+      $this->em->flush();
+      $this->em->getConnection()->commit();
     } catch (\Exception $error) {
-      $fileConnection->rollBack();
+      $this->em->getConnection()->rollBack();
 
       throw $error;
     }
@@ -175,16 +172,18 @@ class FileService
   public function deleteById(string $id)
   {
     $fileInfo = $this->getById($id);
-    $fileTransaction = Propel::getWriteConnection(FileTableMap::DATABASE_NAME);
-    $fileTransaction->beginTransaction();
+
+    $this->em->getConnection()->beginTransaction();
 
     try {
-      $fileInfo->delete($fileTransaction);
+      $this->em->remove($fileInfo);
+      $this->em->flush();
+
       $this->fs->withUploads()->delete($fileInfo->getFilepath());
 
-      $fileTransaction->commit();
+      $this->em->getConnection()->commit();
     } catch (\Exception $error) {
-      $fileTransaction->rollBack();
+      $this->em->getConnection()->rollBack();
 
       throw $error;
     }

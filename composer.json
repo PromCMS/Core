@@ -27,40 +27,40 @@
     "slim/slim": "4.*",
     "guzzlehttp/psr7": "^2",
     "guzzlehttp/guzzle": "^7.4",
-    "php-di/php-di": "^7",
-    "rakibtg/sleekdb": "^2.13",
     "bryanjhv/slim-session": "^4.0",
-    "symfony/filesystem": "^5.0",
     "monolog/monolog": "^3.5",
     "league/flysystem": "^3.15",
     "firebase/php-jwt": "^6.8",
     "paragonie/sodium_compat": "^1.17",
     "phpmailer/phpmailer": "^6.6",
-    "symfony/dotenv": "^6",
-    "propel/propel": "~2.0@beta",
-    "illuminate/support": "^10.21",
     "slim/twig-view": "^3.3",
     "twig/html-extra": "^3.7",
-    "prom-cms/propel-model-behavior": "dev-develop",
     "justinrainbow/json-schema": "^5.2",
-    "slim/psr7": "^1.6"
+    "slim/psr7": "^1.6",
+    "doctrine/orm": "^2.11.0",
+    "doctrine/dbal": "^3.2",
+    "symfony/filesystem": "^5.0",
+    "symfony/finder": "^5.0",
+    "symfony/dotenv": "^6",
+    "symfony/yaml": "^5.4",
+    "gedmo/doctrine-extensions": "^3.14",
+    "symfony/cache": "^5.4",
+    "php-di/php-di": "^7.0",
+    "php-di/slim-bridge": "^3.4"
   },
   "require-dev": {
     "symfony/console": "^6",
     "spatie/phpunit-watcher": "^1.8",
     "phpunit/phpunit": "^10",
-    "fakerphp/faker": "^1.23"
+    "fakerphp/faker": "^1.23",
+    "nikic/php-parser": "^5.0"
   },
   "scripts": {
     "test": [
-      "composer run database:migrate",
       "Composer\\Config::disableProcessTimeout",
-      "phpunit --testdox --stop-on-failure tests"
+      "phpunit --testdox"
     ],
-    "cli": ["bin/prom-cms"],
-    "post-install-cmd": ["composer run propel:sync"],
-    "propel:sync": ["composer run build:propel", "composer run database:migrate"],
-    "build:propel": ["php bin/prom-cms.php models:build"],
-    "database:migrate": ["vendor/bin/propel sql:build --config-dir=\"./.prom-cms/propel\"", "vendor/bin/propel sql:insert --config-dir=\"./.prom-cms/propel\""]
+    "database:migrate": "composer run cli orm:schema-tool:update -- --force --complete",
+    "cli": ["bin/prom-cms"]
   }
 }

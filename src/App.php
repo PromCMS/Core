@@ -5,17 +5,9 @@ namespace PromCMS\Core;
 use DI\Container;
 use PromCMS\Core\Exceptions\AppException;
 use Slim\App as SlimApp;
-use Slim\Factory\AppFactory;
 use Slim\Middleware\Session as SessionMiddleware;
 
-use PromCMS\Core\Bootstrap\Config as ConfigBootstrap;
-use PromCMS\Core\Bootstrap\Database as DatabaseBootstrap;
-use PromCMS\Core\Bootstrap\FileSystem as FileSystemBootstrap;
-use PromCMS\Core\Bootstrap\Twig as TwigBootstrap;
-use PromCMS\Core\Bootstrap\Modules as ModulesBootstrap;
-use PromCMS\Core\Bootstrap\Mailer as MailerBootstrap;
-use PromCMS\Core\Bootstrap\Services as ServicesBootstrap;
-use PromCMS\Core\Bootstrap\Middlewares as MiddlewaresBootstrap;
+use PromCMS\Core\Internal\Bootstrap;
 use Symfony\Component\Filesystem\Path;
 
 /**
@@ -26,13 +18,16 @@ class App
   private SlimApp $app;
   private string $root;
   private static array $appModules = [
-    ConfigBootstrap::class,
-    DatabaseBootstrap::class,
-    FileSystemBootstrap::class,
-    MailerBootstrap::class,
-    ServicesBootstrap::class,
-    TwigBootstrap::class,
-    MiddlewaresBootstrap::class
+    Bootstrap\Config::class,
+    Bootstrap\Logging::class,
+    Bootstrap\Database::class,
+    Bootstrap\FileSystem::class,
+    Bootstrap\Mailer::class,
+    Bootstrap\Services::class,
+    Bootstrap\Twig::class,
+    Bootstrap\Middlewares::class,
+    Bootstrap\Modules::class,
+    Bootstrap\Routes::class
   ];
 
   function __construct(string $root)
@@ -56,14 +51,15 @@ class App
       // Add dependency container
       $container = new Container();
 
-      AppFactory::setContainer($container);
-
       // Create an app
-      $this->app = AppFactory::create();
+      $this->app = \DI\Bridge\Slim\Bridge::create($container);
 
       // Set app root to container
       $container->set('app.root', $this->root);
       $container->set('core.root', Path::join(__DIR__, '..'));
+
+      // Add session to container
+      $container->set(Session::class, new Session());
 
       // Run bootstrap classes
       foreach (static::$appModules as $className) {
@@ -73,12 +69,6 @@ class App
       /** @var Config */
       $config = $container->get(Config::class);
       $isDevelopment = $config->env->development;
-
-      // Add session to container
-      $container->set(Session::class, new Session());
-
-      // Initialize modules
-      (new ModulesBootstrap())->run($this->app, $container);
 
       // Add routing middleware
       $this->app->addRoutingMiddleware();

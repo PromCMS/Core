@@ -6,7 +6,8 @@ This project contains essential parts of PromCMS.
 
 1. [ ] Improve tests
 1. [ ] Add documentation (Partially done)
-1. [ ] ~~Migrate to illuminate/database models and still use SleekDB~~ Migrate to Propel and create SleekDB Adapter into Propel
+1. [x] Migrate to Doctrine
+1. [ ] ~~Migrate to illuminate/database models and still use SleekDB~~ Create SleekDB Adapter into Doctrine
 1. [ ] Improve twig rendering
 1. [x] Improve events
 1. [ ] Provide better international experience
@@ -43,7 +44,6 @@ return function (App $app) {
 
 PromCMS exposes a variety of services and objects that help you with creating your project. Each item has its own documentation page (or even PHPDoc) that you can access by clicking on each item
 
-- [`PasswordService::class`](./src/Services/PasswordService.php)
 - [`JWTService::class`](./src/Services/JWTService.php)
 - [`ImageService::class`](./src/Services/ImageService.php)
 - [`FileService::class`](./src/Services/FileService.php)
@@ -60,20 +60,7 @@ Every PromCMS should have secrets stored in .env. PromCMS stores known configura
 
 ### Known keys
 
-#### `APP_PREFIX`
 #### `APP_ENV`
-#### `LANGUAGES`
-
-Describe available languages in the application. The first language in the list is taken as the default one.
-
-- type: `array<string>`
-- default: `'en'`
-- example: 
-    - one language: `LANGUAGES='cs'` (isn't really necessary, default one is for cases when you decide your application needs more languages)
-    - more languages: `LANGUAGES='cs,en,de,sk'`
-
-#### `APP_NAME`
-#### `APP_URL`
 #### `SECURITY_SESSION_LIFETIME`
 #### `SECURITY_TOKEN_LIFETIME`
 #### `APP_DEBUG`

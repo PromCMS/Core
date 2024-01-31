@@ -20,7 +20,7 @@ final class UserRoleRoutesTest extends AppTestCase
 
   public function testUnauthorizedRequestFailsWith401()
   {
-    $request = $this->createRequest('GET', '/api/entry-types/userRoles');
+    $request = $this->createRequest('GET', '/api/entry-types/userRoles/items');
     $response = static::$app->getSlimApp()->handle($request);
 
     $this->assertEquals(401, $response->getStatusCode());
@@ -28,7 +28,7 @@ final class UserRoleRoutesTest extends AppTestCase
 
   public function testAuthorizedRequestDoesNotFail()
   {
-    $request = $this->createRequest('GET', '/api/entry-types/userRoles');
+    $request = $this->createRequest('GET', '/api/entry-types/userRoles/items/admin');
 
     $newUser = $this->createUser();
     $this->logUserIn($newUser);
@@ -38,75 +38,46 @@ final class UserRoleRoutesTest extends AppTestCase
 
     $this->assertEquals(200, $response->getStatusCode());
 
-    $this->assertEqualsCanonicalizing([
-      "data" => [
-        "adminMetadata" => [
-          "icon" => "UserExclamation"
-        ],
-        "ignoreSeeding" => false,
-        "icon" => "UserExclamation",
-        "admin" => [
-          "icon" => "UserExclamation"
-        ],
-        "tableName" => "prom__user_roles",
-        "hasTimestamps" => false,
-        "hasSoftDelete" => false,
-        "columns" => [
-          "id" => [
-            "editable" => false,
-            "hide" => false,
-            "title" => "ID",
-            "type" => "number",
-            "required" => true,
-            "unique" => false,
-            "translations" => false,
-            "autoIncrement" => true
-          ],
-          "label" => [
-            "editable" => true,
-            "hide" => false,
-            "title" => "Label",
-            "type" => "string",
-            "required" => true,
-            "unique" => false,
-            "translations" => false,
-            "autoIncrement" => false
-          ],
-          "description" => [
-            "editable" => true,
-            "hide" => false,
-            "title" => "Description",
-            "type" => "string",
-            "required" => false,
-            "unique" => false,
-            "translations" => false,
-            "autoIncrement" => false
-          ],
-          "permissions" => [
-            "editable" => true,
-            "hide" => false,
-            "title" => "Permissions",
-            "type" => "json",
-            "required" => false,
-            "unique" => false,
-            "translations" => false,
-            "autoIncrement" => false
-          ],
-          "slug" => [
-            "required" => false,
-            "unique" => false,
-            "translations" => false,
-            "autoIncrement" => false
+    $this->assertEqualsCanonicalizing(
+      [
+        "data" => [
+          "id" => "admin",
+          "name" => "Admin",
+          "slug" => "admin",
+          'description' => 'Main user role provided by PromCMS Core module',
+          'permissions' => [
+            "hasAccessToAdmin" => true,
+            "entities" => [
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ],
+              [
+                "c" => "allow-all",
+                "r" => "allow-all",
+                "u" => "allow-all",
+                "d" => "allow-all"
+              ]
+            ]
           ]
         ],
-        "hasOrdering" => false,
-        "isDraftable" => false,
-        "isSharable" => false,
-        "ownable" => false
+        "message" => "",
+        "code" => false
       ],
-      "message" => "",
-      "code" => false
-    ],
       ObjectUtils::objectToArrayRecursive(json_decode($bodyAsString))
     );
   }
