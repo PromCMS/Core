@@ -48,7 +48,7 @@ class Twig implements AppModuleInterface
     $app->add(TwigMiddleware::createFromContainer($app, RenderingService::class));
     $appViewsFolder = Path::join($appSrc, 'Views');
     if (file_exists($appViewsFolder)) {
-      $loader->addPath($appViewsFolder, '@app');
+      $loader->addPath($appViewsFolder, 'app');
     }
 
     // Add twig app extension

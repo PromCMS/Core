@@ -31,13 +31,13 @@ class FsUtils
    * 
    * @param string $fileLocation Location to the json file. 
    *                             This can be relative or absolute file path to filesystem, or location on the internet. 
-   *                             This can also be a path with @app:<relative path> prefix to resolve into module right away
+   *                             This can also be a path with @app/<relative path> prefix to resolve into module right away
    */
   static function readFile(string $fileLocation)
   {
     $path = $fileLocation;
 
-    if (str_starts_with($fileLocation, '@app:')) {
+    if (str_starts_with($fileLocation, '@app/')) {
       $chunks = explode('/', $fileLocation);
 
       $path = Path::join(
