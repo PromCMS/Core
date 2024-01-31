@@ -6,7 +6,8 @@ This project contains essential parts of PromCMS.
 
 1. [ ] Improve tests
 1. [ ] Add documentation (Partially done)
-1. [ ] ~~Migrate to illuminate/database models and still use SleekDB~~ Migrate to Propel and create SleekDB Adapter into Propel
+1. [x] Migrate to Doctrine
+1. [ ] ~~Migrate to illuminate/database models and still use SleekDB~~ Create SleekDB Adapter into Doctrine
 1. [ ] Improve twig rendering
 1. [x] Improve events
 1. [ ] Provide better international experience
