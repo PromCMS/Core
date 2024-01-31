@@ -46,8 +46,9 @@ class Twig implements AppModuleInterface
 
     // Default Twig utils provided by slim team
     $app->add(TwigMiddleware::createFromContainer($app, RenderingService::class));
-    if (file_exists($appSrc)) {
-      $loader->addPath($appSrc, '@app');
+    $appViewsFolder = Path::join($appSrc, 'Views');
+    if (file_exists($appViewsFolder)) {
+      $loader->addPath($appViewsFolder, '@app');
     }
 
     // Add twig app extension
