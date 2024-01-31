@@ -22,7 +22,7 @@ final class FsUtilsTest extends AppTestCase
 
     $this->assertEquals(
       'true',
-      FsUtils::readFile('@app:schemas/test.json')
+      FsUtils::readFile('@app/schemas/test.json')
     );
   }
 }
