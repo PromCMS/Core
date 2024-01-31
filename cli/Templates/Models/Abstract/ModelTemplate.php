@@ -157,7 +157,7 @@ abstract class ModelTemplate extends AbstractTemplate
       }
 
       $typeIndentifier = new Node\Identifier($column->getPhpType());
-      if (!$column->required) {
+      if (!$column->required || $entity->isSingleton()) {
         $typeIndentifier = new Node\NullableType($typeIndentifier);
       }
 
