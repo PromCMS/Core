@@ -21,6 +21,7 @@ final class ConfigTest extends AppTestCase
     {
         $container = new Container();
         $container->set('app.root', static::$testProjectRoot);
+        $container->set('app.src', Path::join(static::$testProjectRoot, 'src'));
         $container->set('core.root', Path::join(__DIR__, "..", ".."));
         (new ConfigBootstrap())->run(null, $container);
 
@@ -41,10 +42,6 @@ final class ConfigTest extends AppTestCase
                 'env' => 'development',
             ],
             'system' => [
-                'modules' => [
-                    'modelsFolderName' => 'Models',
-                    'controllersFolderName' => 'Controllers',
-                ],
                 'logging' => [
                     'logFilepath' => null
                 ]

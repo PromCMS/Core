@@ -11,7 +11,6 @@ use PromCMS\Core\Internal\Config\SecuritySession as ConfigPart__Security__Sessio
 use PromCMS\Core\Internal\Config\SecurityToken as ConfigPart__Security__Token;
 use PromCMS\Core\Internal\Config\Environment as ConfigPart__Environment;
 use PromCMS\Core\Internal\Config\System as ConfigPart__System;
-use PromCMS\Core\Internal\Config\SystemModules as ConfigPart__System__Modules;
 use PromCMS\Core\Internal\Config\SystemLogging as ConfigPart__System__Logging;
 use Symfony\Component\Filesystem\Path;
 
@@ -61,10 +60,6 @@ class Config implements AppModuleInterface
         'env' => $APP_ENV,
       ]),
       'system' => new ConfigPart__System([
-        'modules' => new ConfigPart__System__Modules([
-          'modelsFolderName' => 'Models',
-          'controllersFolderName' => 'Controllers',
-        ]),
         'logging' => new ConfigPart__System__Logging([
           'logFilepath' => !empty($RELATIVE_LOGGING_FILEPATH) ? Path::join($appRoot, $RELATIVE_LOGGING_FILEPATH) : null
         ])

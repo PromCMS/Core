@@ -6,7 +6,6 @@ use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
 use PromCMS\Core\Services\JWTService;
 use PromCMS\Core\Services\LocalizationService;
-use PromCMS\Core\Services\ModulesService;
 use PromCMS\Core\Services\RouteCollectorService;
 use PromCMS\Core\Services\SchemaService;
 use PromCMS\Core\Services\UserService;
@@ -28,7 +27,6 @@ class Services implements AppModuleInterface
     );
 
     $container->set(RouteCollectorService::class, $app->getRouteCollector());
-    $container->set(ModulesService::class, new ModulesService($container));
     $container->set(SchemaService::class, new SchemaService($container));
   }
 }

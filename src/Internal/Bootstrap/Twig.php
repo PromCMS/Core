@@ -23,6 +23,7 @@ class Twig implements AppModuleInterface
     /** @var Config */
     $config = $container->get(Config::class);
     $appRoot = $container->get('app.root');
+    $appSrc = $container->get('app.src');
     $isDevelopment = $config->env->development;
     $isDebug = $config->env->debug;
     $cachePath = Path::join($appRoot, 'cache', 'twig');
@@ -45,6 +46,9 @@ class Twig implements AppModuleInterface
 
     // Default Twig utils provided by slim team
     $app->add(TwigMiddleware::createFromContainer($app, RenderingService::class));
+    if (file_exists($appSrc)) {
+      $loader->addPath($appSrc, '@app');
+    }
 
     // Add twig app extension
     $twig->addExtension(new AppExtensions($container));

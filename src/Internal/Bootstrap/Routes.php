@@ -9,7 +9,6 @@ use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
 use Slim\App;
-use PromCMS\Core\Module;
 use PromCMS\Core\Config;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Finder\Finder;
@@ -24,9 +23,6 @@ class Routes implements AppModuleInterface
 {
   public function run(App $app, Container $container)
   {
-    $appRoot = $container->get('app.root');
-    Module::$modulesRoot = Path::join($appRoot, 'modules');
-
     $config = $container->get(Config::class);
     $promConfig = $container->get(PromConfig::class);
     $logger = $container->get(Logger::class);
@@ -34,7 +30,7 @@ class Routes implements AppModuleInterface
     $routePrefix = $promConfig->getProject()->url->getPath();
     $supportedLanguages = $promConfig->getProject()->languages;
 
-    // Staticly prepare controllers, no need to search through folder as with modules
+    // Staticly prepare controllers
     $controllerClassNames = [
       InternalControllers\AdminController::class,
       InternalControllers\FilesController::class,
@@ -52,23 +48,23 @@ class Routes implements AppModuleInterface
     ];
 
     $finder = new Finder();
-    $appModulesRoot = Path::join($appRoot, 'modules');
+    $appSrc = $container->get('app.src');
 
     try {
       $finder->files()->name('*.php')->in([
-        Path::join($appModulesRoot, '*', 'Controllers'),
+        Path::join($appSrc, 'Controllers'),
       ])->depth('< 3');
 
       foreach ($finder as $file) {
         $classNameWithNamespace = $file->getPathname();
-        $classNameWithNamespace = str_replace($appModulesRoot, '', $classNameWithNamespace);
+        $classNameWithNamespace = str_replace($appSrc, '', $classNameWithNamespace);
         $classNameWithNamespace = str_replace('/', '\\', $classNameWithNamespace);
         $classNameWithNamespace = str_replace('.php', '', $classNameWithNamespace);
 
-        $controllerClassNames[] = "PromCMS\Modules$classNameWithNamespace";
+        $controllerClassNames[] = "PromCMS\App$classNameWithNamespace";
       }
     } catch (\Exception $error) {
-      $logger->error('Failed to find controllers in modules', [
+      $logger->error('Failed to find controllers in app', [
         'error' => $error
       ]);
     }

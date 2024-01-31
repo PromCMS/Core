@@ -13,7 +13,10 @@ use Symfony\Component\Filesystem\Path;
 class PromConfig
 {
   public bool $isCore;
-  private string $coreModelsNamespace = 'PromCMS\Core\Database\Models';
+  public readonly string $appSrc;
+  public readonly string $appModelsRoot;
+  public readonly string $appNamespace;
+  public readonly string $appModelsNamespace;
   private array $configuration = [
     'project' => [
       'url' => 'http://localhost',
@@ -44,16 +47,11 @@ class PromConfig
 
     $this->coreConfiguration = require Path::join(__DIR__, '..', ...$this->trailingPartOfConfigFilename);
     $this->isCore = $this->configuration['project']['name'] === '__prom-core';
-  }
 
-  public function getProjectModuleRoot()
-  {
-    return Path::join($this->applicationRoot, 'modules', $this->getModuleFolderName());
-  }
-
-  public function getProjectModuleModelsRoot()
-  {
-    return Path::join($this->getProjectModuleRoot(), 'Models');
+    $this->appSrc = Path::join($applicationRoot, 'src');
+    $this->appModelsRoot = Path::join($this->appSrc, 'Models');
+    $this->appNamespace = $this->isCore ? 'PromCMS\Core\Database' : 'PromCMS\App';
+    $this->appModelsNamespace = "$this->appNamespace\\Models";
   }
 
   private Project|null $cachedProject = null;
@@ -90,15 +88,6 @@ class PromConfig
     return $this->configuration['database']['connections'];
   }
 
-  public function getModelNamespace()
-  {
-    if ($this->isCore) {
-      return $this->coreModelsNamespace;
-    }
-
-    return "PromCMS\Modules\\" . $this->getModuleFolderName() . "\Models";
-  }
-
   private array $cachedEntities = [];
 
   /**
@@ -116,7 +105,7 @@ class PromConfig
     foreach ($entities as $entity) {
       $entity['promConfig'] = $this;
       if (empty($entity['namespace'])) {
-        $entity['namespace'] = $this->getModelNamespace();
+        $entity['namespace'] = $this->appModelsNamespace;
       }
       $this->cachedEntities[$entity['tableName']] = new Entity(...$entity);
     }
@@ -130,7 +119,7 @@ class PromConfig
 
     if (!$this->isCore && $includeCore) {
       $coreModels = array_map(function ($entity) {
-        $entity['namespace'] = $this->coreModelsNamespace;
+        $entity['namespace'] = $this->appModelsNamespace;
         $entity['referenceOnly'] = true;
         return $entity;
       }, $this->coreConfiguration['database']['models']);
@@ -187,17 +176,12 @@ class PromConfig
     if (!isset($this->cachedEntities[$tableName])) {
       $entityAsArray['promConfig'] = $this;
       if (empty($entityAsArray['namespace'])) {
-        $entityAsArray['namespace'] = $this->getModelNamespace();
+        $entityAsArray['namespace'] = $this->appModelsNamespace;
       }
       $this->cachedEntities[$tableName] = new Entity(...$entityAsArray);
     }
 
     return $this->cachedEntities[$tableName];
-  }
-
-  public function getModuleFolderName()
-  {
-    return ucfirst(ucwords($this->configuration['project']['slug'] ?? $this->configuration['project']['name']));
   }
 
   public function getTableColumns(string $tableName)

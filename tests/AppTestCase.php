@@ -7,9 +7,7 @@ use PHPUnit\Framework\TestCase;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
-use PromCMS\Core\Module;
 use PromCMS\Core\Password;
-use PromCMS\Core\Utils\FsUtils;
 use PromCMS\Tests\TestUtils;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Headers;
@@ -50,23 +48,6 @@ abstract class AppTestCase extends TestCase
   public static function tearDownAfterClass(): void
   {
     TestUtils::generalCleanup(static::$testProjectRoot);
-  }
-
-  function createModule(string $moduleName, array $otherData = null)
-  {
-    $moduleRoot = Path::join(Module::$modulesRoot, $moduleName);
-    mkdir($moduleRoot);
-
-    file_put_contents(Path::join($moduleRoot, Module::$moduleInfoFileName), json_encode(array_merge([
-      "name" => $moduleName
-    ], $otherData ?? [])));
-  }
-
-  function deleteAllModules()
-  {
-    FsUtils::rrmdir(Module::$modulesRoot);
-
-    mkdir(Module::$modulesRoot);
   }
 
   function getContainer()

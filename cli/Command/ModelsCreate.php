@@ -71,7 +71,7 @@ class ModelsCreate extends AbstractCommand
     chdir($cwd);
 
     $promConfig = new PromConfig($cwd);
-    $modelsRoot = Path::join($cwd, 'Modules', $promConfig->getModuleFolderName(), 'Models');
+    $modelsRoot = $promConfig->appModelsRoot;
 
     if (!Application::isBeingRunInsideApp()) {
       $modelsRoot = Path::join($cwd, 'src', 'Database', 'Models');

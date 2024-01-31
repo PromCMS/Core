@@ -80,7 +80,7 @@ class Entity
    */
   function getPublicColumns(): array
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->hide);
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => !$column->hide);
   }
 
 
@@ -89,7 +89,7 @@ class Entity
    */
   function getPrivateColumns(): array
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => !$column->hide);
+    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->hide);
   }
 
   function isSingleton()

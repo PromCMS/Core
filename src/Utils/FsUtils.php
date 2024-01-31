@@ -2,11 +2,11 @@
 
 namespace PromCMS\Core\Utils;
 
-use PromCMS\Core\Module;
-use PromCMS\Core\Path;
+use Symfony\Component\Filesystem\Path;
 
 class FsUtils
 {
+  public static string $APP_SRC;
   /**
    * Recursively deletes directory and its contents
    */
@@ -31,17 +31,17 @@ class FsUtils
    * 
    * @param string $fileLocation Location to the json file. 
    *                             This can be relative or absolute file path to filesystem, or location on the internet. 
-   *                             This can also be a path with @modules:<module name> prefix to resolve into module right away
+   *                             This can also be a path with @app:<relative path> prefix to resolve into module right away
    */
   static function readFile(string $fileLocation)
   {
     $path = $fileLocation;
 
-    if (str_starts_with($fileLocation, '@modules:')) {
+    if (str_starts_with($fileLocation, '@app:')) {
       $chunks = explode('/', $fileLocation);
 
       $path = Path::join(
-        (new Module($chunks[0]))->getPath(),
+        static::$APP_SRC,
         implode('/', array_slice($chunks, 1))
       );
     }
@@ -67,45 +67,5 @@ class FsUtils
     }
 
     return $results;
-  }
-
-
-  // TODO - deprecate this and use psr autoload instead
-  /**
-   * Imports all php scripts for specified folder
-   * @return string[]|boolean Returns an array of imported paths
-   */
-  public static function autoloadFolder(string $pathToFolder)
-  {
-    $importedFilePaths = [];
-    if (!is_dir($pathToFolder)) {
-      return false;
-    }
-
-    $filePaths = static::getDirContents($pathToFolder);
-    foreach ($filePaths as $filePath) {
-      // do not load dir, this is just one level only
-      if (is_dir($filePath)) {
-        continue;
-      }
-
-      include_once $filePath;
-      $importedFilePaths[] = $filePath;
-    }
-
-    return $importedFilePaths;
-  }
-
-  public static function autoloadControllers(string $moduleRoot)
-  {
-    $importedFilepaths = static::autoloadFolder(Path::join($moduleRoot, "Controllers"));
-
-    if (!$importedFilepaths) {
-      return false;
-    }
-
-    return array_map(function (string $filePath) {
-      return basename($filePath, '.controller.php');
-    }, $importedFilepaths);
   }
 }

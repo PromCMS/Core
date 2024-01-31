@@ -24,7 +24,7 @@ This project contains essential parts of PromCMS.
 
 Services are stored in [PSR Container](https://www.php-fig.org/psr/psr-11/) by PromCMS. In fact, PromCMS sets those objects and subscribes to them internally from the container.
 
-Let's look at this example code that can be placed inside Modules `bootstrap.php`: 
+Let's look at this example code that can be placed inside `<your app root>/src/bootstrap.php`: 
 ```php
 use PromCMS\Core\Config;
 
@@ -48,7 +48,6 @@ PromCMS exposes a variety of services and objects that help you with creating yo
 - [`ImageService::class`](./src/Services/ImageService.php)
 - [`FileService::class`](./src/Services/FileService.php)
 - [`LocalizationService::class`](./src/Services/LocalizationService.php)
-- [`ModulesService::class`](./src/Services/ModulesService.php)
 - [`SchemaService::class`](./src/Services/SchemaService.php)
 - [`RenderingService::class`](./src/Services/RenderingService.php)
 - [`Session::class`](./src/Session.php)

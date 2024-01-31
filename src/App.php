@@ -17,7 +17,7 @@ class App
 {
   private SlimApp $app;
   private string $root;
-  private static array $appModules = [
+  private static array $coreBootstraps = [
     Bootstrap\Config::class,
     Bootstrap\Logging::class,
     Bootstrap\Database::class,
@@ -26,8 +26,6 @@ class App
     Bootstrap\Services::class,
     Bootstrap\Twig::class,
     Bootstrap\Middlewares::class,
-    Bootstrap\Modules::class,
-    Bootstrap\Routes::class
   ];
 
   function __construct(string $root)
@@ -56,15 +54,25 @@ class App
 
       // Set app root to container
       $container->set('app.root', $this->root);
+      $container->set('app.src', $appSrc = Path::join($this->root, 'src'));
       $container->set('core.root', Path::join(__DIR__, '..'));
 
       // Add session to container
       $container->set(Session::class, new Session());
 
       // Run bootstrap classes
-      foreach (static::$appModules as $className) {
+      foreach (static::$coreBootstraps as $className) {
         (new $className())->run($this->app, $container);
       }
+
+      $appBootstrapFilepath = Path::join($appSrc, 'bootstrap.php');
+      if (file_exists($appBootstrapFilepath)) {
+        $bootstrapClosure = require $appBootstrapFilepath;
+
+        $bootstrapClosure($app);
+      }
+
+      (new Bootstrap\Routes())->run($this->app, $container);
 
       /** @var Config */
       $config = $container->get(Config::class);
@@ -116,7 +124,7 @@ class App
 
   public function getAppModules()
   {
-    return static::$appModules;
+    return static::$coreBootstraps;
   }
 
   /**
