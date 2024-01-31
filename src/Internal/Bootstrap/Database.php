@@ -3,7 +3,6 @@
 namespace PromCMS\Core\Internal\Bootstrap;
 
 use DI\Container;
-use Doctrine\Common\EventManager;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\ORMSetup;
@@ -22,8 +21,8 @@ class Database implements AppModuleInterface
     $databaseConnections = $promConfig->getDatabaseConnections();
     $modelsPaths = [Path::join(__DIR__, '..', '..', '..', 'src', 'Database', 'Models')];
 
-    if (!$promConfig->isCore) {
-      $modelsPaths[] = $promConfig->getProjectModuleModelsRoot();
+    if (!$promConfig->isCore && file_exists($appModelsPath = $promConfig->appModelsRoot)) {
+      $modelsPaths[] = $appModelsPath;
     }
 
     $config = ORMSetup::createAttributeMetadataConfiguration(
