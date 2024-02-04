@@ -46,14 +46,14 @@
     "gedmo/doctrine-extensions": "^3.14",
     "symfony/cache": "^5.4",
     "php-di/php-di": "^7.0",
-    "php-di/slim-bridge": "^3.4"
+    "php-di/slim-bridge": "^3.4",
+    "nikic/php-parser": "^5.0"
   },
   "require-dev": {
     "symfony/console": "^6",
     "spatie/phpunit-watcher": "^1.8",
     "phpunit/phpunit": "^10",
-    "fakerphp/faker": "^1.23",
-    "nikic/php-parser": "^5.0"
+    "fakerphp/faker": "^1.23"
   },
   "scripts": {
     "test": [
