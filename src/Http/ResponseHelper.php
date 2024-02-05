@@ -104,6 +104,6 @@ class ResponseHelper
 
   public function getResponse()
   {
-    return $this->response;
+    return $this->response->withHeader('Content-Type', $this->contentType->asHeaderValue());
   }
 }
