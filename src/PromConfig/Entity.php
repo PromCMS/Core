@@ -109,7 +109,12 @@ class Entity
 
     foreach ($this->columns as $column) {
       $column['promConfig'] = $this->promConfig;
-      $columnInstance = $column['type'] === 'relationship' ? new Entity\RelationshipColumn(...$column) : new Entity\Column(...$column);
+
+      $columnInstance = match ($column['type']) {
+        'relationship' => new Entity\RelationshipColumn(...$column),
+        'file' => new Entity\FileColumn(...$column),
+        default => new Entity\Column(...$column)
+      };
 
       $this->cachedColumnsAsInstances[] = $columnInstance;
     }

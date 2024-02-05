@@ -138,13 +138,15 @@ return [
           ]),
           array_merge($defaultColumn, [
             'name' => 'avatar',
-            'type' => 'relationship',
+            'type' => 'file',
             'title' => 'Avatar',
             'required' => false,
-            'targetModelTableName' => $FILES_TABLE_NAME,
-            'labelConstructor' => '{{id}}',
             'multiple' => false,
-            'foreignKey' => 'id'
+            'typeFilter' => 'image',
+            'admin' => [
+              'fieldType' => 'big-image',
+              'editor' => ['width' => 6],
+            ],
           ]),
           array_merge($defaultColumn, [
             'name' => 'role',
