@@ -1,6 +1,8 @@
 <?php
 
 $defaultModel = [
+  'namespace' => 'PromCMS\Core\Database\Models',
+  'partOfCore' => true,
   'timestamp' => true,
   'sorting' => false,
   'draftable' => false,

@@ -12,10 +12,6 @@ use Symfony\Component\Filesystem\Path;
 
 class PromConfig
 {
-  public bool $isCore;
-  public readonly string $appSrc;
-  public readonly string $appModelsRoot;
-  public readonly string $appNamespace;
   public readonly string $appModelsNamespace;
   private array $configuration = [
     'project' => [
@@ -26,32 +22,48 @@ class PromConfig
   ];
   private array $coreConfiguration = [];
 
-
-  private array $trailingPartOfConfigFilename = ['.prom-cms', 'parsed', 'config.php'];
-
-  public function __construct(readonly string $applicationRoot)
+  private static function resolveConfigFileByRoot(string $root)
   {
-    $filename = Path::join($applicationRoot, ...$this->trailingPartOfConfigFilename);
+    return Path::join($root, '.prom-cms', 'parsed', 'config.php');
+  }
+
+  private function init(array $config): static
+  {
+    $config['project'] = array_merge($this->configuration['project'], $config['project']);
+    $this->configuration = array_merge($this->configuration, $config);
+
+    $this->coreConfiguration = require static::resolveConfigFileByRoot(Path::join(__DIR__, '..'));
+    $this->appModelsNamespace = "PromCMS\App\Models";
+
+    // Merge core files with app files
+    $this->configuration['database']['models'] = array_merge(
+      $this->configuration['database']['models'] ?? [],
+      $this->coreConfiguration['database']['models']
+    );
+
+    return $this;
+  }
+
+  public function __construct(array $configContents)
+  {
+    $this->init($configContents);
+
+    if (empty($this->configuration['database']['connections'])) {
+      throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one");
+    }
+  }
+
+  public static function fromProjectRoot(string $root): static
+  {
+    $filename = static::resolveConfigFileByRoot($root);
 
     if (!file_exists($filename)) {
-      throw new \Exception("Could not find parsed Prom config, please make sure that it\'s present at {$filename}");
+      throw new \Exception("Could not find parsed Prom config, please make sure that it's present at {$filename}");
     }
 
     $configurationFromFile = require $filename;
-    $configurationFromFile['project'] = array_merge($this->configuration['project'], $configurationFromFile['project']);
-    $this->configuration = array_merge($this->configuration, $configurationFromFile);
 
-    if (empty($this->configuration['database']['connections'])) {
-      throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one at {$filename}");
-    }
-
-    $this->coreConfiguration = require Path::join(__DIR__, '..', ...$this->trailingPartOfConfigFilename);
-    $this->isCore = $this->configuration['project']['name'] === '__prom-core';
-
-    $this->appSrc = Path::join($applicationRoot, 'src');
-    $this->appModelsRoot = Path::join($this->appSrc, 'Models');
-    $this->appNamespace = $this->isCore ? 'PromCMS\Core\Database' : 'PromCMS\App';
-    $this->appModelsNamespace = "$this->appNamespace\\Models";
+    return new static($configurationFromFile);
   }
 
   private Project|null $cachedProject = null;
@@ -117,16 +129,6 @@ class PromConfig
   {
     $models = $this->configuration['database']['models'] ?? [];
 
-    if (!$this->isCore && $includeCore) {
-      $coreModels = array_map(function ($entity) {
-        $entity['namespace'] = $this->appModelsNamespace;
-        $entity['referenceOnly'] = true;
-        return $entity;
-      }, $this->coreConfiguration['database']['models']);
-
-      $models = array_merge($models, $coreModels ?? []);
-    }
-
     return $models;
   }
 
@@ -164,7 +166,6 @@ class PromConfig
 
   function getEntity(string $entityTableName): ?Entity
   {
-
     $entityAsArray = $this->getEntityAsArray($entityTableName);
 
     if (!$entityAsArray) {

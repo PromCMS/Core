@@ -6,6 +6,7 @@ use DI\Container;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\RouteImplementation;
 use PromCMS\Core\Http\Routing\WithMiddleware;
+use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\Logger;
 use PromCMS\Core\PromConfig;
 use Slim\App;
@@ -52,7 +53,7 @@ class Routes implements AppModuleInterface
 
     try {
       $finder->files()->name('*.php')->in([
-        Path::join($appSrc, 'Controllers'),
+        Path::join($appSrc, Constants::CONTROLLERS_DIR),
       ])->depth('< 3');
 
       foreach ($finder as $file) {

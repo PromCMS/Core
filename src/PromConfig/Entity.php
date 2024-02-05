@@ -65,7 +65,7 @@ class Entity
     public readonly bool $ownable = false,
     public readonly bool $ignoreSeeding = false,
     public array $admin = [],
-    public readonly bool $referenceOnly = false,
+    public readonly bool $partOfCore = false,
     ...$rest
   ) {
     $this->admin = array_merge_recursive(['isHidden' => false], $this->admin);

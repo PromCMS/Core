@@ -8,6 +8,7 @@ use PromCMS\Cli\Templates\Models\EnumTemplate;
 use PromCMS\Cli\Templates\Models\EnumTemplate\EnumTemplateItem;
 use PromCMS\Cli\Templates\Models\ModelTemplate;
 use PromCMS\Cli\Templates\Models\ModelTemplateMode;
+use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -70,17 +71,17 @@ class ModelsCreate extends AbstractCommand
     $cwd = $input->getOption('cwd');
     chdir($cwd);
 
-    $promConfig = new PromConfig($cwd);
-    $modelsRoot = $promConfig->appModelsRoot;
-
-    if (!Application::isBeingRunInsideApp()) {
-      $modelsRoot = Path::join($cwd, 'src', 'Database', 'Models');
-    }
-
+    $promConfig = PromConfig::fromProjectRoot($cwd);
+    $modelsRoot = Path::join($cwd, 'src', Constants::MODELS_DIR);
+    $coreIsUsedInApp = Application::isBeingRunInsideApp();
     $entities = $promConfig->getEntities();
 
+    if (!$coreIsUsedInApp) {
+      $modelsRoot = Path::join($cwd, 'src', 'Database', Constants::MODELS_DIR);
+    }
+
     foreach ($entities as $entity) {
-      if ($entity->referenceOnly) {
+      if ($entity->partOfCore && $coreIsUsedInApp) {
         continue;
       }
 

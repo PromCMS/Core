@@ -4,6 +4,7 @@ namespace PromCMS\Core;
 
 use DI\Container;
 use PromCMS\Core\Exceptions\AppException;
+use PromCMS\Core\Internal\Constants;
 use Slim\App as SlimApp;
 use Slim\Middleware\Session as SessionMiddleware;
 
@@ -65,7 +66,7 @@ class App
         (new $className())->run($this->app, $container);
       }
 
-      $appBootstrapFilepath = Path::join($appSrc, 'bootstrap.php');
+      $appBootstrapFilepath = Path::join($appSrc, Constants::BOOTSTRAP_FILE);
       if (file_exists($appBootstrapFilepath)) {
         $bootstrapClosure = require $appBootstrapFilepath;
 

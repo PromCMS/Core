@@ -68,6 +68,6 @@ class Config implements AppModuleInterface
     $coreIsInVendor = in_array('vendor', explode(DIRECTORY_SEPARATOR, __DIR__));
 
     $container->set(AppConfig::class, $config);
-    $container->set(PromConfig::class, new PromConfig($coreIsInVendor ? $appRoot : $coreRoot));
+    $container->set(PromConfig::class, PromConfig::fromProjectRoot($coreIsInVendor ? $appRoot : $coreRoot));
   }
 }

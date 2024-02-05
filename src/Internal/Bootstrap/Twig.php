@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Internal\Bootstrap;
 
 use PromCMS\Core\Config;
+use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\Rendering\Twig\AppExtensions;
 use PromCMS\Core\Rendering\Twig\Extensions\ArrayUtilsExtension;
 use PromCMS\Core\Rendering\Twig\Extensions\LocalizationExtension;
@@ -46,7 +47,7 @@ class Twig implements AppModuleInterface
 
     // Default Twig utils provided by slim team
     $app->add(TwigMiddleware::createFromContainer($app, RenderingService::class));
-    $appViewsFolder = Path::join($appSrc, 'Views');
+    $appViewsFolder = Path::join($appSrc, Constants::VIEWS_DIR);
     if (file_exists($appViewsFolder)) {
       $loader->addPath($appViewsFolder, 'app');
     }

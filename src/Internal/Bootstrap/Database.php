@@ -7,6 +7,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\ORMSetup;
 use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
 
@@ -17,11 +18,13 @@ class Database implements AppModuleInterface
 {
   public function run($app, Container $container)
   {
+    $appSrc = $container->get('app.src');
     $promConfig = $container->get(PromConfig::class);
     $databaseConnections = $promConfig->getDatabaseConnections();
-    $modelsPaths = [Path::join(__DIR__, '..', '..', '..', 'src', 'Database', 'Models')];
+    $modelsPaths = [Path::join(__DIR__, '..', '..', '..', 'src', 'Database', Constants::MODELS_DIR)];
 
-    if (!$promConfig->isCore && file_exists($appModelsPath = $promConfig->appModelsRoot)) {
+    $coreIsInVendor = in_array('vendor', explode(DIRECTORY_SEPARATOR, __DIR__));
+    if ($coreIsInVendor && file_exists($appModelsPath = Path::join($appSrc, Constants::MODELS_DIR))) {
       $modelsPaths[] = $appModelsPath;
     }
 
