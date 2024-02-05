@@ -2,9 +2,11 @@
 
 namespace PromCMS\Core\PromConfig\Entity;
 
+use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\PromConfig;
 
-class Column {
+class Column
+{
   public array $otherMetadata;
 
   public function __construct(
@@ -33,18 +35,21 @@ class Column {
     $this->otherMetadata = $other;
   }
 
-  function getDatabaseColumName() {
+  function getDatabaseColumName()
+  {
     $name = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', strtolower(str_replace(' \t\r\n\f\v', '_', $this->name))));
 
     return $name;
   }
 
-  function isEnumColumn() {
+  function isEnumColumn()
+  {
     return $this->type === 'enum';
   }
 
-  function getDoctrineType() {
-    return match($this->type) {
+  function getDoctrineType()
+  {
+    return match ($this->type) {
       'boolean' => 'boolean',
       'json' => 'array',
       'longText' => 'text',
@@ -52,15 +57,18 @@ class Column {
       'date' => 'date',
       'dateTime' => 'datetime',
       'number' => 'integer',
+      'file' => 'integer',
+      'relationship' => 'integer',
       default => 'string'
     };
   }
-  function getPhpType() {
+  function getPhpType()
+  {
     if ($this->isEnumColumn()) {
       return $this->otherMetadata['enum']['name'];
     }
-    
-   return match($this->type) {
+
+    return match ($this->type) {
       'boolean' => 'bool',
       'number' => 'int',
       'json' => 'array',
