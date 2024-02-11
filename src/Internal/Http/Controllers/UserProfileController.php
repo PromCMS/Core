@@ -11,6 +11,7 @@ use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Logger;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
+use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
 use PromCMS\Core\Http\ResponseHelper;
@@ -49,9 +50,7 @@ class UserProfileController
   ): ResponseInterface {
     $user = $this->session->get('user');
 
-    HttpUtils::prepareJsonResponse($response, $user->toArray());
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $user->toArray())->getResponse();
   }
 
   #[AsApiRoute('POST', '/profile/login')]
@@ -132,7 +131,8 @@ class UserProfileController
     WithMiddleware(UserLoggedInMiddleware::class)]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    FileService $fileService
   ): ResponseInterface {
     /** @var User */
     $user = $this->session->get('user');
@@ -160,12 +160,14 @@ class UserProfileController
       unset($data['state']);
     }
 
+    if (isset($data['avatar']) && $data['avatar'] !== null) {
+      $data['avatar'] = $fileService->getById($data['avatar']);
+    }
+
     $user->fill($data);
     $this->em->flush();
 
-    HttpUtils::prepareJsonResponse($response, $user->toArray());
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, $user->toArray())->getResponse();
   }
 
   #[AsApiRoute('GET', '/profile/logout'),
@@ -175,8 +177,6 @@ class UserProfileController
     ResponseInterface $response
   ): ResponseInterface {
     $this->session::destroy();
-
-    HttpUtils::prepareJsonResponse($response, [], '', 'success');
 
     return $response;
   }
