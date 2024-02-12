@@ -48,7 +48,7 @@ class UserProfileController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $user = $this->session->get('user');
+    $user = $request->getAttribute('user');
 
     return ResponseHelper::withServerResponse($response, $user->toArray())->getResponse();
   }
@@ -135,7 +135,7 @@ class UserProfileController
     FileService $fileService
   ): ResponseInterface {
     /** @var User */
-    $user = $this->session->get('user');
+    $user = $request->getAttribute('user');
     $parsedBody = $request->getParsedBody();
 
     if (!$parsedBody['data']) {
@@ -259,7 +259,7 @@ class UserProfileController
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getParsedBody();
-    $user = $this->session->get('user');
+    $user = $request->getAttribute('user');
 
     // Check that we atleast have something
     if (!isset($params['newPassword']) || !isset($params['oldPassword'])) {

@@ -17,13 +17,11 @@ use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Services\LocalizationService;
-use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Utils\HttpUtils;
-use Propel\Runtime\Map\TableMap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -32,15 +30,12 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class EntityController
 {
-  protected ?User $currentUser;
-
   public function __construct(Container $container, private PromConfig $promConfig, protected EntityManager $em)
   {
-    $this->currentUser = $container->get(Session::class)->get('user', null);
   }
 
   // TODO: Sharable models should have join tables for user ids
-  private function filterQueryOnlyToOwners(TableMap $modelTableMap, User $currentUser, &$query)
+  private function filterQueryOnlyToOwners($modelTableMap, User $currentUser, &$query)
   {
     $query->filterBy("createdBy", $currentUser->getId());
 
@@ -81,9 +76,10 @@ class EntityController
 
     $parsedBody = $request->getParsedBody();
 
+    $currentUser = $request->getAttribute('user');
     try {
-      if ($entity->sharable && $this->currentUser) {
-        $parsedBody['data']['createdBy'] = $this->currentUser;
+      if ($entity->sharable && $currentUser) {
+        $parsedBody['data']['createdBy'] = $currentUser;
       }
 
       $instance = (new $entity->className);
@@ -237,10 +233,11 @@ class EntityController
       }
     }
 
+    $currentUser = $request->getAttribute('user');
     try {
-      if ($entity->sharable && $this->currentUser) {
-        $fromEntry->setUpdatedBy($this->currentUser);
-        $toEntry->setUpdatedBy($this->currentUser);
+      if ($entity->sharable && $currentUser) {
+        $fromEntry->setUpdatedBy($currentUser);
+        $toEntry->setUpdatedBy($currentUser);
       }
 
       $fromEntry->setOrder($toEntry->getOrder() ?? $toEntry->getId());
@@ -312,8 +309,9 @@ class EntityController
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
     // }
 
-    if ($entity->sharable && $this->currentUser) {
-      $data['updatedBy'] = $this->currentUser;
+    $currentUser = $request->getAttribute('user');
+    if ($entity->sharable && $currentUser) {
+      $data['updatedBy'] = $currentUser;
     }
 
     try {

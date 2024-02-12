@@ -41,8 +41,7 @@ class UserLoggedInMiddleware implements MiddlewareInterface
         ->withHeader('Content-Description', 'user logged off');
     } else {
       try {
-        $this->session
-          ->set('user', $this->userService->getOneById(intval($userId)));
+        $request->withAttribute('user', $this->userService->getOneById(intval($userId)));
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy

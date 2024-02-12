@@ -39,7 +39,7 @@ class EntityPermissionMiddleware implements MiddlewareInterface
     /**
      * @var User
      */
-    $user = $this->session->get('user', null);
+    $user = $request->getAttribute('user');
 
     if (!$user) {
       throw new \Exception('Cannot run permission middleware before auth middleware');

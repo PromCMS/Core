@@ -5,7 +5,6 @@ namespace PromCMS\Core\Internal\Http\Controllers;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PromCMS\Core\Database\EntityManager;
-use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Database\Query\TranslationWalker;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
@@ -15,7 +14,6 @@ use PromCMS\Core\Internal\Http\Middleware\SingletonMiddleware;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\Services\LocalizationService;
-use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
@@ -28,11 +26,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class SingletonController
 {
-  protected User $currentUser;
-
   public function __construct(Container $container, private PromConfig $promConfig, protected EntityManager $em)
   {
-    $this->currentUser = $container->get(Session::class)->get('user', false);
   }
 
   private function getLocalizedQuery(QueryBuilder $query, ServerRequestInterface $request)
@@ -63,9 +58,10 @@ class SingletonController
 
     $parsedBody = $request->getParsedBody();
 
+    $currentUser = $request->getAttribute('user');
     try {
-      if ($entity->sharable && $this->currentUser) {
-        $parsedBody['data']['createdBy'] = $this->currentUser->getId();
+      if ($entity->sharable && $currentUser) {
+        $parsedBody['data']['createdBy'] = $currentUser->getId();
       }
 
       $instance = (new $entity->className);
@@ -187,8 +183,9 @@ class SingletonController
 
     $item = $query->findOneBy([]);
 
-    if ($entity->sharable && $this->currentUser) {
-      $data['updatedBy'] = $this->currentUser->getId();
+    $currentUser = $request->getAttribute('user');
+    if ($entity->sharable && $currentUser) {
+      $data['updatedBy'] = $currentUser->getId();
     }
 
     try {

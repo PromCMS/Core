@@ -36,7 +36,6 @@ class UsersController
   private $container;
   private UserService $userService;
   private PromConfig $promConfig;
-  private User $currentUser;
   private EntityManager $em;
 
   public function __construct(Container $container)
@@ -44,7 +43,6 @@ class UsersController
     $this->container = $container;
     $this->userService = $container->get(UserService::class);
     $this->promConfig = $container->get(PromConfig::class);
-    $this->currentUser = $container->get(Session::class)->get('user', false);
     $this->em = $container->get(EntityManager::class);
   }
 
@@ -80,7 +78,7 @@ class UsersController
   ): ResponseInterface {
     $itemId = intval($request->getAttribute('itemId'));
     $parsedBody = $request->getParsedBody();
-    $currentUser = $this->container->get(Session::class)->get('user');
+    $currentUser = $request->getAttribute('user');
 
     if ($currentUser->getId() === $itemId) {
       return $response
@@ -131,7 +129,7 @@ class UsersController
     try {
       $item = $this->userService->getOneById(
         $itemId,
-        $this->currentUser->isAdmin() ? [] : ['id', 'name']
+        $request->getAttribute('user')->isAdmin() ? [] : ['id', 'name']
       );
 
       HttpUtils::prepareJsonResponse($response, $item->toArray());
