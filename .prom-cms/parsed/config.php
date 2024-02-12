@@ -25,7 +25,7 @@ $defaultColumn = [
     'isHidden' => false,
     'editor' => [
       'width' => 12,
-      'placement' => 'aside'
+      'placement' => 'main'
     ]
   ]
 ];
