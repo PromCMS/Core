@@ -11,6 +11,8 @@ use PhpParser\Comment;
 use PhpParser\Node\Stmt;
 use PhpParser\Node;
 use PromCMS\Core\PromConfig\Entity\Column;
+use PromCMS\Core\PromConfig\Entity\FileColumn;
+use PromCMS\Core\PromConfig\Entity\RelationshipColumn;
 use Symfony\Component\Filesystem\Path;
 
 abstract class ModelTemplate extends AbstractTemplate
@@ -71,7 +73,7 @@ abstract class ModelTemplate extends AbstractTemplate
   {
     $localizedOutput = $this->mode === ModelTemplateMode::LOCALIZED;
 
-    return array_filter($this->entity->getRelationshipColumns(), function ($column) use ($localizedOutput) {
+    return array_filter($this->entity->getRelationshipColumns(), function (RelationshipColumn $column) use ($localizedOutput) {
       if (($localizedOutput && !$column->localized) || (!$localizedOutput && $column->localized)) {
         return false;
       }
@@ -261,16 +263,27 @@ abstract class ModelTemplate extends AbstractTemplate
       ),
     ];
 
+    // Relationship
     if ($column instanceof RelationshipColumn) {
+      $relationshipType = 'OneToOne';
+
+      if ($column->isManyToOne()) {
+        $relationshipType = 'ManyToOne';
+      }
+
+      if ($column instanceof FileColumn) {
+        $relationshipType = $column->otherMetadata['multiple'] ? 'ManyToMany' : 'ManyToOne';
+      }
+
       // Join collumns have special attributes first
       $attributes[] = new Node\Attribute(
-        name: new Node\Name('ORM\\' . ($column->isManyToOne() ? 'ManyToOne' : 'OneToOne')),
+        name: new Node\Name("ORM\\$relationshipType"),
         args: [
           new Node\Arg(
             name: new Node\Identifier('targetEntity'),
             value: new Node\Expr\ClassConstFetch(
               name: new Node\Identifier('class'),
-              class: new Node\Name\FullyQualified('\\' . $column->getReferencedEntity()->className)
+              class: new Node\Name\FullyQualified($column->getReferencedEntity()->className)
             )
           )
         ]
@@ -280,7 +293,9 @@ abstract class ModelTemplate extends AbstractTemplate
         name: new Node\Identifier('referencedColumnName'),
         value: new Node\Scalar\String_($column->getReferenceFieldName())
       );
-    } else {
+    }
+    // Normal column
+    else {
       $columnAttributeArguments[] = new Node\Arg(
         name: new Node\Identifier('type'),
         value: new Node\Scalar\String_($column->getDoctrineType())
@@ -300,7 +315,7 @@ abstract class ModelTemplate extends AbstractTemplate
     // In many-to-one relationship there are two sides, owning and reflecting side.
     // If user defineds it, the reflecting side now have collection of its that references current item.
     // Other side must be marked as readonly othervise it will be a database collumn which should not happen
-    if (($column instanceof RelationshipColumn) === false && !$column->readonly) {
+    if (!$column->readonly) {
       $attributes[] = new Node\Attribute(
         name: new Node\Name('ORM\\' . ($column instanceof RelationshipColumn ? 'JoinColumn' : 'Column')), // TODO: manyToOne requires joinColumn?
         args: $columnAttributeArguments

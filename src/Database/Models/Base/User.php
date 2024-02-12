@@ -32,7 +32,7 @@ class User extends Entity
   #[ORM\Column(name: 'state', nullable: false, unique: false, type: 'string', enumType: UserState::class), PROM\PromModelColumn(title: 'State', type: 'enum', editable: false, hide: false, localized: false)]
   protected ?UserState $state;
   
-  #[ORM\Column(name: 'avatar_id', nullable: true, unique: false, type: 'integer'), PROM\PromModelColumn(title: 'Avatar', type: 'file', editable: false, hide: false, localized: false)]
+  #[ORM\ManyToOne(targetEntity: \PromCMS\Core\Database\Models\File::class), ORM\JoinColumn(name: 'avatar_id', nullable: true, unique: false, referencedColumnName: 'id'), PROM\PromModelColumn(title: 'Avatar', type: 'file', editable: false, hide: false, localized: false)]
   protected ?\PromCMS\Core\Database\Models\File $avatar;
   
   #[ORM\Column(name: 'role', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Role', type: 'string', editable: false, hide: false, localized: false)]
