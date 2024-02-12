@@ -147,7 +147,7 @@ return [
             'typeFilter' => 'image',
             'admin' => [
               'fieldType' => 'big-image',
-              'editor' => ['width' => 6],
+              'editor' => ['width' => 6, 'placement' => 'main'],
             ],
           ]),
           array_merge($defaultColumn, [
