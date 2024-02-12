@@ -84,16 +84,22 @@ abstract class Entity
     foreach ($propers as $proper) {
       /** @var \ReflectionAttribute */
       $attr = $proper->getAttributes(PromModelColumn::class)[0];
-      /** @var PromModelColumn */
-      $info = $attr->newInstance();
       $propertyName = $proper->getName();
 
       if (!isset($this->{$propertyName})) {
         continue;
       }
 
+      /** @var PromModelColumn */
+      $info = $attr->newInstance();
+
       if (!$info->hide) {
         $value = $this->{$propertyName};
+
+        if ($value instanceof Entity) {
+          $value = $value->toArray();
+        }
+
         $res[$propertyName] = $value;
       }
     }
