@@ -380,7 +380,8 @@ class EntityController
     $query = $this->em->createQueryBuilder()
       ->delete($entity->className, 'i')
       ->setMaxResults(1)
-      ->where("i.id", ':id')->setParameter(':id', intval($itemId));
+      ->where("i.id = :id")
+      ->setParameter(':id', intval($itemId));
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
