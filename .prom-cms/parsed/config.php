@@ -174,6 +174,12 @@ return [
             'unique' => true
           ]),
           array_merge($defaultColumn, [
+            'name' => 'slug',
+            'type' => 'string',
+            'title' => 'Slug',
+            'unique' => true
+          ]),
+          array_merge($defaultColumn, [
             'name' => 'content',
             'type' => 'json',
             'title' => 'Content',

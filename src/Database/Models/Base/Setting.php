@@ -21,6 +21,9 @@ class Setting extends Entity
   #[ORM\Column(name: 'name', nullable: false, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Name', type: 'string', editable: false, hide: false, localized: false)]
   protected ?string $name;
   
+  #[ORM\Column(name: 'slug', nullable: false, unique: true, type: 'string'), PROM\PromModelColumn(title: 'Slug', type: 'string', editable: false, hide: false, localized: false)]
+  protected ?string $slug;
+  
   #[ORM\Column(name: 'content', nullable: true, unique: false, type: 'array'), PROM\PromModelColumn(title: 'Content', type: 'json', editable: false, hide: false, localized: false)]
   protected ?array $content;
   
@@ -44,6 +47,17 @@ class Setting extends Entity
   function setName(string $name): static
   {
     $this->name = $name;
+    return $this;
+  }
+  
+  function getSlug(): string
+  {
+    return $this->slug;
+  }
+  
+  function setSlug(string $slug): static
+  {
+    $this->slug = $slug;
     return $this;
   }
   
