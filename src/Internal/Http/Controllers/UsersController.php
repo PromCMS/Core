@@ -10,12 +10,10 @@ use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Http\WhereQueryParam;
 use PromCMS\Core\Database\Models\Base\UserState;
-use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\Services\UserService;
-use PromCMS\Core\Session;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
 use DI\Container;
@@ -93,6 +91,10 @@ class UsersController
     try {
       $user = $this->userService->getOneById($itemId);
       $user->fill($parsedBody['data']);
+
+      if (isset($parsedBody['name'])) {
+        $user->setName($parsedBody['name']);
+      }
 
       HttpUtils::prepareJsonResponse($response, $user->toArray());
 
@@ -230,7 +232,7 @@ class UsersController
     $itemId = $request->getAttribute('itemId');
     $user = $this->userService->getOneById(intval($itemId));
 
-    if ($this->currentUser->getId() === $user->getId()) {
+    if ($request->getAttribute('user')->getId() === $user->getId()) {
       return $response->withStatus(404);
     }
 

@@ -164,6 +164,10 @@ class UserProfileController
       $data['avatar'] = $fileService->getById($data['avatar']);
     }
 
+    if (isset($data['name'])) {
+      $user->setName($data['name']);
+    }
+
     $user->fill($data);
     $this->em->flush();
 

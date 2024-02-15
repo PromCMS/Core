@@ -105,6 +105,10 @@ class UserService
       $create->fill($payload);
     }
 
+    if (isset($payload['name'])) {
+      $create->setName($payload['name']);
+    }
+
     $this->em->persist($create);
     $this->em->flush();
 
