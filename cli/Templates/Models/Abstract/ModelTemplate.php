@@ -174,7 +174,7 @@ abstract class ModelTemplate extends AbstractTemplate
         ],
         attrGroups: [
           new Node\AttributeGroup([
-            ...$this->getDoctrineColumnAttributes($column),
+            ...$this->getDoctrineColumnAttributes($column, $entity),
             // This should be last attribute
             $this->getPromColumnAttribute($column)
           ])
@@ -244,7 +244,7 @@ abstract class ModelTemplate extends AbstractTemplate
     return $properties;
   }
 
-  protected function getDoctrineColumnAttributes(Column $column)
+  protected function getDoctrineColumnAttributes(Column $column, Entity $entity)
   {
     $attributes = [];
     // These default are predefined and same for both join and normal columns
@@ -255,7 +255,7 @@ abstract class ModelTemplate extends AbstractTemplate
       ),
       new Node\Arg(
         name: new Node\Identifier('nullable'),
-        value: new Node\Expr\ConstFetch(new Node\Name(json_encode(!$column->required)))
+        value: new Node\Expr\ConstFetch(new Node\Name(json_encode(!$column->required || $entity->isSingleton())))
       ),
       new Node\Arg(
         name: new Node\Identifier('unique'),
