@@ -330,8 +330,9 @@ class EntityController
         $existingTranslations = $item->getTranslations();
 
         if (!isset($existingTranslations[$language])) {
-          $translation = new($entity->getTranslationClassName());
+          $translation = new($entity->getTranslationClassName())($language);
           $translation->fill($item->toArray()); // Is it really necessary to fill it? Does every mutation need required fields to be copied?
+          $translation->setObject($item);
         } else {
           $translation = $existingTranslations[$language];
         }
