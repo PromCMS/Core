@@ -69,7 +69,7 @@ class UserService
   public function updateOne(User $user, array $payload = []): User
   {
     if (isset($payload['avatar']) && $payload['avatar'] !== null && is_array($payload['avatar'])) {
-      if (isset($data['avatar']['id'])) {
+      if (isset($payload['avatar']['id'])) {
         $payload['avatar'] = $this->fileService->getById($payload['avatar']['id']);
       }
     }
@@ -117,7 +117,7 @@ class UserService
       $create = new User();
 
       if (isset($payload['avatar']) && $payload['avatar'] !== null && is_array($payload['avatar'])) {
-        if (isset($data['avatar']['id'])) {
+        if (isset($payload['avatar']['id'])) {
           $payload['avatar'] = $this->fileService->getById($payload['avatar']['id']);
         }
       }
