@@ -264,14 +264,13 @@ abstract class ModelTemplate extends AbstractTemplate
     ];
 
     // Relationship
+    $relationshipType = 'OneToOne';
     if ($column instanceof RelationshipColumn) {
-      $relationshipType = 'OneToOne';
-
       if ($column->isOneToMany()) {
         $relationshipType = 'OneToMany';
       }
 
-      if ($column->isManyToOne()) {
+      if (($column instanceof FileColumn) === false && $column->isManyToOne()) {
         $relationshipType = 'ManyToOne';
       }
 
@@ -293,11 +292,20 @@ abstract class ModelTemplate extends AbstractTemplate
         ]
       );
 
-      if ($relationshipType === 'ManyToOne' && ($column instanceof FileColumn) === false) {
-        $attributes[0]->args[] = new Node\Arg(
-          name: new Node\Identifier('inversedBy'),
-          value: new Node\Scalar\String_($column->otherMetadata['inversedBy'])
-        );
+      if (($column instanceof FileColumn) === false) {
+        if ($relationshipType === 'OneToMany') {
+          $attributes[0]->args[] = new Node\Arg(
+            name: new Node\Identifier('mappedBy'),
+            value: new Node\Scalar\String_($column->otherMetadata['mappedBy'])
+          );
+        }
+
+        if ($relationshipType === 'ManyToOne') {
+          $attributes[0]->args[] = new Node\Arg(
+            name: new Node\Identifier('inversedBy'),
+            value: new Node\Scalar\String_($column->otherMetadata['inversedBy'])
+          );
+        }
       }
 
       $columnAttributeArguments[] = new Node\Arg(
@@ -326,7 +334,7 @@ abstract class ModelTemplate extends AbstractTemplate
     // In many-to-one relationship there are two sides, owning and reflecting side.
     // If user defineds it, the reflecting side now have collection of its that references current item.
     // Other side must be marked as readonly othervise it will be a database collumn which should not happen
-    if (!$column->readonly) {
+    if (!$column->readonly && $relationshipType !== 'OneToMany') {
       $attributes[] = new Node\Attribute(
         name: new Node\Name('ORM\\' . ($column instanceof RelationshipColumn ? 'JoinColumn' : 'Column')), // TODO: manyToOne requires joinColumn?
         args: $columnAttributeArguments

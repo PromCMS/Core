@@ -130,6 +130,17 @@ class Entity
     return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column instanceof RelationshipColumn);
   }
 
+  function getColumnByName(string $name)
+  {
+    foreach ($this->getColumns() as $column) {
+      if ($column->name === $name) {
+        return $column;
+      }
+    }
+
+    return null;
+  }
+
   /**
    * @return array<int, Column>
    */

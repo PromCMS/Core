@@ -30,17 +30,17 @@ class RelationshipColumn extends Column
   {
     $ref = $this->getReferencedEntity();
 
-    foreach ($ref->getRelationshipColumns() as $refRelationColumn) {
-      if ($refRelationColumn->otherMetadata['inversedBy'] === $this->name) {
-        if ($refRelationColumn->isOneToMany()) {
-          return true;
-        }
-
-        break;
-      }
+    if ($this->isOneToMany()) {
+      return false;
     }
 
-    return false;
+    if (!isset($this->otherMetadata['inversedBy'])) {
+      throw new \Exception('Missing inversedBy for ' . $this->name);
+    }
+
+    $refColumn = $ref->getColumnByName($this->otherMetadata['inversedBy']);
+
+    return $refColumn->isOneToMany();
   }
 
   function isOneToOne()
