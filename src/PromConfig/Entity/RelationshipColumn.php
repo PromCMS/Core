@@ -35,7 +35,7 @@ class RelationshipColumn extends Column
     }
 
     if (!isset($this->otherMetadata['inversedBy'])) {
-      throw new \Exception('Missing inversedBy for ' . $this->name);
+      return false;
     }
 
     $refColumn = $ref->getColumnByName($this->otherMetadata['inversedBy']);
