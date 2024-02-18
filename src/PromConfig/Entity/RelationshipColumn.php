@@ -4,33 +4,54 @@ namespace PromCMS\Core\PromConfig\Entity;
 
 use PromCMS\Core\PromConfig\Entity;
 
-class RelationshipColumn extends Column {
-  function getDatabaseColumName() {
+class RelationshipColumn extends Column
+{
+  function getDatabaseColumName()
+  {
     return parent::getDatabaseColumName() . '_id';
   }
 
-  function getReferencedEntity(): Entity   {
+  function getReferencedEntity(): Entity
+  {
     return $this->promConfig->getEntity($this->otherMetadata['targetModelTableName']);
   }
 
-  function getReferenceFieldName(): string {
+  function getReferenceFieldName(): string
+  {
     return $this->otherMetadata['foreignKey'];
   }
 
-  function isOneToMany() {
-    
-  }
-
-  function isManyToOne(): bool {
+  function isOneToMany()
+  {
     return isset($this->otherMetadata['multiple']) && $this->otherMetadata['multiple'];
   }
 
-  function isOneToOne() {
-    return !$this->isManyToOne();
+  function isManyToOne(): bool
+  {
+    $ref = $this->getReferencedEntity();
+    $relationName = $this->otherMetadata['relationName'];
+
+    foreach ($ref->getRelationshipColumns() as $relationColumn) {
+      if ($relationColumn->otherMetadata['relationName'] === $relationName) {
+        if ($relationColumn->isOneToMany()) {
+          return true;
+        }
+
+        break;
+      }
+    }
+
+    return false;
   }
 
-  function getPhpType() {
-    if ($this->isManyToOne()) {
+  function isOneToOne()
+  {
+    return !$this->isManyToOne() && !$this->isOneToMany();
+  }
+
+  function getPhpType()
+  {
+    if ($this->isOneToMany()) {
       return '\Doctrine\Common\Collections\Collection';
     }
 

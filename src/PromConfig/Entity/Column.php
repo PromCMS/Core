@@ -2,7 +2,6 @@
 
 namespace PromCMS\Core\PromConfig\Entity;
 
-use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\PromConfig;
 
 class Column

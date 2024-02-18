@@ -18,7 +18,7 @@ class FileColumn extends RelationshipColumn
 
   function getPhpType()
   {
-    if ($this->isManyToOne()) {
+    if ($this->isOneToMany()) {
       return '\Doctrine\Common\Collections\Collection';
     }
 

@@ -78,7 +78,7 @@ abstract class ModelTemplate extends AbstractTemplate
         return false;
       }
 
-      return $column->isManyToOne();
+      return $column->isOneToMany();
     });
   }
 
@@ -180,7 +180,7 @@ abstract class ModelTemplate extends AbstractTemplate
           ])
         ],
         attributes: [
-          'comments' => $column instanceof RelationshipColumn && $column->isManyToOne() ? [
+          'comments' => $column instanceof RelationshipColumn && $column->isOneToMany() ? [
             new Comment\Doc('/**
 * @var ArrayCollection<int, \\' . $column->getReferencedEntity()->className . '>
 */')
@@ -267,8 +267,8 @@ abstract class ModelTemplate extends AbstractTemplate
     if ($column instanceof RelationshipColumn) {
       $relationshipType = 'OneToOne';
 
-      if ($column->isManyToOne()) {
-        $relationshipType = 'ManyToOne';
+      if ($column->isOneToMany()) {
+        $relationshipType = 'OneToMany';
       }
 
       if ($column instanceof FileColumn) {
@@ -517,9 +517,9 @@ abstract class ModelTemplate extends AbstractTemplate
       // TODO - relationship columns are trickier, many to one will not have setter with 'set' but 'add' etc...
       $typeIndentifier = new Node\Identifier($column->getPhpType());
       if ($column instanceof RelationshipColumn) {
-        if ($column->isOneToMany()) {
-          $typeIndentifier = new Node\Name\FullyQualified($column->getReferencedEntity()->className);
-        }
+        // if ($column->isManyToOne()) {
+        //   $typeIndentifier = new Node\Name\FullyQualified($column->getReferencedEntity()->className);
+        // }
       }
 
       if (!$column->required) {

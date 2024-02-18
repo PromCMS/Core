@@ -8,6 +8,7 @@ use PromCMS\Cli\Templates\Models\ModelTemplateMode;
 use PromCMS\Core\Database\Models\Trait\NumericId;
 use PromCMS\Core\Database\Models\Trait\Timestamps;
 use PromCMS\Core\PromConfig\Entity;
+use PromCMS\Core\PromConfig\Entity\RelationshipColumn;
 use Symfony\Component\Filesystem\Path;
 use PhpParser\Node;
 use PhpParser\Node\Stmt;
@@ -154,7 +155,7 @@ class BaseModelTemplate extends ModelTemplate
   {
     $uses = parent::getUseStatements($entity);
 
-    if ($entity->localized || !empty(array_filter($entity->getRelationshipColumns(), fn($column) => $column->isManyToOne()))) {
+    if ($entity->localized || !empty(array_filter($entity->getRelationshipColumns(), fn(RelationshipColumn $column) => $column->isOneToMany()))) {
       $uses[] = new Stmt\Use_([new Stmt\UseUse(new Node\Name('Doctrine\Common\Collections\ArrayCollection'))]);
     }
 

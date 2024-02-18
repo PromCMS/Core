@@ -63,11 +63,9 @@ class User extends Base\User
   public function fill(array $values)
   {
     parent::fill($values);
-
     if (isset($values['name'])) {
       $this->setName($values['name']);
     }
-
     if (isset($values['password']) && !empty($newPassword = $values['password'])) {
       $this->setPassword($newPassword);
     }
