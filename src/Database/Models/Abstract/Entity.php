@@ -2,7 +2,7 @@
 
 namespace PromCMS\Core\Database\Models\Abstract;
 
-use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping\PromModelColumn;
 use PromCMS\Core\Database\Models\Trait\Draftable;
@@ -101,7 +101,7 @@ abstract class Entity
           $value = $value->toArray();
         } else if ($value instanceof \DateTimeInterface) {
           $value = $value->format(\DateTime::ISO8601);
-        } else if ($value instanceof ArrayCollection) {
+        } else if ($value instanceof Collection) {
           $result = [];
 
           foreach ($value as $row) {
