@@ -137,6 +137,10 @@ abstract class Entity
       /** @var PromModelColumn */
       $info = $attr->newInstance();
 
+      if ($info->title === "Updated at" || $info->title === "Created at") {
+        continue;
+      }
+
       $newValue[$propertyName] = $info;
     }
 
