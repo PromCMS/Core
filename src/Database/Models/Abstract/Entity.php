@@ -105,7 +105,7 @@ abstract class Entity
           $result = [];
 
           foreach ($value as $row) {
-            $result[] = $row->toArray();
+            $result[] = ['id' => $row->getId()];
           }
 
           $value = $result;
