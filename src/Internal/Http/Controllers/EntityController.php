@@ -84,7 +84,11 @@ class EntityController
 
       $incommingValue = $data[$column->name];
       if (!is_array($incommingValue)) {
-        continue;
+        if (is_int($incommingValue)) {
+          $incommingValue = ['id' => $incommingValue];
+        } else {
+          continue;
+        }
       }
 
       $finalValue = [];
@@ -349,7 +353,11 @@ class EntityController
 
       $incommingValue = $data[$column->name];
       if (!is_array($incommingValue)) {
-        continue;
+        if (is_int($incommingValue)) {
+          $incommingValue = ['id' => $incommingValue];
+        } else {
+          continue;
+        }
       }
 
       $finalValue = [];
