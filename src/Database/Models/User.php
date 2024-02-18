@@ -68,7 +68,7 @@ class User extends Base\User
       $this->setName($values['name']);
     }
 
-    if (!empty($newPassword = $values['password'])) {
+    if (isset($values['password']) && !empty($newPassword = $values['password'])) {
       $this->setPassword($newPassword);
     }
   }
