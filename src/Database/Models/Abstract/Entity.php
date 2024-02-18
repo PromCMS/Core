@@ -100,6 +100,10 @@ abstract class Entity
           $value = $value->toArray();
         }
 
+        if ($value instanceof \DateTimeInterface) {
+          $value = $value->format(\DateTime::ISO8601);
+        }
+
         $res[$propertyName] = $value;
       }
     }
