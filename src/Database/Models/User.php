@@ -18,12 +18,12 @@ class User extends Base\User
   // {
   //   return array_merge(static::$privateFields, array_map(fn($item) => ucfirst($item), static::$privateFields));
   // }
-  
+
   public function getName(): string
   {
     return $this->firstname . " " . $this->lastname;
   }
-  
+
   public function setName(string $name)
   {
     [$firstname, $lastname] = explode(' ', $name);
@@ -34,12 +34,12 @@ class User extends Base\User
     $this->lastname = $lastname;
     return $this;
   }
-  
+
   public function isBlocked(): bool
   {
     return $this->state === UserState::BLOCKED;
   }
-  
+
   public function checkPassword(string $checkAgainst)
   {
     $userPassword = $this->password;
@@ -48,26 +48,31 @@ class User extends Base\User
     }
     return Password::check($checkAgainst, $userPassword);
   }
-  
+
   public function isAdmin(): bool
   {
     return $this->getRole() === 'admin';
   }
-  
+
   public function setPassword(string $password): static
   {
     $this->password = Password::hash($password);
     return $this;
   }
-  
+
   public function fill(array $values)
   {
     parent::fill($values);
+
+    if (isset($values['name'])) {
+      $this->setName($values['name']);
+    }
+
     if (!empty($newPassword = $values['password'])) {
       $this->setPassword($newPassword);
     }
   }
-  
+
   public function toArray()
   {
     $result = parent::toArray();

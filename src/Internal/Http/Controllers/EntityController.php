@@ -314,6 +314,33 @@ class EntityController
       $data['updatedBy'] = $currentUser;
     }
 
+    foreach ($entity->getRelationshipColumns() as $column) {
+      if (!isset($data[$column->name]) || $column->readonly) {
+        continue;
+      }
+
+      $incommingValue = $data[$column->name];
+      if (!is_array($incommingValue)) {
+        continue;
+      }
+
+      $finalValue = [];
+      $repo = $this->em->getRepository($column->getReferencedEntity()->className);
+      if ($column->otherMetadata['multiple']) {
+        foreach ($incommingValue as $linkEntity) {
+          if (!isset($linkEntity['id'])) {
+            continue;
+          }
+
+          $finalValue[] = $repo->findOneBy(['id' => $linkEntity['id']]);
+        }
+      } else {
+        $finalValue = $repo->findOneBy(['id' => $incommingValue['id']]);
+      }
+
+      $data[$column->name] = $finalValue;
+    }
+
     try {
       if (!$item) {
         throw new EntityNotFoundException();

@@ -16,10 +16,12 @@ use PromCMS\Core\Database\Models\User;
 class UserService
 {
   private EntityManager $em;
+  private FileService $fileService;
 
   public function __construct(Container $container)
   {
     $this->em = $container->get(EntityManager::class);
+    $this->fileService = $container->get(FileService::class);
   }
 
   private function createQb()
@@ -64,14 +66,25 @@ class UserService
     return $this->getOneBy("id", $id, $select);
   }
 
-  public function updateById(string|int $id, array $payload = []): User
+  public function updateOne(User $user, array $payload = []): User
   {
-    $user = $this->getOneById($id);
+    if (isset($payload['avatar']) && $payload['avatar'] !== null && is_array($payload['avatar'])) {
+      if (isset($data['avatar']['id'])) {
+        $payload['avatar'] = $this->fileService->getById($payload['avatar']['id']);
+      }
+    }
 
     $user->fill($payload);
     $this->em->flush();
 
     return $user;
+  }
+
+  public function updateById(string|int $id, array $payload = []): User
+  {
+    $user = $this->getOneById($id);
+
+    return $this->updateOne($user, $payload);
   }
 
   public function getManyPaged(
@@ -102,11 +115,14 @@ class UserService
       $create = $payload;
     } else {
       $create = new User();
-      $create->fill($payload);
-    }
 
-    if (isset($payload['name'])) {
-      $create->setName($payload['name']);
+      if (isset($payload['avatar']) && $payload['avatar'] !== null && is_array($payload['avatar'])) {
+        if (isset($data['avatar']['id'])) {
+          $payload['avatar'] = $this->fileService->getById($payload['avatar']['id']);
+        }
+      }
+
+      $create->fill($payload);
     }
 
     $this->em->persist($create);

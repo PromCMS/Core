@@ -13,6 +13,7 @@ use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Password;
 use PromCMS\Core\PromConfig;
+use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Exceptions\EntityDuplicateException;
 use PromCMS\Core\Exceptions\EntityNotFoundException;
@@ -72,7 +73,8 @@ class UsersController
   ]
   public function update(
     ServerRequestInterface $request,
-    ResponseInterface $response
+    ResponseInterface $response,
+    FileService $fileService
   ): ResponseInterface {
     $itemId = intval($request->getAttribute('itemId'));
     $parsedBody = $request->getParsedBody();
@@ -89,14 +91,9 @@ class UsersController
     }
 
     try {
-      $user = $this->userService->getOneById($itemId);
-      $user->fill($parsedBody['data']);
+      $updatedUser = $this->userService->updateById($itemId, $parsedBody['data']);
 
-      if (isset($parsedBody['name'])) {
-        $user->setName($parsedBody['name']);
-      }
-
-      HttpUtils::prepareJsonResponse($response, $user->toArray());
+      HttpUtils::prepareJsonResponse($response, $updatedUser->toArray());
 
       return $response;
     } catch (\Exception $ex) {

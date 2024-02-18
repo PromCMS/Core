@@ -132,7 +132,8 @@ class UserProfileController
   public function update(
     ServerRequestInterface $request,
     ResponseInterface $response,
-    FileService $fileService
+    FileService $fileService,
+    UserService $userService
   ): ResponseInterface {
     /** @var User */
     $user = $request->getAttribute('user');
@@ -160,16 +161,7 @@ class UserProfileController
       unset($data['state']);
     }
 
-    if (isset($data['avatar']) && $data['avatar'] !== null) {
-      $data['avatar'] = $fileService->getById($data['avatar']);
-    }
-
-    if (isset($data['name'])) {
-      $user->setName($data['name']);
-    }
-
-    $user->fill($data);
-    $this->em->flush();
+    $userService->updateOne($user, $data);
 
     return ResponseHelper::withServerResponse($response, $user->toArray())->getResponse();
   }
