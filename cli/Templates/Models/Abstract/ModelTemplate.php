@@ -271,6 +271,10 @@ abstract class ModelTemplate extends AbstractTemplate
         $relationshipType = 'OneToMany';
       }
 
+      if ($column->isManyToOne()) {
+        $relationshipType = 'ManyToOne';
+      }
+
       if ($column instanceof FileColumn) {
         $relationshipType = $column->otherMetadata['multiple'] ? 'ManyToMany' : 'ManyToOne';
       }
@@ -288,6 +292,13 @@ abstract class ModelTemplate extends AbstractTemplate
           )
         ]
       );
+
+      if ($relationshipType === 'ManyToOne' && ($column instanceof FileColumn) === false) {
+        $attributes[0]->args[] = new Node\Arg(
+          name: new Node\Identifier('inversedBy'),
+          value: new Node\Scalar\String_($column->otherMetadata['inversedBy'])
+        );
+      }
 
       $columnAttributeArguments[] = new Node\Arg(
         name: new Node\Identifier('referencedColumnName'),

@@ -29,11 +29,10 @@ class RelationshipColumn extends Column
   function isManyToOne(): bool
   {
     $ref = $this->getReferencedEntity();
-    $relationName = $this->otherMetadata['relationName'];
 
-    foreach ($ref->getRelationshipColumns() as $relationColumn) {
-      if ($relationColumn->otherMetadata['relationName'] === $relationName) {
-        if ($relationColumn->isOneToMany()) {
+    foreach ($ref->getRelationshipColumns() as $refRelationColumn) {
+      if ($refRelationColumn->otherMetadata['inversedBy'] === $this->name) {
+        if ($refRelationColumn->isOneToMany()) {
           return true;
         }
 
