@@ -152,7 +152,19 @@ abstract class Entity
     $columns = $this->getColumnsForValues($values);
 
     foreach ($columns as $propertyName => $proper) {
-      $this->{$propertyName} = $values[$propertyName];
+      $incommingValue = $values[$propertyName];
+
+      if (isset($this->{$propertyName}) && $this->{$propertyName} instanceof ArrayCollection) {
+        foreach ($incommingValue as $value) {
+          if (!$this->{$propertyName}->contains($value)) {
+            $this->{$propertyName}->add($value);
+          }
+        }
+
+        continue;
+      }
+
+      $this->{$propertyName} = $incommingValue;
     }
 
     return $this;

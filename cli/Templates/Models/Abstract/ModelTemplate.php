@@ -182,7 +182,7 @@ abstract class ModelTemplate extends AbstractTemplate
         attributes: [
           'comments' => $column instanceof RelationshipColumn && $column->isManyToOne() ? [
             new Comment\Doc('/**
-* @var ArrayCollection<int, ' . $column->getReferencedEntity()->className . '>
+* @var ArrayCollection<int, \\' . $column->getReferencedEntity()->className . '>
 */')
           ] : []
         ]

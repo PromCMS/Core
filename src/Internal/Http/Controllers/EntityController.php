@@ -75,15 +75,43 @@ class EntityController
     // There is no need to set language on create as create should take default language
 
     $parsedBody = $request->getParsedBody();
+    $data = $parsedBody['data'];
+
+    foreach ($entity->getRelationshipColumns() as $column) {
+      if (!isset($data[$column->name]) || $column->readonly) {
+        continue;
+      }
+
+      $incommingValue = $data[$column->name];
+      if (!is_array($incommingValue)) {
+        continue;
+      }
+
+      $finalValue = [];
+      $repo = $this->em->getRepository($column->getReferencedEntity()->className);
+      if ($column->otherMetadata['multiple']) {
+        foreach ($incommingValue as $linkEntity) {
+          if (!isset($linkEntity['id'])) {
+            continue;
+          }
+
+          $finalValue[] = $repo->findOneBy(['id' => $linkEntity['id']]);
+        }
+      } else {
+        $finalValue = $repo->findOneBy(['id' => $incommingValue['id']]);
+      }
+
+      $data[$column->name] = $finalValue;
+    }
 
     $currentUser = $request->getAttribute('user');
     try {
       if ($entity->sharable && $currentUser) {
-        $parsedBody['data']['createdBy'] = $currentUser;
+        $data['createdBy'] = $currentUser;
       }
 
       $instance = (new $entity->className);
-      $instance->fill($parsedBody['data']);
+      $instance->fill($data);
       $this->em->persist($instance);
       $this->em->flush();
 
