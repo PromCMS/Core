@@ -161,7 +161,11 @@ abstract class Entity
     foreach ($columns as $propertyName => $proper) {
       $incommingValue = $values[$propertyName];
 
-      if (isset($this->{$propertyName}) && $this->{$propertyName} instanceof ArrayCollection) {
+      if (isset($this->{$propertyName}) && $this->{$propertyName} instanceof Collection) {
+        if ($proper->type === 'file') {
+          $this->{$propertyName}->clear();
+        }
+
         foreach ($incommingValue as $value) {
           if (!$this->{$propertyName}->contains($value)) {
             $this->{$propertyName}->add($value);
