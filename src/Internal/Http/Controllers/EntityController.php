@@ -95,6 +95,10 @@ class EntityController
       $repo = $this->em->getRepository($column->getReferencedEntity()->className);
       if ($column->otherMetadata['multiple']) {
         foreach ($incommingValue as $linkEntity) {
+          if (is_numeric($linkEntity)) {
+            $linkEntity = ['id' => $linkEntity];
+          }
+
           if (!isset($linkEntity['id'])) {
             continue;
           }
@@ -364,6 +368,10 @@ class EntityController
       $repo = $this->em->getRepository($column->getReferencedEntity()->className);
       if ($column->otherMetadata['multiple']) {
         foreach ($incommingValue as $linkEntity) {
+          if (is_numeric($linkEntity)) {
+            $linkEntity = ['id' => $linkEntity];
+          }
+
           if (!isset($linkEntity['id'])) {
             continue;
           }
