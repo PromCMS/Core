@@ -16,11 +16,11 @@ trait Ownable
   #[ORM\ManyToOne(targetEntity: User::class)]
   #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
   #[PromMapping\PromModelColumn(title: 'Updated by', type: 'relationship')]
-  protected User|null $updateBy = null;
+  protected User|null $updatedBy = null;
 
   public function setUpdatedBy(User $user)
   {
-    $this->updateBy = $user;
+    $this->updatedBy = $user;
   }
 
   public function setCreatedBy(User $user)
