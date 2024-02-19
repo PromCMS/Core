@@ -162,7 +162,7 @@ class ImageService
     );
 
     $srcPrefix = $this->promConfig->getProject()->url->__toString();
-    $src = "api/entry-types/files/items/$fileId/raw?$joinedArgs";
+    $src = "api/library/files/items/$fileId?$joinedArgs";
 
     if (!str_ends_with($srcPrefix, "/")) {
       $src = "/$src";
