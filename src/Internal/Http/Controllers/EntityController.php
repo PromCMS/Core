@@ -118,7 +118,7 @@ class EntityController
       $instance = (new $entity->className);
       $instance->fill($data);
 
-      if ($entity->sharable && $currentUser) {
+      if ($entity->ownable && $currentUser) {
         $instance->setCreatedBy($currentUser);
       }
 
@@ -273,7 +273,7 @@ class EntityController
 
     $currentUser = $request->getAttribute('user');
     try {
-      if ($entity->sharable && $currentUser) {
+      if ($entity->ownable && $currentUser) {
         $fromEntry->setUpdatedBy($currentUser);
         $toEntry->setUpdatedBy($currentUser);
       }
@@ -413,8 +413,8 @@ class EntityController
         $item->fill($data);
       }
 
-      if ($entity->sharable && $currentUser) {
-        $item->setCreatedBy($currentUser);
+      if ($entity->ownable && $currentUser) {
+        $item->setUpdatedBy($currentUser);
       }
 
       $this->em->flush();
