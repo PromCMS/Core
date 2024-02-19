@@ -113,13 +113,15 @@ class EntityController
     }
 
     $currentUser = $request->getAttribute('user');
-    try {
-      if ($entity->sharable && $currentUser) {
-        $data['createdBy'] = $currentUser;
-      }
 
+    try {
       $instance = (new $entity->className);
       $instance->fill($data);
+
+      if ($entity->sharable && $currentUser) {
+        $instance->setCreatedBy($currentUser);
+      }
+
       $this->em->persist($instance);
       $this->em->flush();
 
@@ -346,9 +348,6 @@ class EntityController
     // }
 
     $currentUser = $request->getAttribute('user');
-    if ($entity->sharable && $currentUser) {
-      $data['updatedBy'] = $currentUser;
-    }
 
     foreach ($entity->getRelationshipColumns() as $column) {
       if (!isset($data[$column->name]) || $column->readonly) {
@@ -412,6 +411,10 @@ class EntityController
         $this->em->persist($translation);
       } else {
         $item->fill($data);
+      }
+
+      if ($entity->sharable && $currentUser) {
+        $item->setCreatedBy($currentUser);
       }
 
       $this->em->flush();

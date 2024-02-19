@@ -57,15 +57,16 @@ class SingletonController
     // }
 
     $parsedBody = $request->getParsedBody();
-
     $currentUser = $request->getAttribute('user');
-    try {
-      if ($entity->sharable && $currentUser) {
-        $parsedBody['data']['createdBy'] = $currentUser->getId();
-      }
 
+    try {
       $instance = (new $entity->className);
       $instance->fill($parsedBody['data'] ?? []);
+
+      if ($entity->sharable && $currentUser) {
+        $instance->setCreatedBy($currentUser);
+      }
+
       $this->em->persist($instance);
       $this->em->flush();
 
@@ -182,11 +183,7 @@ class SingletonController
     // }
 
     $item = $query->findOneBy([]);
-
     $currentUser = $request->getAttribute('user');
-    if ($entity->sharable && $currentUser) {
-      $data['updatedBy'] = $currentUser->getId();
-    }
 
     try {
       if (!$item) {
@@ -214,6 +211,10 @@ class SingletonController
         $this->em->persist($translation);
       } else {
         $item->fill($data);
+      }
+
+      if ($entity->sharable && $currentUser) {
+        $item->setUpdatedBy($currentUser);
       }
 
       $this->em->flush();
