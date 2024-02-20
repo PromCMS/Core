@@ -13,7 +13,7 @@ use Symfony\Component\Filesystem\Path;
 class ImageService
 {
   private array $ALLOWED_IMAGE_TYPES = ["jpeg", "jpg", "png", "webp"];
-  private string $DEFAULT_IMAGE_TYPE = "jpeg";
+  private string $DEFAULT_IMAGE_TYPE = "png";
   private Filesystem $fs;
   private Config $config;
   private PromConfig $promConfig;
