@@ -38,7 +38,7 @@ class FileService
   /**
    * Get one specific file from database
    */
-  public function getById(string $id): File
+  public function getById(string|int $id): File
   {
     return $this->em->getRepository(File::class)->find($id);
   }

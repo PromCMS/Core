@@ -5,6 +5,7 @@ namespace PromCMS\Core\Rendering\Twig;
 use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
+use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\Exceptions\ValidateSchemaException;
 use PromCMS\Core\PromConfig;
 use PromCMS\Core\PromConfig\Project;
@@ -97,19 +98,22 @@ class AppExtensions extends AbstractExtension
   }
 
   public function getImage(
-    string $id,
+    string|int|null|File $idOrImage,
     int $width = null,
     int $height = null,
     int $quality = null
-  ): array {
-    $imageInfo = $this->fileService->getById($id);
-    $imageResult = $this->imageService->getProcessed($imageInfo, [
+  ): array|null {
+    if (!$idOrImage) {
+      return null;
+    }
+
+    $imageInfo = $idOrImage instanceof File ? $idOrImage : $this->fileService->getById($idOrImage);
+
+    return $this->imageService->getProcessed($imageInfo, [
       'w' => $width,
       'h' => $height,
       'q' => $quality,
     ]);
-
-    return $imageResult;
   }
 
   public function getDynamicBlock(string $blockPath, $payload = []): string
