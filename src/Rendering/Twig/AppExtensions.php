@@ -6,6 +6,8 @@ use DI\Container;
 use Exception;
 use PromCMS\Core\Config;
 use PromCMS\Core\Exceptions\ValidateSchemaException;
+use PromCMS\Core\PromConfig;
+use PromCMS\Core\PromConfig\Project;
 use PromCMS\Core\Schema;
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
@@ -20,6 +22,7 @@ class AppExtensions extends AbstractExtension
   private FileService $fileService;
   private $twigService;
   private Config $config;
+  private PromConfig $promConfig;
   private string $appRoot;
   private Schema $viteAssetsConfigSchema;
 
@@ -29,7 +32,9 @@ class AppExtensions extends AbstractExtension
     $this->twigService = $container->get(RenderingService::class);
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
+    $this->promConfig = $container->get(PromConfig::class);
     $this->appRoot = $container->get('app.root');
+
     $this->viteAssetsConfigSchema = new Schema([
       "type" => "object",
       "properties" => [
@@ -73,22 +78,21 @@ class AppExtensions extends AbstractExtension
   public function getFunctions()
   {
     return [
-      new TwigFunction('getConfig', [$this, 'getConfig']),
+      new TwigFunction('getAppEnvironment', [$this, 'getAppEnvironment']),
       new TwigFunction('getImage', [$this, 'getImage']),
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
     ];
   }
 
-  public function getConfig(): array
+  public function getAppEnvironment(): array
   {
-    $config = $this->config->__toArray();
+    return $this->config->env->__toArray();
+  }
 
-    // TODO: add functionality that hides specific secrets from return of this function (for example session secrets)
-    // This is kind of complete, but this should be more granular
-    unset($config["security"]);
-
-    return $config;
+  public function getProjectConfig(): Project
+  {
+    return $this->promConfig->getProject();
   }
 
   public function getImage(
@@ -114,7 +118,7 @@ class AppExtensions extends AbstractExtension
         "$blockPath.twig",
         $payload,
       );
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       return "No block found for '$blockPath'";
     }
   }
@@ -126,7 +130,7 @@ class AppExtensions extends AbstractExtension
   {
     try {
       return (array) $this->viteAssetsConfigSchema->validate($config);
-    } catch (\Exception $exception) {
+    } catch (Exception $exception) {
       return $exception;
     }
   }
