@@ -79,6 +79,7 @@ class AppExtensions extends AbstractExtension
   {
     return [
       new TwigFunction('getAppEnvironment', [$this, 'getAppEnvironment']),
+      new TwigFunction('getProjectConfig', [$this, 'getProjectConfig']),
       new TwigFunction('getImage', [$this, 'getImage']),
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
