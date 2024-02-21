@@ -47,9 +47,7 @@ class FilesController
 
   #[
     AsApiRoute('GET', '/items/{itemId}'),
-    WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
-    WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function getOne(
     ServerRequestInterface $request,
@@ -69,6 +67,11 @@ class FilesController
 
       // Sometimes user will request information as json, then just return it so
       if ($request->getHeader('accept')[0] === 'application/json') {
+        if (!$userId) {
+          return $response->withStatus(401);
+        }
+
+
         HttpUtils::prepareJsonResponse(
           $response,
           $fileInfo->toArray(),
