@@ -41,13 +41,13 @@ class AppExtensions extends AbstractExtension
       "properties" => [
         "manifestFileName" => [
           "type" => "string",
-          "default" => "manifest.json"
+          "default" => ".vite/manifest.json"
         ],
         "distFolderPath" => [
           "type" => "string",
           "required" => true
         ],
-        "assets" => [
+        "entries" => [
           "type" => "array",
           "required" => true,
           "items" => [
@@ -57,18 +57,6 @@ class AppExtensions extends AbstractExtension
                 "type" => "string",
                 "required" => true
               ],
-              "type" => [
-                "type" => "string",
-                "required" => true,
-                "enum" => [
-                  "stylesheet",
-                  "script"
-                ]
-              ],
-              "scriptType" => [
-                "type" => "string",
-                "default" => "module"
-              ]
             ]
           ]
         ]
@@ -152,7 +140,7 @@ class AppExtensions extends AbstractExtension
       throw $config;
     }
 
-    $assets = $config['assets'];
+    $definedAssets = $config['entries'];
     $composedAssets = '';
     $distFolderPath = $config['distFolderPath'];
     $manifestFilePath = Path::join(
@@ -162,40 +150,58 @@ class AppExtensions extends AbstractExtension
       $config['manifestFileName'],
     );
 
-    if (!$this->config->env->development) {
+    $assets = [];
+
+    // In development we take whats defined rightaway, stylesheets should be imported through javascript files
+    if ($this->config->env->development) {
+      $assets = array_map(fn($entry) => array_merge($entry, ['type' => 'script']), $definedAssets);
+    }
+    // In production we have to parse compiled vite assets by manifest
+    else {
       if (!file_exists($manifestFilePath)) {
         throw new Exception(
-          "Manifest is not present in provided path '$manifestFilePath' in getViteAssets twig function",
+          "Manifest is not present in provided path '$manifestFilePath' in getViteAssets twig function. Build your assets with Vite or enable development",
         );
       }
 
       $manifestAssets = json_decode(file_get_contents($manifestFilePath), true);
 
-      foreach ($assets as $assetKey => $assetInfo) {
+      foreach ($definedAssets as &$assetInfo) {
+        $assetEntry = $assetInfo['path'];
         // Ignore if provided assets was not marked as an entry in twig function
-        if (!isset($manifestAssets[$assetInfo['path']])) {
+        if (!isset($manifestAssets[$assetEntry])) {
           continue;
         }
 
-        $assets[$assetKey]['path'] = implode('/', [
-          $distFolderPath,
-          $manifestAssets[$assetInfo['path']]['file'],
-        ]);
+        $manifestInfo = $manifestAssets[$assetEntry];
+        $compiledAssetEntryPath = $manifestInfo['file'];
+
+        $assets[] = [
+          'path' => "$distFolderPath/$compiledAssetEntryPath",
+          'type' => 'script'
+        ];
+
+        foreach (($manifestInfo['css'] ?? []) as $cssPath) {
+          $assets[] = [
+            'path' => "$distFolderPath/$cssPath",
+            'type' => 'stylesheet'
+          ];
+        }
       }
     }
 
     foreach ($assets as $assetInfo) {
-      $src = $assetInfo["path"];
+      $path = $assetInfo['path'];
 
-      switch ($assetInfo["type"]) {
-        case 'stylesheet':
-          $composedAssets .= "\n <link rel=\"stylesheet\" href=\"$src\">";
-          break;
-        case 'script':
-          $scriptType = $assetInfo["scriptType"];
-          $composedAssets .= "\n <script type=\"$scriptType\" crossorigin src=\"$src\"></script>";
-          break;
+      $firstCharInPath = substr($path, 0, 1);
+      if ($firstCharInPath !== '/') {
+        $path = "/$path";
       }
+
+      $composedAssets .= "\n" . match ($assetInfo['type']) {
+        'script' => "<script type=\"module\" crossorigin src=\"$path\"></script>",
+        'stylesheet' => "<link rel=\"stylesheet\" href=\"$path\">",
+      };
     }
 
     return $composedAssets;

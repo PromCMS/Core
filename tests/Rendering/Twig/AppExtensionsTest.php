@@ -26,26 +26,19 @@ final class AppExtensionsTest extends AppTestCase
 
     echo $res;
 
-    $this->expectOutputString("<script>alert('Invalid assets array in getViteAssets twig function, because: assets(The property assets is required)');</script>");
+    $this->expectOutputString("<script>alert('Invalid assets array in getViteAssets twig function, because: entries(The property entries is required)');</script>");
   }
 
   public function testTwigFunctionGetViteAssetsShouldReturnRightOnCorrectConfig()
   {
     $res = static::$extensionInstance->getViteAssets([
       "distFolderPath" => "dist",
-      "assets" => [
+      "entries" => [
         [
-          "path" => 'index.ts',
-          "type" => "script"
+          "path" => 'index.ts'
         ],
         [
-          "path" => 'index.tsx',
-          "type" => "script",
-          "scriptType" => "sdfdsf"
-        ],
-        [
-          "path" => 'index.scss',
-          "type" => "stylesheet"
+          "path" => 'index.tsx'
         ],
       ]
     ]);
@@ -53,6 +46,6 @@ final class AppExtensionsTest extends AppTestCase
 
     echo $res;
 
-    $this->expectOutputString("\n <script type=\"module\" crossorigin src=\"index.ts\"></script>\n <script type=\"sdfdsf\" crossorigin src=\"index.tsx\"></script>\n <link rel=\"stylesheet\" href=\"index.scss\">");
+    $this->expectOutputString("\n<script type=\"module\" crossorigin src=\"/index.ts\"></script>\n<script type=\"module\" crossorigin src=\"/index.tsx\"></script>");
   }
 }
