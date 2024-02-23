@@ -26,7 +26,6 @@ class App
     Bootstrap\Mailer::class,
     Bootstrap\Services::class,
     Bootstrap\Twig::class,
-    Bootstrap\Middlewares::class,
   ];
 
   function __construct(string $root)
@@ -73,6 +72,10 @@ class App
         $bootstrapClosure($this->app);
       }
 
+      // Define app middlewares after app bootstrap has been defined, 
+      // app middlewares should be run before them
+      (new Bootstrap\Middlewares())->run($this->app, $container);
+      // Define routes after everything is bootstraped
       (new Bootstrap\Routes())->run($this->app, $container);
 
       /** @var Config */
