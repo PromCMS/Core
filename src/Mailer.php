@@ -50,7 +50,7 @@ class Mailer extends PHPMailer
       $this->Password = $password ?? '';
     }
 
-    if (!empty($fromEmailAddress = $this->Username ?? $sendFrom)) {
+    if (!empty($fromEmailAddress = $sendFrom ?? $this->Username)) {
       $this->setFrom(
         $fromEmailAddress,
         $sendFromName ?? 'PROM Mailer',
@@ -63,6 +63,7 @@ class Mailer extends PHPMailer
   public function send(): bool
   {
     if (!$this->isSetuped) {
+      $this->ErrorInfo = 'Mailer is not setuped - setup mailer with setup() method on mailer class';
       return false;
     }
 
