@@ -19,7 +19,6 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-#[AsRouteGroup(pathnamePrefix: '/entry-types/{modelId:generalTranslations|prom__general_translations}')]
 class LocalizationController
 {
   private Container $container;
@@ -32,12 +31,12 @@ class LocalizationController
   }
 
   #[
-    AsApiRoute('POST', '/items'),
+    AsApiRoute('POST', '/entry-types/{modelId:generalTranslations|prom__general_translations}/items/upsert'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
   ]
-  function updateOne(
+  function upsertOne(
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
@@ -64,7 +63,7 @@ class LocalizationController
   }
 
   #[
-    AsApiRoute('DELETE', '/items/delete'),
+    AsApiRoute('DELETE', '/entry-types/{modelId:generalTranslations|prom__general_translations}/items/delete'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
     WithMiddleware(EntityPermissionMiddleware::class),
@@ -86,7 +85,7 @@ class LocalizationController
   }
 
   #[
-    AsApiRoute('GET', '/items'),
+    AsApiRoute('GET', '/entry-types/{modelId:generalTranslations|prom__general_translations}/items'),
     WithMiddleware(ModelMiddleware::class)
   ]
   public function getMany(
