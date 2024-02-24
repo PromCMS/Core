@@ -9,8 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use GuzzleHttp\Psr7\Response;
 use PromCMS\Core\Utils\HttpUtils;
+use Slim\Psr7\Response;
 
 class UserLoggedInMiddleware implements MiddlewareInterface
 {

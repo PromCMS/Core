@@ -10,12 +10,12 @@ use PromCMS\Core\PromConfig\Entity;
 use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionKey;
 use PromCMS\Core\PromConfig\Project\Security\RolePermissionOptionValue;
 use PromCMS\Core\Session;
-use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use PromCMS\Core\Utils\HttpUtils;
+use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
 
 class EntityPermissionMiddleware implements MiddlewareInterface
