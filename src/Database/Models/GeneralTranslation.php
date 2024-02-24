@@ -9,7 +9,7 @@ namespace PromCMS\Core\Database\Models;
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as PROM;
 
-#[ORM\Entity, ORM\Table(name: 'prom__general_translations'), PROM\PromModel(ignoreSeeding: false), ORM\HasLifecycleCallbacks]
+#[ORM\Entity, ORM\Table(name: 'prom__general_translations'), PROM\PromModel(ignoreSeeding: false), ORM\UniqueConstraint(name: 'prom__general_translations_unique', columns: ['lang', 'key']), ORM\HasLifecycleCallbacks]
 class GeneralTranslation extends Base\GeneralTranslation
 {
 }

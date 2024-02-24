@@ -14,7 +14,7 @@ class Column
     public readonly string $title,
     public readonly PromConfig $promConfig,
     public readonly bool $required = true,
-    public readonly bool $unique = false,
+    public readonly bool|string $unique = false,
     public readonly bool $localized = false,
     public readonly bool $readonly = false,
     public readonly bool $hide = false,

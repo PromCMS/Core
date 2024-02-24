@@ -5,6 +5,8 @@ namespace PromCMS\Cli\Templates\Models;
 use PhpParser\Node\Stmt;
 use PromCMS\Core\PromConfig\Entity;
 use PhpParser\Node;
+use PromCMS\Core\PromConfig\Entity\Column;
+use PromCMS\Core\PromConfig\Entity\RelationshipColumn;
 
 class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
 {
@@ -131,6 +133,7 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
       ]),
     ];
 
+    $uniqueConstraintColumns = array_filter($this->entity->getColumns(), fn(Column|RelationshipColumn $column) => !$column->localized && $column->unique);
     if ($isOutputLocalized) {
       $attributes[] = new Node\Attribute(new Node\Name('ORM\UniqueConstraint'), [
         new Node\Arg(
@@ -155,6 +158,8 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
           )
         ),
       ]);
+
+      $uniqueConstraintColumns = array_filter($this->entity->getLocalizedColumns(), fn(Column|RelationshipColumn $column) => is_string($column->unique));
     } else {
       $attributes[] = new Node\Attribute(new Node\Name('PROM\PromModel'), [
         new Node\Arg(
@@ -163,6 +168,30 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
             new Node\Name(json_encode(!$this->entity->ignoreSeeding))
           )
         )
+      ]);
+    }
+
+    $uniqueConstraintColumns = array_filter($uniqueConstraintColumns, fn(Column|RelationshipColumn $column) => is_string($column->unique));
+
+    $uniqueColumnGroups = [];
+    foreach ($uniqueConstraintColumns as $uniqueColumn) {
+      $uniqueColumnGroups[$uniqueColumn->unique] = array_merge($uniqueColumnGroups[$uniqueColumn->unique] ?? [], [$uniqueColumn->name]);
+    }
+
+    foreach ($uniqueColumnGroups as $groupName => $groupColumns) {
+      $attributes[] = new Node\Attribute(new Node\Name('ORM\UniqueConstraint'), [
+        new Node\Arg(
+          name: new Node\Identifier('name'),
+          value: new Node\Scalar\String_($groupName)
+        ),
+        new Node\Arg(
+          name: new Node\Identifier('columns'),
+          value: new Node\Expr\Array_(
+            array_map(fn($columnName) => new Node\Expr\ArrayItem(
+              new Node\Scalar\String_($columnName . "")
+            ), $groupColumns)
+          )
+        ),
       ]);
     }
 

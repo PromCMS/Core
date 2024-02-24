@@ -67,8 +67,15 @@ class LocalizationService
     }
 
     if ($includeUnknown) {
-      $otherTranslations = $qb->from(GeneralTranslation::class, 't')->select('t')
-        ->where($qb->expr()->notIn('t.key', array_keys($items)))
+      $otherTranslationsQuery = $qb->from(GeneralTranslation::class, 't')->select('t');
+
+      if (count($items)) {
+        $otherTranslationsQuery = $otherTranslationsQuery
+          ->where($qb->expr()->notIn('t.key', ':keys'))
+          ->setParameter(':keys', array_keys($items));
+      }
+
+      $otherTranslations = $otherTranslationsQuery
         ->getQuery()
         ->execute();
 
