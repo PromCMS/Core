@@ -6,7 +6,6 @@ use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Http\Routing\AsApiRoute;
-use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Services\LocalizationService;
@@ -72,7 +71,7 @@ class LocalizationController
     ServerRequestInterface $request,
     ResponseInterface $response
   ): ResponseInterface {
-    $body = $request->getParsedBody();
+    $body = $request->getParsedBody()["data"] ?? [];
 
     if (!isset($body['key'])) {
       return $response->withStatus(400);
