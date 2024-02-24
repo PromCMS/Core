@@ -32,8 +32,8 @@ class LocalizationController
   #[
     AsApiRoute('POST', '/entry-types/{modelId:generalTranslations|prom__general_translations}/items/upsert'),
     WithMiddleware(UserLoggedInMiddleware::class),
-    WithMiddleware(EntityPermissionMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
   ]
   function upsertOne(
     ServerRequestInterface $request,
