@@ -257,11 +257,14 @@ abstract class ModelTemplate extends AbstractTemplate
         name: new Node\Identifier('nullable'),
         value: new Node\Expr\ConstFetch(new Node\Name(json_encode(!$column->required || $entity->isSingleton())))
       ),
-      new Node\Arg(
+    ];
+
+    if (is_bool($column->unique)) {
+      $columnAttributeArguments[] = new Node\Arg(
         name: new Node\Identifier('unique'),
         value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->unique)))
-      ),
-    ];
+      );
+    }
 
     // Relationship
     $relationshipType = 'OneToOne';

@@ -17,10 +17,10 @@ class GeneralTranslation extends Entity
   use \PromCMS\Core\Database\Models\Trait\Timestamps;
   use \PromCMS\Core\Database\Models\Trait\NumericId;
   
-  #[ORM\Column(name: 'lang', nullable: false, unique: "prom__general_translations_unique", type: 'string'), PROM\PromModelColumn(title: 'Language', type: 'string', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'lang', nullable: false, type: 'string'), PROM\PromModelColumn(title: 'Language', type: 'string', editable: false, hide: false, localized: false)]
   protected ?string $lang;
   
-  #[ORM\Column(name: 'key', nullable: false, unique: "prom__general_translations_unique", type: 'string'), PROM\PromModelColumn(title: 'Key', type: 'string', editable: false, hide: false, localized: false)]
+  #[ORM\Column(name: 'key', nullable: false, type: 'string'), PROM\PromModelColumn(title: 'Key', type: 'string', editable: false, hide: false, localized: false)]
   protected ?string $key;
   
   #[ORM\Column(name: 'value', nullable: false, unique: false, type: 'string'), PROM\PromModelColumn(title: 'Value', type: 'string', editable: false, hide: false, localized: false)]

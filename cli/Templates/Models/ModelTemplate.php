@@ -188,7 +188,7 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
           name: new Node\Identifier('columns'),
           value: new Node\Expr\Array_(
             array_map(fn($columnName) => new Node\Expr\ArrayItem(
-              new Node\Scalar\String_($columnName . "")
+              new Node\Scalar\String_($columnName)
             ), $groupColumns)
           )
         ),
