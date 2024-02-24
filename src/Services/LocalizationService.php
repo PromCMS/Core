@@ -147,6 +147,7 @@ class LocalizationService
   function deleteTranslationKey($key)
   {
     $this->createQb()->delete(GeneralTranslation::class, 't')->where('t.key = :key')->setParameter('key', $key)->getQuery()->execute();
+    $this->em->flush();
 
     return true;
   }
