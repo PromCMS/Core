@@ -31,7 +31,7 @@ class Role
       return array_fill_keys(array_keys(static::$defaultPermissisonsSet), $permission->value);
     }
 
-    if (isset($this->modelPermissions[$tableName]) && empty($permissionSetFromConfig = $this->modelPermissions[$tableName])) {
+    if (!isset($this->modelPermissions[$tableName]) || empty($permissionSetFromConfig = $this->modelPermissions[$tableName])) {
       return static::$defaultPermissisonsSet;
     }
 
