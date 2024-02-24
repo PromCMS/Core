@@ -137,6 +137,8 @@ class LocalizationService
         'key' => $key,
         'value' => $value
       ]);
+
+      $this->em->persist($item);
     }
 
     $this->em->flush();
