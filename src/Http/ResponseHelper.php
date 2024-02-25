@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Http;
 
 use PromCMS\Core\Database\Paginate;
+use PromCMS\Core\Database\Models\Abstract\Entity;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseHelper
