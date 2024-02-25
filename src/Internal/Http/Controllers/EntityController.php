@@ -206,7 +206,6 @@ class EntityController
     $entity = $request->getAttribute(Entity::class);
     $query = $this->em->createQueryBuilder()
       ->select('i')
-      ->addSelect('COALESCE(i.order, i.id) as order')
       ->from($entity->className, 'i');
 
     $queryParams = $request->getQueryParams();
@@ -223,7 +222,7 @@ class EntityController
     }
 
     if ($entity->sorting) {
-      $query->orderBy('order', 'ASC');
+      $query->addSelect('COALESCE(i.order, i.id) as order')->orderBy('order', 'ASC');
     }
 
     return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($this->getLocalizedQuery($query, $request))->execute($page, $limit))->getResponse();
