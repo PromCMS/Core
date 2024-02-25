@@ -61,7 +61,11 @@ class ResponseHelper
     foreach ($items as $item) {
       if (!is_array($item)) {
         $itemsAsArray[] = $item->toArray();
+        continue;
+      }
 
+      if (isset($item[0]) && $item[0] instanceof Entity) {
+        $itemsAsArray[] = $item[0]->toArray();
         continue;
       }
 

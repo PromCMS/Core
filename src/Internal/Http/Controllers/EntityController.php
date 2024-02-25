@@ -202,9 +202,12 @@ class EntityController
     ServerRequestInterface $request,
     ResponseInterface $response,
   ): ResponseInterface {
-    /** @var Entity */
+    /** @var $entity Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->from($entity->className, 'i')->select('i');
+    $query = $this->em->createQueryBuilder()
+      ->select('i')
+      ->addSelect('COALESCE(i.order, i.id) as order')
+      ->from($entity->className, 'i');
 
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
@@ -214,9 +217,13 @@ class EntityController
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
     // }
 
-    // TODO - make it more dynamic
+    // TODO - make it more dynamic and remove the param from admin list othervise it will try to add order to createdBy
     if (isset($queryParams['orderBy_created_at'])) {
       $query->orderBy("i.createdAt", $queryParams['orderBy_created_at']);
+    }
+
+    if ($entity->sorting) {
+      $query->orderBy('order', 'ASC');
     }
 
     return ResponseHelper::withServerPagedResponse($response, Paginate::fromQuery($this->getLocalizedQuery($query, $request))->execute($page, $limit))->getResponse();
@@ -278,8 +285,9 @@ class EntityController
         $toEntry->setUpdatedBy($currentUser);
       }
 
+      $prevOrderFromEntry = $fromEntry->getOrder() ?? $fromEntry->getId();
       $fromEntry->setOrder($toEntry->getOrder() ?? $toEntry->getId());
-      $toEntry->setOrder($fromEntry->getOrder() ?? $fromEntry->getId());
+      $toEntry->setOrder($prevOrderFromEntry);
 
       $this->em->flush();
       $this->em->getConnection()->commit();
