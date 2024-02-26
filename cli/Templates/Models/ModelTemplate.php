@@ -133,6 +133,14 @@ class ModelTemplate extends \PromCMS\Cli\Templates\Models\Abstract\ModelTemplate
       ]),
     ];
 
+    foreach ($class->attrGroups as $attGroup) {
+      foreach ($attGroup->attrs as $attr) {
+        if ($attr->name instanceof Node\Name && $attr->name->name === 'ORM\EntityListeners') {
+          $attributes[] = $attr;
+        }
+      }
+    }
+
     $uniqueConstraintColumns = array_filter($this->entity->getColumns(), fn(Column|RelationshipColumn $column) => !$column->localized && $column->unique);
     if ($isOutputLocalized) {
       $attributes[] = new Node\Attribute(new Node\Name('ORM\UniqueConstraint'), [
