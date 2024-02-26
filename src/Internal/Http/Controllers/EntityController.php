@@ -9,6 +9,7 @@ use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Database\Query\TranslationWalker;
+use PromCMS\Core\Http\WhereQueryParam;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\Routing\AsApiRoute;
@@ -211,6 +212,10 @@ class EntityController
     $queryParams = $request->getQueryParams();
     $page = isset($queryParams['page']) ? $queryParams['page'] : 1;
     $limit = intval($queryParams['limit'] ?? 15);
+
+    if (isset($queryParams['where'])) {
+      (new WhereQueryParam($queryParams['where']))->toQuery($query, 'i');
+    }
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
