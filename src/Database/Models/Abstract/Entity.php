@@ -175,6 +175,17 @@ abstract class Entity
         continue;
       }
 
+      if ($incommingValue && $proper->type === "enum" && is_string($incommingValue)) {
+        $proper = new \ReflectionProperty(static::class, $propertyName);
+        $types = $proper->getType() instanceof \ReflectionUnionType ? $proper->getTypes() : [$proper->getType()];
+
+        foreach ($types as $type) {
+          if (enum_exists($type->getName())) {
+            $incommingValue = ($type->getName())::from($incommingValue);
+          }
+        }
+      }
+
       $this->{$propertyName} = $incommingValue;
     }
 
