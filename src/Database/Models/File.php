@@ -9,7 +9,7 @@ namespace PromCMS\Core\Database\Models;
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as PROM;
 
-#[ORM\Entity, ORM\Table(name: 'prom__files'), PROM\PromModel(ignoreSeeding: false), ORM\HasLifecycleCallbacks]
+#[ORM\Entity, ORM\Table(name: 'prom__files'), ORM\EntityListeners([Listeners\FileListener::class]), PROM\PromModel(ignoreSeeding: false), ORM\HasLifecycleCallbacks]
 class File extends Base\File
 {
 }
