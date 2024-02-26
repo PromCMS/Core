@@ -7,6 +7,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\ORMSetup;
 use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Models\Listeners\FileListener;
 use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Filesystem\Path;
@@ -32,6 +33,8 @@ class Database implements AppModuleInterface
       paths: $modelsPaths,
       isDevMode: true,
     );
+
+    $config->getEntityListenerResolver()->register(new FileListener($container));
 
     $dsnParser = new DsnParser(['mysql' => 'mysqli', 'postgres' => 'pdo_pgsql', 'sqlite' => 'pdo_sqlite']);
     $connection = DriverManager::getConnection(

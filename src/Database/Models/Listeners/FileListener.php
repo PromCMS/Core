@@ -3,8 +3,7 @@
 namespace PromCMS\Core\Database\Models\Listeners;
 
 use DI\Container;
-use Doctrine\ORM\Event\PostFlushEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Event\PreRemoveEventArgs;
 use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\Filesystem;
 
@@ -21,14 +20,14 @@ class FileListener
     $this->fs = $container->get(Filesystem::class);
   }
 
-  public function preRemove(File $file, PreUpdateEventArgs $event)
+  public function preRemove(File $file, PreRemoveEventArgs $event)
   {
     if (!in_array($file->getFilename(), $this->filesToRemove)) {
-      $this->filesToRemove[] = $file->getFilename();
+      $this->filesToRemove[] = $file->getFilepath();
     }
   }
 
-  public function postFlush(PostFlushEventArgs $args)
+  public function postRemove()
   {
     $uploads = $this->fs->withUploads();
     foreach ($this->filesToRemove as $filepathToRemove) {

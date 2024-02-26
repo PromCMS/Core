@@ -172,20 +172,7 @@ class FileService
   public function deleteById(string $id)
   {
     $fileInfo = $this->getById($id);
-
-    $this->em->getConnection()->beginTransaction();
-
-    try {
-      $this->em->remove($fileInfo);
-      $this->em->flush();
-
-      $this->fs->withUploads()->delete($fileInfo->getFilepath());
-
-      $this->em->getConnection()->commit();
-    } catch (\Exception $error) {
-      $this->em->getConnection()->rollBack();
-
-      throw $error;
-    }
+    $this->em->remove($fileInfo);
+    $this->em->flush();
   }
 }
