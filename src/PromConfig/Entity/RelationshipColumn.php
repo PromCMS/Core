@@ -75,7 +75,7 @@ class RelationshipColumn extends Column
   function getOnDeleteMode(): ?string
   {
     // Set it automatically as something else may result in exceptions thrown when relations does not have other side
-    $mode = $this->otherMetadata['onDelete'] ?? ($this->required ? 'cascade' : 'set-null');
+    $mode = $this->otherMetadata['onDelete'] ?? '';
 
     return match ($mode) {
       'cascade' => 'CASCADE',
