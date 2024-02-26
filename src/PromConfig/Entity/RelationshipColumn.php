@@ -56,4 +56,28 @@ class RelationshipColumn extends Column
 
     return "\\" . $this->getReferencedEntity()->className;
   }
+
+  function hasCascadeModes(): bool
+  {
+    return count($this->getCascadeModes() ?? []) > 0;
+  }
+
+  function getCascadeModes(): ?array
+  {
+    return $this->otherMetadata['cascade'] ?? null;
+  }
+
+  function hasOnDeleteMode()
+  {
+    return !!$this->getOnDeleteMode();
+  }
+
+  function getOnDeleteMode(): ?string
+  {
+    return match ($this->otherMetadata['onDelete'] ?? '') {
+      'cascade' => 'CASCADE',
+      'set-null' => 'SET NULL',
+      default => null,
+    };
+  }
 }

@@ -145,6 +145,7 @@ return [
             'required' => false,
             'multiple' => false,
             'typeFilter' => 'image',
+            'onDelete' => 'set-null',
             'admin' => [
               'fieldType' => 'big-image',
               'editor' => ['width' => 6, 'placement' => 'main'],
