@@ -459,33 +459,36 @@ class EntityController
   public function delete(
     ServerRequestInterface $request,
     ResponseInterface $response,
+    EntityManager $em
   ): ResponseInterface {
     $itemId = $request->getAttribute('itemId');
 
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()
-      ->delete($entity->className, 'i')
+    $entity = $this->em->createQueryBuilder()
+      ->from($entity->className, 'i')
+      ->select('i')
       ->setMaxResults(1)
-      ->where("i.id = :id")
-      ->setParameter(':id', intval($itemId));
+      ->where('i.id = :id')
+      ->setParameter(':id', intval($itemId))
+      ->getQuery()
+      ->getOneOrNullResult();
+
+    if (!$entity) {
+      return $response->withStatus(404);
+    }
 
     // if ($request->getAttribute('permission-only-own', false) === true) {
     //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
     // }
 
-    $result = $query->getQuery()->execute();
+    $em->remove($entity);
+    $em->flush();
 
-    if (empty($result)) {
-      HttpUtils::prepareJsonResponse($response, [], 'Failed to delete');
-
-      return $response
-        ->withStatus(500)
-        ->withHeader('Content-Description', 'Failed to delete');
-    }
-
-    HttpUtils::prepareJsonResponse($response, [], 'Item deleted');
-
-    return $response;
+    return ResponseHelper::withServerResponse($response, [
+      'data' => [],
+      'message' => 'Item deleted',
+      'code' => false,
+    ])->getResponse();
   }
 }

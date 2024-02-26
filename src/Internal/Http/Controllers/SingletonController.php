@@ -250,21 +250,24 @@ class SingletonController
   ): ResponseInterface {
     /** @var Entity */
     $entity = $request->getAttribute(Entity::class);
-    $query = $this->em->createQueryBuilder()->delete($entity->className, 'i');
+    $query = $this->em->createQueryBuilder()
+      ->from($entity->className, 'i')
+      ->select('i')
+      ->setMaxResults(1);
 
-    // if ($this->isLocalizedModel($modelTableMap)) {
-    //   $query->joinWithI18n($this->getCurrentLanguage($request, $args));
-    // }
+    $item = $query->getQuery()->getOneOrNullResult();
 
-    $result = $query->getQuery()->execute();
-
-    if (empty($result)) {
+    if (!$item) {
       HttpUtils::prepareJsonResponse($response, [], 'Failed to delete');
 
       return $response
         ->withStatus(500)
         ->withHeader('Content-Description', 'Failed to delete');
     }
+
+
+    $this->em->remove($item);
+    $this->em->flush();
 
     HttpUtils::prepareJsonResponse($response, [], 'Item deleted');
 
