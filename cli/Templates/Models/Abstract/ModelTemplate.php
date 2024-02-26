@@ -309,17 +309,17 @@ abstract class ModelTemplate extends AbstractTemplate
             value: new Node\Scalar\String_($column->otherMetadata['inversedBy'])
           );
         }
+      }
 
-        if ($column->hasCascadeModes()) {
-          $attributes[0]->args[] = new Node\Arg(
-            name: new Node\Identifier('cascade'),
-            value: new Node\Expr\Array_(
-              array_map(fn($cascadeMode) => new Node\Expr\ArrayItem(
-                new Node\Scalar\String_($cascadeMode)
-              ), $column->getCascadeModes())
-            )
-          );
-        }
+      if ($column->hasCascadeModes()) {
+        $attributes[0]->args[] = new Node\Arg(
+          name: new Node\Identifier('cascade'),
+          value: new Node\Expr\Array_(
+            array_map(fn($cascadeMode) => new Node\Expr\ArrayItem(
+              new Node\Scalar\String_($cascadeMode)
+            ), $column->getCascadeModes())
+          )
+        );
       }
 
       $columnAttributeArguments[] = new Node\Arg(
