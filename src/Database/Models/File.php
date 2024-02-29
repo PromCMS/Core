@@ -8,8 +8,25 @@ namespace PromCMS\Core\Database\Models;
 
 use Doctrine\ORM\Mapping as ORM;
 use PromCMS\Core\Database\Models\Mapping as PROM;
+use Symfony\Component\Filesystem\Path;
 
 #[ORM\Entity, ORM\Table(name: 'prom__files'), ORM\EntityListeners([Listeners\FileListener::class]), PROM\PromModel(ignoreSeeding: false), ORM\HasLifecycleCallbacks]
 class File extends Base\File
 {
+  function moveTo(string $basename)
+  {
+    $filename = basename($this->getFilepath());
+    $newPath = Path::join($basename, $filename);
+
+    $this->setFilepath($newPath);
+  }
+
+  function rename(string $filenameWithoutExtension): static
+  {
+    $existingExtension = pathinfo($this->getFilename(), PATHINFO_EXTENSION);
+
+    $this->setFilename("$filenameWithoutExtension.$existingExtension");
+
+    return $this;
+  }
 }

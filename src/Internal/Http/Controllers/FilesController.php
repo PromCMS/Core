@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Internal\Http\Controllers;
 
+use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Filesystem;
 use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
@@ -109,6 +110,38 @@ class FilesController
   }
 
   #[
+    AsApiRoute('PATCH', '/items/{itemId}/move'),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(UserLoggedInMiddleware::class)
+  ]
+  public function moveOne(
+    ServerRequestInterface $request,
+    ResponseInterface $response,
+    Session $session,
+    EntityManager $em,
+    $itemId
+  ): ResponseInterface {
+    $queryParams = $request->getQueryParams();
+    $moveTo = $queryParams['to'] ?? '/';
+
+    try {
+      $fileInfo = $this->fileService->getById($itemId);
+      $fileInfo->moveTo($moveTo);
+      $em->flush();
+
+      return $response->withStatus(200);
+    } catch (\Exception $e) {
+      if ($e instanceof EntityNotFoundException) {
+        return $response->withStatus(404);
+      }
+
+      return $response
+        ->withStatus(500)
+        ->withHeader('Content-Description', $e->getMessage());
+    }
+  }
+
+  #[
     AsApiRoute('GET', '/items'),
     WithMiddleware(UserLoggedInMiddleware::class),
     WithMiddleware(ModelMiddleware::class),
@@ -200,7 +233,9 @@ class FilesController
   ): ResponseInterface {
     $itemId = $request->getAttribute('itemId');
     $parsedBody = $request->getParsedBody();
-    $updatedFile = $this->fileService->updateById($itemId, $parsedBody['data']);
+    $data = $parsedBody['data'];
+
+    $updatedFile = $this->fileService->updateById($itemId, $data);
 
     HttpUtils::prepareJsonResponse($response, $updatedFile->toArray());
 

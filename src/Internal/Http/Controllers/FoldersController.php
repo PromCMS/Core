@@ -3,9 +3,10 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use DI\Container;
-use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemException;
 use PromCMS\Core\Config;
+use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Models\File;
 use PromCMS\Core\Filesystem;
 use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\Routing\AsApiRoute;
@@ -23,24 +24,32 @@ class FoldersController
 {
   private Filesystem $fs;
   private Config $config;
+  private EntityManager $em;
 
   public function __construct(Container $container)
   {
     $this->fs = $container->get(Filesystem::class);
     $this->config = $container->get(Config::class);
+    $this->em = $container->get(EntityManager::class);
   }
 
-  private function listingHasContents(DirectoryListing $listing)
+  private function hasDirContents(string $basename): bool
   {
-    $hasItems = false;
-
-    // TODO: Why have foreach?
-    foreach ($listing as $item) {
-      $hasItems = true;
-      break;
+    if (!$this->fs->withUploads()->directoryExists($basename)) {
+      return false;
     }
 
-    return $hasItems;
+    $files = $this->em
+      ->createQueryBuilder()
+      ->select('f')
+      ->from(File::class, 'f')
+      ->where('f.filepath LIKE :filepath%')
+      ->setParameter(':filepath', $basename)
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+
+    return count($files) > 0;
   }
 
   #[
@@ -51,10 +60,10 @@ class FoldersController
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getQueryParams();
-    $dirname = $params['path'];
+    $basename = $params['path'];
 
     try {
-      $listing = $this->fs->withUploads()->listContents($dirname, false);
+      $listing = $this->fs->withUploads()->listContents($basename, false);
       $folders = [];
 
       /** @var \League\Flysystem\StorageAttributes $item */
@@ -85,14 +94,14 @@ class FoldersController
   ): ResponseInterface {
     $parsedBody = $request->getParsedBody();
     $data = $parsedBody['data'];
-    $dirname = $data['path'];
+    $basename = $data['path'];
 
     try {
-      if ($this->fs->withUploads()->directoryExists($dirname)) {
+      if ($this->fs->withUploads()->directoryExists($basename)) {
         return $response->withStatus(409);
       }
 
-      $this->fs->withUploads()->createDirectory($dirname);
+      $this->fs->withUploads()->createDirectory($basename);
 
       return $response->withStatus(200);
     } catch (FilesystemException $exception) {
@@ -110,18 +119,16 @@ class FoldersController
     ResponseInterface $response
   ): ResponseInterface {
     $data = $request->getQueryParams();
-    $dirname = $data['path'];
+    $basename = $data['path'];
 
     try {
-      $hasItems = $this->listingHasContents(
-        $this->fs->withUploads()->listContents($dirname, false),
-      );
+      $hasItems = $this->hasDirContents($basename);
 
       if ($hasItems) {
         return $response->withStatus(400);
       }
 
-      $this->fs->withUploads()->deleteDirectory($dirname);
+      $this->fs->withUploads()->deleteDirectory($basename);
 
       return $response->withStatus(200);
     } catch (FilesystemException $exception) {

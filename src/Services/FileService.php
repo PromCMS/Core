@@ -144,27 +144,18 @@ class FileService
   {
     $existingFileMetadata = $this->getById($id);
 
-    $this->em->getConnection()->beginTransaction();
-
-    try {
-      // TODO: Update its filepath to different root
-      if (!empty($payload["filepath"])) {
-        unset($payload["filepath"]);
-      }
-
-      if (!empty($payload["filename"]) && Path::hasExtension($newFilename = $payload["filename"])) {
-        $payload["filename"] = Path::changeExtension($newFilename, Path::getExtension($existingFileMetadata->getFilename()));
-      }
-
-      $existingFileMetadata->fill($payload);
-
-      $this->em->flush();
-      $this->em->getConnection()->commit();
-    } catch (\Exception $error) {
-      $this->em->getConnection()->rollBack();
-
-      throw $error;
+    // TODO: Update its filepath to different root
+    if (!empty($payload["filepath"])) {
+      unset($payload["filepath"]);
     }
+
+    if (!empty($payload["filename"]) && Path::hasExtension($newFilename = $payload["filename"])) {
+      $payload["filename"] = Path::changeExtension($newFilename, Path::getExtension($existingFileMetadata->getFilename()));
+    }
+
+    $existingFileMetadata->fill($payload);
+
+    $this->em->flush();
 
     return $existingFileMetadata;
   }
