@@ -31,7 +31,7 @@ class FileListener
     }
   }
 
-  public function preUpdate(PreUpdateEventArgs $event)
+  public function preUpdate(File $file, PreUpdateEventArgs $event)
   {
     if ($event->hasChangedField('filepath')) {
       $this->filesToMove[] = [
