@@ -29,7 +29,7 @@ final class SingletonRoutesTest extends AppTestCase
   {
     $request = $this->createRequest('GET', '/api/singletons');
 
-    $newUser = $this->createUser();
+    $newUser = $this->mockUser();
     $this->logUserIn($newUser);
 
     $response = static::$app->getSlimApp()->handle($request);

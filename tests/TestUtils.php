@@ -33,17 +33,6 @@ class TestUtils
     $_SESSION = [];
   }
 
-  public static function ensureEmptyDatabase(App $app)
-  {
-    try {
-      /** @var EntityManager */
-      $em = $app->getSlimApp()->getContainer()->get(EntityManager::class);
-      $em->createQueryBuilder()->delete(User::class)->getQuery()->execute();
-    } catch (\Exception $error) {
-      echo "messing: " . $error->getMessage();
-    }
-  }
-
   public static function prepareSystemForTests(string $root)
   {
     if (is_dir($root)) {

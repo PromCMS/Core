@@ -30,7 +30,7 @@ final class UserRoleRoutesTest extends AppTestCase
   {
     $request = $this->createRequest('GET', '/api/entry-types/userRoles/items/admin');
 
-    $newUser = $this->createUser();
+    $newUser = $this->mockUser();
     $this->logUserIn($newUser);
 
     $response = static::$app->getSlimApp()->handle($request);

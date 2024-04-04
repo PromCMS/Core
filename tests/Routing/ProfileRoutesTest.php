@@ -2,6 +2,7 @@
 
 use DI\Container;
 use PromCMS\Core\App;
+use PromCMS\Core\Database\EntityManager;
 use PromCMS\Tests\AppTestCase;
 
 final class ProfileRoutesTest extends AppTestCase
@@ -32,8 +33,8 @@ final class ProfileRoutesTest extends AppTestCase
 
   public function testSuccessfullyAuthorizes()
   {
-    $this->createUser([
-      "email" => "test@example.com"
+    $this->mockUser([
+      "email" => "test@example.com",
     ]);
 
     $request = $this->createJsonRequest('POST', '/api/profile/login', [

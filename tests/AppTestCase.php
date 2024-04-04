@@ -3,11 +3,11 @@
 namespace PromCMS\Tests;
 
 use Faker\Factory;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Core\Database\Models\User;
-use PromCMS\Core\Password;
+use PromCMS\Core\Services\UserService;
 use PromCMS\Tests\TestUtils;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Headers;
@@ -36,7 +36,6 @@ abstract class AppTestCase extends TestCase
 
     static::$app = new App(static::$testProjectRoot);
     static::$app->init(true);
-    TestUtils::ensureEmptyDatabase(static::$app);
     static::$faker = Factory::create();
   }
 
@@ -55,19 +54,44 @@ abstract class AppTestCase extends TestCase
     return static::$app->getSlimApp()->getContainer();
   }
 
-  function createUser(array $overrides = [])
+  function getMockedUserService(): MockObject|UserService
+  {
+    $container = $this->getContainer();
+    $userService = $container->get(UserService::class);
+
+    if (($userService instanceof MockObject) === false) {
+      $container->set(UserService::class, $this->createMock(UserService::class));
+    }
+
+    return $container->get(UserService::class);
+  }
+
+  function mockUser(array $overrides = [])
   {
     $autorizedUser = new User();
+    (new \ReflectionProperty(User::class, 'id'))->setValue($autorizedUser, 111);
     $autorizedUser->setName($overrides['name'] ?? static::$faker->name());
     $autorizedUser->setEmail($overrides['email'] ?? static::$faker->email());
-    $autorizedUser->setPassword(Password::hash($overrides['password'] ?? 'test1234'));
+    $autorizedUser->setPassword($overrides['password'] ?? 'test1234');
     // $autorizedUser->setRoleId(0);
     $autorizedUser->setRole('admin');
     $autorizedUser->setState($overrides['state'] ?? UserState::ACTIVE);
 
-    $em = $this->getContainer()->get(EntityManager::class);
-    $em->persist($autorizedUser);
-    $em->flush();
+    $mockedUserService = $this->getMockedUserService();
+    $mockedUserService
+      ->expects($this->any())
+      ->method('findOneBy')
+      ->willReturn($autorizedUser);
+
+    $mockedUserService
+      ->expects($this->any())
+      ->method('getOneById')
+      ->willReturn($autorizedUser);
+
+    $mockedUserService
+      ->expects($this->any())
+      ->method('getOneBy')
+      ->willReturn($autorizedUser);
 
     return $autorizedUser;
   }

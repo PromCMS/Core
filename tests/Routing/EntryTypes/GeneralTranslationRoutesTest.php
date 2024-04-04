@@ -29,7 +29,7 @@ final class GeneralTranslationRoutesTest extends AppTestCase
   {
     $request = $this->createRequest('GET', '/api/entry-types/generalTranslations');
 
-    $newUser = $this->createUser();
+    $newUser = $this->mockUser();
     $this->logUserIn($newUser);
 
     $response = static::$app->getSlimApp()->handle($request);

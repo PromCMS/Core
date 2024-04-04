@@ -29,7 +29,7 @@ final class EntryTypesRoutesTest extends AppTestCase
   {
     $request = $this->createRequest('GET', '/api/entry-types');
 
-    $newUser = $this->createUser();
+    $newUser = $this->mockUser();
     $this->logUserIn($newUser);
 
     $response = static::$app->getSlimApp()->handle($request);

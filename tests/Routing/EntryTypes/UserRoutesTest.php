@@ -1,7 +1,9 @@
 <?php
 
 use DI\Container;
+use Doctrine\Common\Collections\ArrayCollection;
 use PromCMS\Core\App;
+use PromCMS\Core\Database\Paginate;
 use PromCMS\Core\PromConfig;
 use PromCMS\Tests\AppTestCase;
 
@@ -29,13 +31,29 @@ final class UserRoutesTest extends AppTestCase
   public function testAuthorizedRequestDoesNotFail()
   {
     $request = $this->createRequest('GET', '/api/entry-types/users/items');
-    $newUser = $this->createUser();
+    $newUser = $this->mockUser();
     /**
      * @var PromConfig
      */
     $promConfig = static::$app->getSlimApp()->getContainer()->get(PromConfig::class);
 
     $this->logUserIn($newUser);
+
+    $paginateMock = $this->createMock(Paginate::class);
+    $paginateMock
+      ->expects($this->any())
+      ->method('getTotal')
+      ->willReturn(1);
+
+    $paginateMock
+      ->expects($this->any())
+      ->method('getItems')
+      ->willReturn(new ArrayCollection([$newUser]));
+
+    $this->getMockedUserService()
+      ->expects($this->any())
+      ->method('getManyPaged')
+      ->willReturn($paginateMock);
 
     $response = static::$app->getSlimApp()->handle($request);
     $bodyAsString = $response->getBody()->__toString();

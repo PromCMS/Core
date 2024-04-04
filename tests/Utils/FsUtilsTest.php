@@ -1,7 +1,6 @@
 <?php
 
 use PromCMS\Core\App;
-use PromCMS\Core\Module;
 use PromCMS\Core\Utils\FsUtils;
 use PromCMS\Tests\AppTestCase;
 use Symfony\Component\Filesystem\Path;
@@ -18,7 +17,13 @@ final class FsUtilsTest extends AppTestCase
 
   public function test_that_readFile_works_correctly_with_shorthand()
   {
-    file_put_contents(Path::join(static::$testProjectRoot, 'schemas', 'test.json'), 'true');
+    $testJsonPath = Path::join(static::$testProjectRoot, 'src', 'schemas', 'test.json');
+
+    if (!file_exists(dirname($testJsonPath))) {
+      mkdir(dirname($testJsonPath), 0777, true);
+    }
+
+    file_put_contents($testJsonPath, 'true');
 
     $this->assertEquals(
       'true',
