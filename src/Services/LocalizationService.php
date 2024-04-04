@@ -3,7 +3,6 @@
 namespace PromCMS\Core\Services;
 
 use DI\Container;
-use Doctrine\ORM\QueryBuilder;
 use Exception;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Exceptions\EntityNotFoundException;

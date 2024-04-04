@@ -12,6 +12,7 @@ use PromCMS\Core\PromConfig\Project;
 use PromCMS\Core\Schema;
 use PromCMS\Core\Services\FileService;
 use PromCMS\Core\Services\ImageService;
+use PromCMS\Core\Services\MaintananceService;
 use PromCMS\Core\Services\RenderingService;
 use Symfony\Component\Filesystem\Path;
 use Twig\Extension\AbstractExtension;
@@ -24,6 +25,7 @@ class AppExtensions extends AbstractExtension
   private $twigService;
   private Config $config;
   private PromConfig $promConfig;
+  private MaintananceService $maintananceService;
   private string $appRoot;
   private Schema $viteAssetsConfigSchema;
 
@@ -34,6 +36,7 @@ class AppExtensions extends AbstractExtension
     $this->imageService = $container->get(ImageService::class);
     $this->config = $container->get(Config::class);
     $this->promConfig = $container->get(PromConfig::class);
+    $this->maintananceService = $container->get(MaintananceService::class);
     $this->appRoot = $container->get('app.root');
 
     $this->viteAssetsConfigSchema = new Schema([
@@ -72,6 +75,22 @@ class AppExtensions extends AbstractExtension
       new TwigFunction('getImage', [$this, 'getImage']),
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
+      new TwigFunction('isMaintananceEnabled', [$this, 'isMaintananceEnabled']),
+      new TwigFunction('getMaintananceMetadata', [$this, 'getMaintananceMetadata']),
+    ];
+  }
+
+  public function isMaintananceEnabled(): bool
+  {
+    return $this->maintananceService->isEnabled();
+  }
+
+  public function getMaintananceMetadata(): array
+  {
+    return [
+      'title' => $this->maintananceService->getTitle(),
+      'description' => $this->maintananceService->getDescription(),
+      'countdown' => $this->maintananceService->getCountdownTimestamp(),
     ];
   }
 

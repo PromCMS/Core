@@ -110,6 +110,15 @@ class MaintananceService
     $this->cachedMetadata = null;
   }
 
+  function disableIfCountdownIsElapsed()
+  {
+    $data = $this->getCountdownTimestamp();
+
+    if (is_int($data) && $data <= time()) {
+      $this->disable();
+    }
+  }
+
   function disable()
   {
     if (!$this->isEnabled()) {
@@ -128,6 +137,8 @@ class MaintananceService
         ->setParameter(2, MaintananceServiceKeys::ENABLED->asString())
         ->getQuery()
         ->getSingleScalarResult();
+
+      $this->cachedMetadata = null;
     } catch (\Exception | NoResultException $error) {
       if ($error instanceof NoResultException) {
         // No need to do anything - if it is not present then it is disabled
