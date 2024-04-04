@@ -2,6 +2,7 @@
 
 namespace PromCMS\Core\Http\Middleware;
 
+use DI\Container;
 use PromCMS\Core\Logger;
 use PromCMS\Core\Services\UserService;
 use PromCMS\Core\Session;
@@ -15,7 +16,7 @@ use Slim\Psr7\Response;
 class UserLoggedInMiddleware implements MiddlewareInterface
 {
 
-  public function __construct(private Session $session, private UserService $userService, private Logger $logger)
+  public function __construct(private Session $session, private Logger $logger, private Container $container)
   {
   }
 
@@ -25,6 +26,7 @@ class UserLoggedInMiddleware implements MiddlewareInterface
   public function process(Request $request, RequestHandler $handler): ResponseInterface
   {
     $userId = $this->session->get('user_id', false);
+    $userService = $this->container->get(UserService::class);
 
     if (!$userId) {
       $response = new Response();
@@ -41,7 +43,7 @@ class UserLoggedInMiddleware implements MiddlewareInterface
         ->withHeader('Content-Description', 'user logged off');
     } else {
       try {
-        $request = $request->withAttribute('user', $this->userService->getOneById(intval($userId)));
+        $request = $request->withAttribute('user', $userService->getOneById(intval($userId)));
       } catch (\Exception $e) {
         $response = new Response();
         // User does not exist hence the session destroy
