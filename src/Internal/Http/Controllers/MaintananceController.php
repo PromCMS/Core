@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-#[AsRouteGroup('/prom__settings/maintanance')]
+#[AsRouteGroup('/entry-types/prom__settings/maintanance')]
 class MaintananceController
 {
   #[AsApiRoute('POST', '/disabled')]

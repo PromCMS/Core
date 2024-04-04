@@ -41,6 +41,7 @@ class Routes implements AppModuleInterface
       InternalControllers\UserProfileController::class,
       InternalControllers\UserRolesController::class,
       InternalControllers\UsersController::class,
+      InternalControllers\MaintananceController::class,
         // These are just matchers - previous controllers have explicit routes defined
       InternalControllers\EntityController::class,
       InternalControllers\EntitiesController::class,
@@ -78,7 +79,7 @@ class Routes implements AppModuleInterface
 
         $classRouteGroups = $ref->getAttributes(AsRouteGroup::class);
         /** @var \ReflectionAttribute $group */
-        if (isset($classRouteGroups[0])) {
+        if (isset ($classRouteGroups[0])) {
           $group = $classRouteGroups[0];
 
           /** @var AsRouteGroup */
