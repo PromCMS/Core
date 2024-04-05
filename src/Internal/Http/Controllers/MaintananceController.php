@@ -3,6 +3,7 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Http\Middleware\InputValidationMiddleware;
+use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Http\Routing\AsApiRoute;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
@@ -17,6 +18,20 @@ use Psr\Http\Message\ServerRequestInterface;
 #[AsRouteGroup('/entry-types/prom__settings/maintanance')]
 class MaintananceController
 {
+  #[AsApiRoute('GET', '/')]
+  public function getInfoAsBatch(
+    ServerRequestInterface $request,
+    ResponseInterface $response,
+    MaintananceService $maintananceService
+  ): ResponseInterface {
+    return ResponseHelper::withServerResponse($response, [
+      'enabled' => $maintananceService->isEnabled(),
+      'title' => $maintananceService->getTitle(),
+      'description' => $maintananceService->getDescription(),
+      'countdown' => $maintananceService->getCountdownTimestamp()
+    ])->getResponse();
+  }
+
   #[AsApiRoute('POST', '/disabled')]
   public function disable(
     ServerRequestInterface $request,
