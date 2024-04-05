@@ -3,34 +3,18 @@
 namespace PromCMS\Core\Services;
 
 use DI\Container;
-use Doctrine\ORM\NoResultException;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Models\Setting;
 
 /**
  * @internal Part of PromCMS Core and should not be used outside of it
  */
-enum MaintananceServiceKeys
+enum MaintananceServiceKeys: string
 {
-  case ENABLED;
-  case TITLE;
-  case DESCRIPTION;
-  case COUNTDOWN;
-
-  public function asString(): string
-  {
-    return MaintananceServiceKeys::getPrefix() . match ($this) {
-      MaintananceServiceKeys::ENABLED => 'enabled',
-      MaintananceServiceKeys::TITLE => 'title',
-      MaintananceServiceKeys::DESCRIPTION => 'description',
-      MaintananceServiceKeys::COUNTDOWN => 'countdown',
-    };
-  }
-
-  public static function getPrefix(): string
-  {
-    return "__prom_maintanance_";
-  }
+  case ENABLED = 'enabled';
+  case TITLE = 'title';
+  case DESCRIPTION = 'description';
+  case COUNTDOWN = 'countdown';
 }
 
 /**
@@ -38,7 +22,7 @@ enum MaintananceServiceKeys
  */
 class MaintananceService
 {
-  private array|null $cachedMetadata = null;
+  private string $SETTING_KEY = '__prom_maintanance';
   private EntityManager $em;
 
   public function __construct(Container $container)
@@ -46,68 +30,46 @@ class MaintananceService
     $this->em = $container->get(EntityManager::class);
   }
 
-  function enable(array|null $metadata = null)
+  function enable(array $metadata = [])
   {
-    $items = [
-      [
-        'key' => MaintananceServiceKeys::ENABLED->asString(),
-        'value' => true,
-      ]
-    ];
+    $existing = $this->getDataFromDatabase();
 
-    $possibleKeys = array_map(fn(MaintananceServiceKeys $case) => str_replace(MaintananceServiceKeys::getPrefix(), '', $case->asString()), MaintananceServiceKeys::cases());
-    foreach (($metadata ?? []) as $key => $item) {
-      if (!in_array($key, $possibleKeys)) {
+    if (!$existing) {
+      $existing = new Setting();
+      $existing
+        ->setName($this->SETTING_KEY)
+        ->setSlug($this->SETTING_KEY);
+    }
+
+    $newMetadata = array_merge($existing->getContent()['data'] ?? [], [
+      MaintananceServiceKeys::ENABLED->value => true
+    ]);
+
+    foreach ($metadata as $key => $item) {
+      try {
+        $keyAsEnum = MaintananceServiceKeys::from($key);
+      } catch (\Exception $error) {
+        // No need to throw
         continue;
       }
 
-      $items[] = [
+      $newMetadata[$keyAsEnum->value] = [
         'key' => MaintananceServiceKeys::getPrefix() . $key,
-        'value' => $item
-      ];
-    }
-
-    foreach ($items as $item) {
-      $key = $item['key'];
-      $value = $item['value'];
-      $content = [
-        'type' => match ($key) {
-          MaintananceServiceKeys::ENABLED->asString() => 'boolean',
-          MaintananceServiceKeys::COUNTDOWN->asString() => 'dateTime',
-          default => 'textArea'
-        },
-        'data' => match ($key) {
-          MaintananceServiceKeys::ENABLED->asString() => boolval($value),
-          default => strval($value)
-        },
-      ];
-
-      try {
-        $this->em->createQueryBuilder()
-          ->update(Setting::class, 'i')
-          ->set('i.content', '?1')
-          ->setParameter(1, $content)
-          ->where('i.slug = ?2')
-          ->setParameter(2, $key)
-          ->getQuery()
-          ->getSingleScalarResult();
-      } catch (\Exception | NoResultException $error) {
-        if ($error instanceof NoResultException) {
-          $newItem = new Setting();
-          $newItem
-            ->setContent($content)
-            ->setSlug($key)
-            ->setName($key);
-
-          $this->em->persist($newItem);
-        } else {
-          throw $error;
+        'value' => match ($keyAsEnum) {
+          MaintananceServiceKeys::ENABLED => boolval($item),
+          MaintananceServiceKeys::COUNTDOWN => ($valueToTime = strtotime(strval($item))) ? $valueToTime : null,
+          default => strval($item)
         }
-      }
+      ];
     }
 
+    $existing->setContent([
+      'type' => 'json',
+      'data' => $newMetadata
+    ]);
+
+    $this->em->persist($existing);
     $this->em->flush();
-    $this->cachedMetadata = null;
   }
 
   function disableIfCountdownIsElapsed()
@@ -125,66 +87,69 @@ class MaintananceService
       return;
     }
 
-    try {
-      $this->em->createQueryBuilder()
-        ->update(Setting::class, 'i')
-        ->set('i.content', '?1')
-        ->setParameter(1, [
-          'type' => 'boolean',
-          'data' => false
-        ])
-        ->where('i.slug = ?2')
-        ->setParameter(2, MaintananceServiceKeys::ENABLED->asString())
-        ->getQuery()
-        ->getSingleScalarResult();
-
-      $this->cachedMetadata = null;
-    } catch (\Exception | NoResultException $error) {
-      if ($error instanceof NoResultException) {
-        // No need to do anything - if it is not present then it is disabled
-      } else {
-        throw $error;
-      }
-    }
+    // item wont be null as isEnabled returns false if item does not exist yet
+    $item = $this->getDataFromDatabase();
+    $content = $item->getContent();
+    $item->setContent(
+      array_merge(
+        $content,
+        [
+          'data' => array_merge(
+            $content['data'],
+            [
+              MaintananceServiceKeys::ENABLED->value => false
+            ]
+          )
+        ]
+      )
+    );
+    $this->em->flush();
   }
 
-  private function getMetadataFromDatabase(): array
+  private function getDataFromDatabase(): Setting|null
   {
-    if ($this->cachedMetadata) {
-      return $this->cachedMetadata;
+    return $this->em->getRepository(Setting::class)->findOneBy([
+      'slug' => $this->SETTING_KEY
+    ]);
+  }
+
+  /**
+   * @return array<string, string|bool>
+   */
+  private function extractMetadata(Setting|null $item): array
+  {
+    if (!$item) {
+      return [];
     }
 
-    $values = $this->em->createQueryBuilder()
-      ->select('s')
-      ->from(Setting::class, 's')
-      ->where('s.slug LIKE ?1')
-      ->setParameter(1, MaintananceServiceKeys::getPrefix() . '%')
-      ->getQuery()
-      ->getResult();
-
+    $metadata = $item->getContent()['data'] ?? [];
     $settingsBySlugs = [];
-    /** @var Setting $value */
-    foreach ($values as $value) {
-      $settingsBySlugs[$value->getSlug()] = $value;
-    }
+    foreach ($metadata as $key => $value) {
+      try {
+        $keyAsEnum = MaintananceServiceKeys::from($key);
+      } catch (\Exception $error) {
+        // No need to throw
+        continue;
+      }
 
-    $this->cachedMetadata = $settingsBySlugs;
+      $settingsBySlugs[$keyAsEnum->value] = $value;
+    }
 
     return $settingsBySlugs;
   }
 
-  private function getOneByKey(MaintananceServiceKeys $key): string|null
+  private function getOneByKey(MaintananceServiceKeys $key): string|int|bool|null
   {
-    $values = $this->getMetadataFromDatabase();
+    $values = $this->extractMetadata($this->getDataFromDatabase());
 
-    return $values[$key->asString()] ?? null;
+    return $values[$key->value] ?? null;
   }
 
   function isEnabled()
   {
     $value = $this->getOneByKey(MaintananceServiceKeys::ENABLED);
 
-    return $value === '1';
+    return $value === true;
   }
 
   function getTitle()
@@ -199,8 +164,8 @@ class MaintananceService
 
   function getCountdownTimestamp()
   {
-    $valueAsString = $this->getOneByKey(MaintananceServiceKeys::COUNTDOWN);
-    $value = strtotime($valueAsString);
+    $value = $this->getOneByKey(MaintananceServiceKeys::COUNTDOWN);
+    $value = is_int($value) ? $value : strtotime($value);
 
     return $value ? $value : null;
   }
