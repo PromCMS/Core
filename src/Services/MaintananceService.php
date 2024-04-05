@@ -38,7 +38,11 @@ class MaintananceService
       $existing = new Setting();
       $existing
         ->setName($this->SETTING_KEY)
-        ->setSlug($this->SETTING_KEY);
+        ->setSlug($this->SETTING_KEY)
+        ->setContent([
+          'type' => 'json',
+          'data' => []
+        ]);
     }
 
     $newMetadata = array_merge($existing->getContent()['data'] ?? [], [
@@ -53,14 +57,11 @@ class MaintananceService
         continue;
       }
 
-      $newMetadata[$keyAsEnum->value] = [
-        'key' => MaintananceServiceKeys::getPrefix() . $key,
-        'value' => match ($keyAsEnum) {
-          MaintananceServiceKeys::ENABLED => boolval($item),
-          MaintananceServiceKeys::COUNTDOWN => ($valueToTime = strtotime(strval($item))) ? $valueToTime : null,
-          default => strval($item)
-        }
-      ];
+      $newMetadata[$keyAsEnum->value] = match ($keyAsEnum) {
+        MaintananceServiceKeys::ENABLED => boolval($item),
+        MaintananceServiceKeys::COUNTDOWN => ($valueToTime = strtotime(strval($item))) ? $valueToTime : null,
+        default => strval($item)
+      };
     }
 
     $existing->setContent([
