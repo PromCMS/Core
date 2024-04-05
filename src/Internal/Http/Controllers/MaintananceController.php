@@ -62,10 +62,24 @@ class MaintananceController
       "type" => "object",
       "properties" => [
         "title" => [
-          "type" => "string",
+          "anyOf" => [
+            [
+              "type" => "string"
+            ],
+            [
+              "type" => "null"
+            ]
+          ]
         ],
         "description" => [
-          "type" => "string",
+          "anyOf" => [
+            [
+              "type" => "string"
+            ],
+            [
+              "type" => "null"
+            ]
+          ]
         ],
         "countdown" => [
           "anyOf" => [
