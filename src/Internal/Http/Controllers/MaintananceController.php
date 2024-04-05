@@ -3,10 +3,13 @@
 namespace PromCMS\Core\Internal\Http\Controllers;
 
 use PromCMS\Core\Http\Middleware\InputValidationMiddleware;
+use PromCMS\Core\Http\Middleware\UserLoggedInMiddleware;
 use PromCMS\Core\Http\ResponseHelper;
 use PromCMS\Core\Http\Routing\AsApiRoute;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
 use PromCMS\Core\Http\Routing\WithMiddleware;
+use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
+use PromCMS\Core\Internal\Http\Middleware\ModelMiddleware;
 use PromCMS\Core\Schema;
 use PromCMS\Core\Services\MaintananceService;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +21,12 @@ use Psr\Http\Message\ServerRequestInterface;
 #[AsRouteGroup('/entry-types/prom__settings/maintanance')]
 class MaintananceController
 {
-  #[AsApiRoute('GET', '/')]
+  #[
+    AsApiRoute('GET', '/'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function getInfoAsBatch(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -32,7 +40,12 @@ class MaintananceController
     ])->getResponse();
   }
 
-  #[AsApiRoute('POST', '/disable')]
+  #[
+    AsApiRoute('POST', '/disable'),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
+  ]
   public function disable(
     ServerRequestInterface $request,
     ResponseInterface $response,
@@ -66,7 +79,10 @@ class MaintananceController
           ]
         ]
       ]
-    ])))
+    ]))),
+    WithMiddleware(UserLoggedInMiddleware::class),
+    WithMiddleware(ModelMiddleware::class),
+    WithMiddleware(EntityPermissionMiddleware::class),
   ]
   public function enable(
     ServerRequestInterface $request,
