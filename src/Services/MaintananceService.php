@@ -167,7 +167,11 @@ class MaintananceService
   function getCountdownTimestamp()
   {
     $value = $this->getOneByKey(MaintananceServiceKeys::COUNTDOWN);
-    $value = is_int($value) ? $value : $value ? strtotime($value) : null;
+    if (!$value) {
+      return null;
+    }
+
+    $value = is_int($value) ? strtotime($value) : $value;
 
     return $value ? $value : null;
   }
