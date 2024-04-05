@@ -32,7 +32,7 @@ class MaintananceController
     ])->getResponse();
   }
 
-  #[AsApiRoute('POST', '/disabled')]
+  #[AsApiRoute('POST', '/disable')]
   public function disable(
     ServerRequestInterface $request,
     ResponseInterface $response,
