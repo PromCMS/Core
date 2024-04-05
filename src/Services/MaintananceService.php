@@ -171,7 +171,7 @@ class MaintananceService
       return null;
     }
 
-    $value = is_int($value) ? strtotime($value) : $value;
+    $value = !is_int($value) ? strtotime($value) : $value;
 
     return $value ? $value : null;
   }
