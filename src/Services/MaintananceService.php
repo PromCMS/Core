@@ -30,7 +30,7 @@ class MaintananceService
     $this->em = $container->get(EntityManager::class);
   }
 
-  function enable(array $metadata = [])
+  function enable(array|null $metadata = [])
   {
     $existing = $this->getDataFromDatabase();
 
