@@ -32,6 +32,7 @@ class MaintananceService
 
   function enable(array|null $metadata = [])
   {
+    $metadata = $metadata ?? [];
     $existing = $this->getDataFromDatabase();
 
     if (!$existing) {
