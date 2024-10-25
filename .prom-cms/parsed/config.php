@@ -12,7 +12,7 @@ $defaultModel = [
   'ignoreSeeding' => true,
   'admin' => [
     'isHidden' => false,
-  ]
+  ],
 ];
 
 $defaultColumn = [
@@ -25,9 +25,9 @@ $defaultColumn = [
     'isHidden' => false,
     'editor' => [
       'width' => 12,
-      'placement' => 'main'
-    ]
-  ]
+      'placement' => 'main',
+    ],
+  ],
 ];
 
 $FILES_TABLE_NAME = 'prom__files';
@@ -43,7 +43,7 @@ return [
       [
         'name' => 'core',
         'uri' => 'pdo-sqlite:///' . __DIR__ . '/database.sqlite',
-      ]
+      ],
     ],
     // Models are used int real applications though
     'models' => [
@@ -53,7 +53,7 @@ return [
         'phpName' => 'File',
         'title' => 'Files',
         'admin' => [
-          'icon' => 'Folder'
+          'icon' => 'Folder',
         ],
         'columns' => [
           array_merge($defaultColumn, [
@@ -76,16 +76,16 @@ return [
             'type' => 'boolean',
             'title' => 'Private',
             'defaultValue' => 'false',
-            'required' => false
+            'required' => false,
           ]),
           array_merge($defaultColumn, [
             'name' => 'description',
             'type' => 'longText',
             'title' => 'Description',
             'localized' => true,
-            'required' => false
+            'required' => false,
           ]),
-        ]
+        ],
       ]),
       // Users
       array_merge($defaultModel, [
@@ -94,7 +94,7 @@ return [
         'title' => 'Users',
         'ignoreSeeding' => false,
         'admin' => [
-          'icon' => 'Archive'
+          'icon' => 'Archive',
         ],
         'columns' => [
           array_merge($defaultColumn, [
@@ -110,8 +110,8 @@ return [
             'editable' => false,
             'hide' => true,
             'admin' => array_merge($defaultColumn['admin'], [
-              'isHidden' => true
-            ])
+              'isHidden' => true,
+            ]),
           ]),
           array_merge($defaultColumn, [
             'name' => 'firstname',
@@ -134,9 +134,9 @@ return [
                 'INVITED' => 'invited',
                 'BLOCKED' => 'blocked',
                 'PASSWORD_RESET' => 'password-reset',
-              ]
+              ],
             ],
-            'defaultValue' => 'UserState::INVITED'
+            'defaultValue' => 'UserState::INVITED',
           ]),
           array_merge($defaultColumn, [
             'name' => 'avatar',
@@ -156,7 +156,7 @@ return [
             'type' => 'string',
             'title' => 'Role',
           ]),
-        ]
+        ],
       ]),
       // Settings
       array_merge($defaultModel, [
@@ -165,35 +165,35 @@ return [
         'phpName' => 'Setting',
         'ownable' => true,
         'admin' => [
-          'icon' => 'Settings'
+          'icon' => 'Settings',
         ],
         'columns' => [
           array_merge($defaultColumn, [
             'name' => 'name',
             'type' => 'string',
             'title' => 'Name',
-            'unique' => true
+            'unique' => true,
           ]),
           array_merge($defaultColumn, [
             'name' => 'slug',
             'type' => 'string',
             'title' => 'Slug',
-            'unique' => true
+            'unique' => true,
           ]),
           array_merge($defaultColumn, [
             'name' => 'content',
             'type' => 'json',
             'title' => 'Content',
             'defaultValue' => '[]',
-            'required' => false
+            'required' => false,
           ]),
           array_merge($defaultColumn, [
             'name' => 'description',
             'type' => 'longText',
             'title' => 'Description',
-            'required' => false
+            'required' => false,
           ]),
-        ]
+        ],
       ]),
       // Translations
       array_merge($defaultModel, [
@@ -201,28 +201,28 @@ return [
         'title' => 'General translations',
         'phpName' => 'GeneralTranslation',
         'admin' => [
-          'icon' => 'LanguageHiragana'
+          'icon' => 'LanguageHiragana',
         ],
         'columns' => [
           array_merge($defaultColumn, [
             'name' => 'lang',
             'type' => 'string',
             'title' => 'Language',
-            'unique' => 'prom__general_translations_unique'
+            'unique' => 'prom__general_translations_unique',
           ]),
           array_merge($defaultColumn, [
             'name' => 'key',
             'type' => 'string',
             'title' => 'Key',
-            'unique' => 'prom__general_translations_unique'
+            'unique' => 'prom__general_translations_unique',
           ]),
           array_merge($defaultColumn, [
             'name' => 'value',
             'type' => 'string',
             'title' => 'Value',
           ]),
-        ]
-      ])
-    ]
-  ]
+        ],
+      ]),
+    ],
+  ],
 ];

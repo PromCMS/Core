@@ -18,14 +18,27 @@ use Symfony\Component\Filesystem\Path;
 abstract class ModelTemplate extends AbstractTemplate
 {
   protected string $namespace;
-  public static function from(string $root, Entity $entity, ModelTemplateMode $mode)
-  {
+  public static function from(
+    string $root,
+    Entity $entity,
+    ModelTemplateMode $mode
+  ) {
     return new static($root, $entity, $mode);
   }
 
-  public function __construct(string $root, public readonly Entity $entity, protected ModelTemplateMode $mode)
-  {
-    parent::__construct(Path::join($root, ($mode === ModelTemplateMode::LOCALIZED ? $entity->getTranslationPhpName() : $entity->phpName) . '.php'));
+  public function __construct(
+    string $root,
+    public readonly Entity $entity,
+    protected ModelTemplateMode $mode
+  ) {
+    parent::__construct(
+      Path::join(
+        $root,
+        ($mode === ModelTemplateMode::LOCALIZED
+          ? $entity->getTranslationPhpName()
+          : $entity->phpName) . '.php'
+      )
+    );
 
     $this->namespace = $entity->namespace;
   }
@@ -36,23 +49,18 @@ abstract class ModelTemplate extends AbstractTemplate
 
     return new Stmt\Namespace_(
       name: new Node\Name($this->namespace),
-      stmts: [
-        ...$this->getUseStatements($this->entity),
-        $this->getClass()
-      ],
-      attributes: $headerAsExpression ? [
-        'comments' => [
-          $headerAsExpression
+      stmts: [...$this->getUseStatements($this->entity), $this->getClass()],
+      attributes: $headerAsExpression
+        ? [
+          'comments' => [$headerAsExpression],
         ]
-      ] : []
+        : []
     );
   }
 
   public function generateAst()
   {
-    $this->ast = [
-      $this->getNamespace()
-    ];
+    $this->ast = [$this->getNamespace()];
   }
 
   function save()
@@ -65,7 +73,9 @@ abstract class ModelTemplate extends AbstractTemplate
   protected function getClass(): Stmt\Class_
   {
     return new Stmt\Class_(
-      ($this->mode === ModelTemplateMode::LOCALIZED ? $this->entity->getTranslationPhpName() : $this->entity->phpName)
+      $this->mode === ModelTemplateMode::LOCALIZED
+        ? $this->entity->getTranslationPhpName()
+        : $this->entity->phpName
     );
   }
 
@@ -73,8 +83,13 @@ abstract class ModelTemplate extends AbstractTemplate
   {
     $localizedOutput = $this->mode === ModelTemplateMode::LOCALIZED;
 
-    return array_filter($this->entity->getRelationshipColumns(), function (RelationshipColumn $column) use ($localizedOutput) {
-      if (($localizedOutput && !$column->localized) || (!$localizedOutput && $column->localized)) {
+    return array_filter($this->entity->getRelationshipColumns(), function (
+      RelationshipColumn $column
+    ) use ($localizedOutput) {
+      if (
+        ($localizedOutput && !$column->localized) ||
+        (!$localizedOutput && $column->localized)
+      ) {
         return false;
       }
 
@@ -99,7 +114,10 @@ abstract class ModelTemplate extends AbstractTemplate
       );
     endforeach;
 
-    if ($this->entity->localized && $this->mode !== ModelTemplateMode::LOCALIZED) {
+    if (
+      $this->entity->localized &&
+      $this->mode !== ModelTemplateMode::LOCALIZED
+    ) {
       $lines[] = new Stmt\Expression(
         new Node\Expr\Assign(
           var: new Node\Expr\PropertyFetch(
@@ -111,8 +129,28 @@ abstract class ModelTemplate extends AbstractTemplate
       );
     }
 
+    $columns = $this->entity->getColumns();
+    $columnsWithDefaultDateTime = array_filter(
+      $columns,
+      fn(Column|RelationshipColumn $column) => ($column->type === 'date' ||
+        $column->type === 'dateTime') &&
+        $column->defaultValue === 'NOW'
+    );
+
+    foreach ($columnsWithDefaultDateTime as $column):
+      $lines[] = new Stmt\Expression(
+        new Node\Expr\Assign(
+          var: new Node\Expr\PropertyFetch(
+            var: new Node\Expr\Variable('this'),
+            name: new Node\Identifier($column->name)
+          ),
+          expr: new Node\Expr\New_(new Node\Name('\DateTime'))
+        )
+      );
+    endforeach;
+
     return new Stmt\ClassMethod(new Node\Identifier('__construct'), [
-      'stmts' => $lines
+      'stmts' => $lines,
     ]);
   }
 
@@ -132,16 +170,14 @@ abstract class ModelTemplate extends AbstractTemplate
         $adaptations[] = new Stmt\TraitUseAdaptation\Alias(
           // We override this trait method and retyping it
           method: new Node\Identifier('getTranslations'),
-          newModifier: Modifiers::PROTECTED ,
+          newModifier: Modifiers::PROTECTED,
           newName: new Node\Identifier('getTranslationsOriginal'),
           trait: null
         );
       }
 
       $uses[] = new Stmt\TraitUse(
-        traits: [
-          new Node\Name\FullyQualified($traitClass),
-        ],
+        traits: [new Node\Name\FullyQualified($traitClass)],
         adaptations: $adaptations
       );
     }
@@ -165,26 +201,33 @@ abstract class ModelTemplate extends AbstractTemplate
 
       $properties[] = new Stmt\Property(
         type: $typeIndentifier,
-        flags: Modifiers::PROTECTED ,
+        flags: Modifiers::PROTECTED,
         props: [
           new Stmt\PropertyProperty(
-            name: new Node\VarLikeIdentifier($column->name),
+            name: new Node\VarLikeIdentifier($column->name)
             // default:... TODO
-          )
+          ),
         ],
         attrGroups: [
           new Node\AttributeGroup([
             ...$this->getDoctrineColumnAttributes($column, $entity),
             // This should be last attribute
-            $this->getPromColumnAttribute($column)
-          ])
+            $this->getPromColumnAttribute($column),
+          ]),
         ],
         attributes: [
-          'comments' => $column instanceof RelationshipColumn && $column->isOneToMany() ? [
-            new Comment\Doc('/**
-* @var ArrayCollection<int, \\' . $column->getReferencedEntity()->className . '>
-*/')
-          ] : []
+          'comments' =>
+            $column instanceof RelationshipColumn && $column->isOneToMany()
+              ? [
+                new Comment\Doc(
+                  '/**
+* @var ArrayCollection<int, \\' .
+                    $column->getReferencedEntity()->className .
+                    '>
+*/'
+                ),
+              ]
+              : [],
         ]
       );
     }
@@ -193,12 +236,12 @@ abstract class ModelTemplate extends AbstractTemplate
     if ($this->mode !== ModelTemplateMode::LOCALIZED && $entity->localized) {
       $properties[] = new Stmt\Property(
         // type: new Node\NullableType(new Node\Identifier('ArrayCollection')),
-        flags: Modifiers::PROTECTED ,
+        flags: Modifiers::PROTECTED,
         props: [
           new Stmt\PropertyProperty(
-            name: new Node\VarLikeIdentifier('translations'),
+            name: new Node\VarLikeIdentifier('translations')
             // default:... TODO
-          )
+          ),
         ],
         attrGroups: [
           new Node\AttributeGroup([
@@ -209,34 +252,36 @@ abstract class ModelTemplate extends AbstractTemplate
                   name: new Node\Identifier('targetEntity'),
                   value: new Node\Expr\ClassConstFetch(
                     name: new Node\Identifier('class'),
-                    class: new Node\Name\FullyQualified($entity->getTranslationClassName())
+                    class: new Node\Name\FullyQualified(
+                      $entity->getTranslationClassName()
+                    )
                   )
                 ),
                 new Node\Arg(
                   name: new Node\Identifier('mappedBy'),
-                  value: new Node\Scalar\String_('object'),
+                  value: new Node\Scalar\String_('object')
                 ),
                 new Node\Arg(
                   name: new Node\Identifier('cascade'),
                   value: new Node\Expr\Array_([
-                    new Node\Expr\ArrayItem(
-                      new Node\Scalar\String_('persist')
-                    ),
-                    new Node\Expr\ArrayItem(
-                      new Node\Scalar\String_('remove')
-                    ),
-                  ]),
-                )
+                    new Node\Expr\ArrayItem(new Node\Scalar\String_('persist')),
+                    new Node\Expr\ArrayItem(new Node\Scalar\String_('remove')),
+                  ])
+                ),
               ]
-            )
-          ])
+            ),
+          ]),
         ],
         attributes: [
           'comments' => [
-            new Comment\Doc('/**
-* @var ArrayCollection<int, \\' . $entity->getTranslationClassName() . '>
-*/')
-          ]
+            new Comment\Doc(
+              '/**
+* @var ArrayCollection<int, \\' .
+                $entity->getTranslationClassName() .
+                '>
+*/'
+            ),
+          ],
         ]
       );
     }
@@ -255,14 +300,20 @@ abstract class ModelTemplate extends AbstractTemplate
       ),
       new Node\Arg(
         name: new Node\Identifier('nullable'),
-        value: new Node\Expr\ConstFetch(new Node\Name(json_encode(!$column->required || $entity->isSingleton())))
+        value: new Node\Expr\ConstFetch(
+          new Node\Name(
+            json_encode(!$column->required || $entity->isSingleton())
+          )
+        )
       ),
     ];
 
     if (is_bool($column->unique)) {
       $columnAttributeArguments[] = new Node\Arg(
         name: new Node\Identifier('unique'),
-        value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->unique)))
+        value: new Node\Expr\ConstFetch(
+          new Node\Name(json_encode($column->unique))
+        )
       );
     }
 
@@ -273,12 +324,14 @@ abstract class ModelTemplate extends AbstractTemplate
         $relationshipType = 'OneToMany';
       }
 
-      if (($column instanceof FileColumn) === false && $column->isManyToOne()) {
+      if ($column instanceof FileColumn === false && $column->isManyToOne()) {
         $relationshipType = 'ManyToOne';
       }
 
       if ($column instanceof FileColumn) {
-        $relationshipType = $column->otherMetadata['multiple'] ? 'ManyToMany' : 'ManyToOne';
+        $relationshipType = $column->otherMetadata['multiple']
+          ? 'ManyToMany'
+          : 'ManyToOne';
       }
 
       // Join collumns have special attributes first
@@ -289,13 +342,15 @@ abstract class ModelTemplate extends AbstractTemplate
             name: new Node\Identifier('targetEntity'),
             value: new Node\Expr\ClassConstFetch(
               name: new Node\Identifier('class'),
-              class: new Node\Name\FullyQualified($column->getReferencedEntity()->className)
+              class: new Node\Name\FullyQualified(
+                $column->getReferencedEntity()->className
+              )
             )
-          )
+          ),
         ]
       );
 
-      if (($column instanceof FileColumn) === false) {
+      if ($column instanceof FileColumn === false) {
         if ($relationshipType === 'OneToMany') {
           $attributes[0]->args[] = new Node\Arg(
             name: new Node\Identifier('mappedBy'),
@@ -315,9 +370,12 @@ abstract class ModelTemplate extends AbstractTemplate
         $attributes[0]->args[] = new Node\Arg(
           name: new Node\Identifier('cascade'),
           value: new Node\Expr\Array_(
-            array_map(fn($cascadeMode) => new Node\Expr\ArrayItem(
-              new Node\Scalar\String_($cascadeMode)
-            ), $column->getCascadeModes())
+            array_map(
+              fn($cascadeMode) => new Node\Expr\ArrayItem(
+                new Node\Scalar\String_($cascadeMode)
+              ),
+              $column->getCascadeModes()
+            )
           )
         );
       }
@@ -352,12 +410,20 @@ abstract class ModelTemplate extends AbstractTemplate
       }
     }
 
+    // Just mark the column as identifier when the config sad so
+    if ($column->identifier) {
+      $attributes[] = new Node\Attribute(name: new Node\Name('ORM\Id'));
+    }
+
     // In many-to-one relationship there are two sides, owning and reflecting side.
     // If user defineds it, the reflecting side now have collection of its that references current item.
     // Other side must be marked as readonly othervise it will be a database collumn which should not happen
     if ($relationshipType !== 'OneToMany') {
       $attributes[] = new Node\Attribute(
-        name: new Node\Name('ORM\\' . ($column instanceof RelationshipColumn ? 'JoinColumn' : 'Column')), // TODO: manyToOne requires joinColumn?
+        name: new Node\Name(
+          'ORM\\' .
+            ($column instanceof RelationshipColumn ? 'JoinColumn' : 'Column')
+        ), // TODO: manyToOne requires joinColumn?
         args: $columnAttributeArguments
       );
     }
@@ -380,15 +446,21 @@ abstract class ModelTemplate extends AbstractTemplate
         ),
         new Node\Arg(
           name: new Node\Identifier('editable'),
-          value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->readonly)))
+          value: new Node\Expr\ConstFetch(
+            new Node\Name(json_encode($column->readonly))
+          )
         ),
         new Node\Arg(
           name: new Node\Identifier('hide'),
-          value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->hide)))
+          value: new Node\Expr\ConstFetch(
+            new Node\Name(json_encode($column->hide))
+          )
         ),
         new Node\Arg(
           name: new Node\Identifier('localized'),
-          value: new Node\Expr\ConstFetch(new Node\Name(json_encode($column->localized)))
+          value: new Node\Expr\ConstFetch(
+            new Node\Name(json_encode($column->localized))
+          )
         ),
       ]
     );
@@ -404,9 +476,7 @@ abstract class ModelTemplate extends AbstractTemplate
     $statements = [];
     foreach ($items as $name => $alias) {
       $statements[] = new Stmt\Use_(
-        uses: [
-          new Stmt\UseUse(new Node\Name($name), $alias)
-        ]
+        uses: [new Stmt\UseUse(new Node\Name($name), $alias)]
       );
     }
 
@@ -433,7 +503,10 @@ abstract class ModelTemplate extends AbstractTemplate
       );
     endforeach;
 
-    if ($this->entity->localized && $this->mode !== ModelTemplateMode::LOCALIZED) {
+    if (
+      $this->entity->localized &&
+      $this->mode !== ModelTemplateMode::LOCALIZED
+    ) {
       $initCollectionsMethodLines[] = new Stmt\Expression(
         new Node\Expr\AssignOp\Coalesce(
           var: new Node\Expr\PropertyFetch(
@@ -450,10 +523,8 @@ abstract class ModelTemplate extends AbstractTemplate
       subNodes: [
         'attrGroups' => [
           new Node\AttributeGroup([
-            new Node\Attribute(
-              new Node\Name('ORM\PostLoad')
-            )
-          ])
+            new Node\Attribute(new Node\Name('ORM\PostLoad')),
+          ]),
         ],
         'stmts' => $initCollectionsMethodLines,
       ]
@@ -470,15 +541,19 @@ abstract class ModelTemplate extends AbstractTemplate
                 var: new Node\Expr\Variable('this'),
                 name: new Node\Identifier('getTranslationsOriginal')
               )
-            )
-          ]
+            ),
+          ],
         ],
         attributes: [
           'comments' => [
-            new Comment\Doc('/**
-* @return ArrayCollection<string, \\' . $entity->getTranslationClassName() . '>
-*/')
-          ]
+            new Comment\Doc(
+              '/**
+* @return ArrayCollection<string, \\' .
+                $entity->getTranslationClassName() .
+                '>
+*/'
+            ),
+          ],
         ]
       );
 
@@ -492,7 +567,7 @@ abstract class ModelTemplate extends AbstractTemplate
             new Node\Param(
               var: $addTranslationParam,
               type: new Node\Name('\\' . $entity->getTranslationClassName())
-            )
+            ),
           ],
           'stmts' => [
             new Stmt\If_(
@@ -503,9 +578,7 @@ abstract class ModelTemplate extends AbstractTemplate
                     name: new Node\Identifier('translations')
                   ),
                   name: new Node\Identifier('contains'),
-                  args: [
-                    new Node\Arg($addTranslationParam)
-                  ]
+                  args: [new Node\Arg($addTranslationParam)]
                 )
               ),
               [
@@ -514,9 +587,7 @@ abstract class ModelTemplate extends AbstractTemplate
                     new Node\Expr\MethodCall(
                       var: new Node\Expr\Variable('translation'),
                       name: new Node\Identifier('setObject'),
-                      args: [
-                        new Node\Arg($thisVariable)
-                      ]
+                      args: [new Node\Arg($thisVariable)]
                     )
                   ),
                   new Stmt\Expression(
@@ -530,21 +601,19 @@ abstract class ModelTemplate extends AbstractTemplate
                         new Node\Arg(
                           new Node\Expr\MethodCall(
                             var: new Node\Expr\Variable('translation'),
-                            name: new Node\Identifier('getLocale'),
+                            name: new Node\Identifier('getLocale')
                           )
                         ),
-                        new Node\Arg($addTranslationParam)
+                        new Node\Arg($addTranslationParam),
                       ]
                     )
-                  )
-                ]
+                  ),
+                ],
               ]
             ),
-            new Stmt\Return_(
-              $thisVariable
-            )
-          ]
-        ],
+            new Stmt\Return_($thisVariable),
+          ],
+        ]
       );
     }
 
@@ -576,11 +645,7 @@ abstract class ModelTemplate extends AbstractTemplate
         name: new Node\Identifier('get' . ucfirst($column->name)),
         subNodes: [
           'returnType' => $typeIndentifier,
-          'stmts' => [
-            new Stmt\Return_(
-              $thisPropertyFetch
-            )
-          ]
+          'stmts' => [new Stmt\Return_($thisPropertyFetch)],
         ]
       );
 
@@ -591,10 +656,7 @@ abstract class ModelTemplate extends AbstractTemplate
         name: new Node\Identifier('set' . ucfirst($column->name)),
         subNodes: [
           'params' => [
-            new Node\Param(
-              var: $setterParamVariable,
-              type: $typeIndentifier
-            )
+            new Node\Param(var: $setterParamVariable, type: $typeIndentifier),
           ],
           'stmts' => [
             new Stmt\Expression(
@@ -603,9 +665,7 @@ abstract class ModelTemplate extends AbstractTemplate
                 expr: $setterParamVariable
               )
             ),
-            new Stmt\Return_(
-              new Node\Expr\Variable('this')
-            )
+            new Stmt\Return_(new Node\Expr\Variable('this')),
           ],
           'returnType' => new Node\Name('static'),
         ]

@@ -13,7 +13,6 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class PromModelColumn
 {
-
   /**
    * @var string
    * @readonly
@@ -49,7 +48,7 @@ final class PromModelColumn
     string $type,
     ?bool $editable = true,
     ?bool $hide = false,
-    ?bool $localized = false,
+    ?bool $localized = false
   ) {
     $this->title = $title;
     $this->type = $type;

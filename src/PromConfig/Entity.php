@@ -21,7 +21,6 @@ class Entity
 
   private function initializeTraits()
   {
-
     if ($this->timestamp) {
       $this->traits[] = Timestamps::class;
     }
@@ -38,7 +37,10 @@ class Entity
       $this->traits[] = Draftable::class;
     }
 
-    $localizedFields = array_filter($this->columns, fn($column) => $column['localized']);
+    $localizedFields = array_filter(
+      $this->columns,
+      fn($column) => $column['localized']
+    );
     if (count($localizedFields)) {
       $this->traits[] = Localized::class;
     }
@@ -47,7 +49,14 @@ class Entity
       $this->traits[] = Sharable::class;
     }
 
-    $this->traits[] = NumericId::class;
+    $customIdentifierFields = array_filter(
+      $this->columns,
+      fn($column) => $column['identifier'] ?? false
+    );
+    // If there is a custom identifier then we omit the default
+    if (!count($customIdentifierFields)) {
+      $this->traits[] = NumericId::class;
+    }
   }
 
   public function __construct(
@@ -69,7 +78,8 @@ class Entity
     ...$rest
   ) {
     $this->admin = array_merge_recursive(['isHidden' => false], $this->admin);
-    $this->phpName = $this->phpName ?? str_replace('_', '', ucwords($this->tableName, '_'));
+    $this->phpName =
+      $this->phpName ?? str_replace('_', '', ucwords($this->tableName, '_'));
     $this->className = $this->namespace . '\\' . $this->phpName;
     $this->initializeTraits();
     $this->localized = in_array(Localized::class, $this->traits);
@@ -80,21 +90,53 @@ class Entity
    */
   function getPublicColumns(): array
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => !$column->hide);
+    return array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => !$column->hide
+    );
   }
-
 
   /**
    * @return array<int, Column|RelationshipColumn>
    */
   function getPrivateColumns(): array
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->hide);
+    return array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => $column->hide
+    );
+  }
+
+  function getIdentifierColumn(): Column
+  {
+    $identifierColumns = array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => $column->identifier
+    );
+
+    // This is default column with NumericId trait
+    if (!count($identifierColumns)) {
+      return new Column(
+        name: 'id',
+        type: 'number',
+        title: 'ID',
+        identifier: true,
+        promConfig: $this->promConfig
+      );
+    }
+
+    /** @var Column */
+    $identifierColumn = $identifierColumns[0];
+
+    return $identifierColumn;
   }
 
   function isSingleton()
   {
-    return in_array($this->tableName, $this->promConfig->getSingletonTableNames());
+    return in_array(
+      $this->tableName,
+      $this->promConfig->getSingletonTableNames()
+    );
   }
 
   private ?array $cachedColumnsAsInstances = null;
@@ -113,7 +155,7 @@ class Entity
       $columnInstance = match ($column['type']) {
         'relationship' => new Entity\RelationshipColumn(...$column),
         'file' => new Entity\FileColumn(...$column),
-        default => new Entity\Column(...$column)
+        default => new Entity\Column(...$column),
       };
 
       $this->cachedColumnsAsInstances[] = $columnInstance;
@@ -127,7 +169,11 @@ class Entity
    */
   function getRelationshipColumns()
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column instanceof RelationshipColumn);
+    return array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => $column instanceof
+        RelationshipColumn
+    );
   }
 
   function getColumnByName(string $name)
@@ -146,12 +192,18 @@ class Entity
    */
   function getEnumColumns()
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->isEnumColumn());
+    return array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => $column->isEnumColumn()
+    );
   }
 
   function getLocalizedColumns()
   {
-    return array_filter($this->getColumns(), fn(Column|RelationshipColumn $column) => $column->localized);
+    return array_filter(
+      $this->getColumns(),
+      fn(Column|RelationshipColumn $column) => $column->localized
+    );
   }
 
   function getTranslationTableName(): ?string

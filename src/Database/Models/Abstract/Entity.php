@@ -47,7 +47,7 @@ abstract class Entity
       'isDraftable' => in_array(Draftable::class, $usedTraits),
       'isSharable' => in_array(Sharable::class, $usedTraits),
       'isLocalized' => in_array(Localized::class, $usedTraits),
-      'columns' => $promConfig->getTableColumns($tableName)
+      'columns' => $promConfig->getTableColumns($tableName),
     ];
 
     return $this->cachedMetadata = $metadata;
@@ -99,9 +99,9 @@ abstract class Entity
 
         if ($value instanceof Entity) {
           $value = $value->toArray();
-        } else if ($value instanceof \DateTimeInterface) {
+        } elseif ($value instanceof \DateTimeInterface) {
           $value = $value->format(\DateTime::ISO8601);
-        } else if ($value instanceof Collection) {
+        } elseif ($value instanceof Collection) {
           $result = [];
 
           foreach ($value as $row) {
@@ -118,10 +118,9 @@ abstract class Entity
     return $res;
   }
 
-
   /**
    * Compares incomming values with existing fields and returns filtered columns with PromModelColumn instances
-   * 
+   *
    *@return array<PromModelColumn>
    */
   protected function getColumnsForValues(array $values): array
@@ -144,7 +143,7 @@ abstract class Entity
       /** @var PromModelColumn */
       $info = $attr->newInstance();
 
-      if ($info->title === "Updated at" || $info->title === "Created at") {
+      if ($info->title === 'Updated at' || $info->title === 'Created at') {
         continue;
       }
 
@@ -161,7 +160,10 @@ abstract class Entity
     foreach ($columns as $propertyName => $proper) {
       $incommingValue = $values[$propertyName];
 
-      if (isset($this->{$propertyName}) && $this->{$propertyName} instanceof Collection) {
+      if (
+        isset($this->{$propertyName}) &&
+        $this->{$propertyName} instanceof Collection
+      ) {
         if ($proper->type === 'file') {
           $this->{$propertyName}->clear();
         }
@@ -175,13 +177,20 @@ abstract class Entity
         continue;
       }
 
-      if ($incommingValue && $proper->type === "enum" && is_string($incommingValue)) {
+      if (
+        $incommingValue &&
+        $proper->type === 'enum' &&
+        is_string($incommingValue)
+      ) {
         $proper = new \ReflectionProperty(static::class, $propertyName);
-        $types = $proper->getType() instanceof \ReflectionUnionType ? $proper->getTypes() : [$proper->getType()];
+        $types =
+          $proper->getType() instanceof \ReflectionUnionType
+            ? $proper->getTypes()
+            : [$proper->getType()];
 
         foreach ($types as $type) {
           if (enum_exists($type->getName())) {
-            $incommingValue = ($type->getName())::from($incommingValue);
+            $incommingValue = $type->getName()::from($incommingValue);
           }
         }
       }

@@ -19,24 +19,37 @@ class Column
     public readonly bool $readonly = false,
     public readonly bool $hide = false,
     public readonly ?string $defaultValue = null,
+    public readonly bool $identifier = false,
     public array $admin = [],
     ...$other
   ) {
-    $this->admin = array_merge([
-      'isHidden' => false,
-    ], $this->admin);
+    $this->admin = array_merge(
+      [
+        'isHidden' => false,
+      ],
+      $this->admin
+    );
 
-    $this->admin['editor'] = array_merge([
-      'width' => 12,
-      'placement' => 'aside'
-    ], $this->admin['editor']);
+    $this->admin['editor'] = array_merge(
+      [
+        'width' => 12,
+        'placement' => 'aside',
+      ],
+      $this->admin['editor']
+    );
 
     $this->otherMetadata = $other;
   }
 
   function getDatabaseColumName()
   {
-    $name = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', strtolower(str_replace(' \t\r\n\f\v', '_', $this->name))));
+    $name = strtolower(
+      preg_replace(
+        '/(?<!^)[A-Z]/',
+        '_$0',
+        strtolower(str_replace(' \t\r\n\f\v', '_', $this->name))
+      )
+    );
 
     return $name;
   }
@@ -44,6 +57,11 @@ class Column
   function isEnumColumn()
   {
     return $this->type === 'enum';
+  }
+
+  function isPrimaryKey()
+  {
+    return $this->primaryKey;
   }
 
   function getDoctrineType()
@@ -58,7 +76,7 @@ class Column
       'number' => 'integer',
       'file' => 'integer',
       'relationship' => 'integer',
-      default => 'string'
+      default => 'string',
     };
   }
   function getPhpType()
@@ -73,7 +91,7 @@ class Column
       'json' => 'array',
       'date' => '\DateTimeInterface',
       'dateTime' => '\DateTimeInterface',
-      default => 'string'
+      default => 'string',
     };
   }
 }
