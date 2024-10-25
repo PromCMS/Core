@@ -415,6 +415,12 @@ abstract class ModelTemplate extends AbstractTemplate
       $attributes[] = new Node\Attribute(name: new Node\Name('ORM\Id'));
     }
 
+    if (($column->otherMetadata['autoIncrement'] ?? false) === true) {
+      $attributes[] = new Node\Attribute(
+        name: new Node\Name('ORM\GeneratedValue')
+      );
+    }
+
     // In many-to-one relationship there are two sides, owning and reflecting side.
     // If user defineds it, the reflecting side now have collection of its that references current item.
     // Other side must be marked as readonly othervise it will be a database collumn which should not happen
