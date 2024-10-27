@@ -8,12 +8,18 @@ class RelationshipColumn extends Column
 {
   function getDatabaseColumName()
   {
+    if ($this->database['columnName'] ?? false) {
+      return parent::getDatabaseColumName();
+    }
+
     return parent::getDatabaseColumName() . '_id';
   }
 
   function getReferencedEntity(): Entity
   {
-    return $this->promConfig->getEntity($this->otherMetadata['targetModelTableName']);
+    return $this->promConfig->getEntity(
+      $this->otherMetadata['targetModelTableName']
+    );
   }
 
   function getReferenceFieldName(): string
@@ -23,7 +29,8 @@ class RelationshipColumn extends Column
 
   function isOneToMany()
   {
-    return isset($this->otherMetadata['multiple']) && $this->otherMetadata['multiple'];
+    return isset($this->otherMetadata['multiple']) &&
+      $this->otherMetadata['multiple'];
   }
 
   function isManyToOne(): bool
@@ -54,7 +61,7 @@ class RelationshipColumn extends Column
       return '\Doctrine\Common\Collections\Collection';
     }
 
-    return "\\" . $this->getReferencedEntity()->className;
+    return '\\' . $this->getReferencedEntity()->className;
   }
 
   function hasCascadeModes(): bool

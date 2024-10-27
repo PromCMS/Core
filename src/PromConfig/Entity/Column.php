@@ -21,6 +21,7 @@ class Column
     public readonly ?string $defaultValue = null,
     public readonly bool $identifier = false,
     public array $admin = [],
+    public array $database = [],
     ...$other
   ) {
     $this->admin = array_merge(
@@ -43,13 +44,11 @@ class Column
 
   function getDatabaseColumName()
   {
-    $name = strtolower(
-      preg_replace(
-        '/(?<!^)[A-Z]/',
-        '_$0',
-        strtolower(str_replace(' \t\r\n\f\v', '_', $this->name))
-      )
-    );
+    if ($this->database['columnName'] ?? false) {
+      return $this->database['columnName'];
+    }
+
+    $name = strtolower(preg_replace('~(?=[A-Z])(?!\A)~', '_', $this->name));
 
     return $name;
   }
