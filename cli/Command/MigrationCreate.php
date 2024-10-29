@@ -11,34 +11,35 @@ use PromCMS\Cli\Templates\Models\ModelTemplateMode;
 use PromCMS\Core\Internal\Constants;
 use PromCMS\Core\PromConfig;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Path;
 
-#[AsCommand(
-  name: 'models:create',
-  description: 'Creates models defined in prom config.',
-  hidden: false,
-)]
-class ModelsCreate extends AbstractCommand
+#[
+  AsCommand(
+    name: 'migration:create',
+    description: 'Creates models defined in prom config.',
+    hidden: false
+  )
+]
+class MigrationCreate extends AbstractCommand
 {
   /**
    * {@inheritDoc}
    *
    * @return void
    */
-  protected function configure()
+  protected function configure(): void
   {
     parent::configure();
   }
 
-  private function getConfigPath(string $root)
+  private function getConfigPath(string $root): string
   {
     return Path::join($root, '.prom-cms', 'parsed', 'config.php');
   }
 
-  private function hasConfigDefined(string $root)
+  private function hasConfigDefined(string $root): bool
   {
     return file_exists($this->getConfigPath($root));
   }
@@ -48,8 +49,10 @@ class ModelsCreate extends AbstractCommand
    *
    * @return void
    */
-  protected function initialize(InputInterface $input, OutputInterface $output)
-  {
+  protected function initialize(
+    InputInterface $input,
+    OutputInterface $output
+  ): void {
     $cwd = $input->getOption('cwd');
 
     if (!$this->hasConfigDefined($cwd)) {
@@ -57,17 +60,14 @@ class ModelsCreate extends AbstractCommand
     }
   }
 
-  private function snakecase(string $input)
-  {
-    return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $input));
-  }
-
   /**
    * {@inheritDoc}
    *
    */
-  protected function execute(InputInterface $input, OutputInterface $output): int
-  {
+  protected function execute(
+    InputInterface $input,
+    OutputInterface $output
+  ): int {
     $cwd = $input->getOption('cwd');
     chdir($cwd);
 
@@ -92,35 +92,29 @@ class ModelsCreate extends AbstractCommand
 
         BaseModelTemplate::from($modelsRoot, $entity, $mode)->save();
 
-        ModelTemplate::from(
-          $modelsRoot,
-          $entity,
-          $mode
-        )->save();
+        ModelTemplate::from($modelsRoot, $entity, $mode)->save();
       }
 
       $enumColumns = $entity->getEnumColumns();
       foreach ($enumColumns as $column) {
-        ['name' => $enumName, 'values' => $enumValues] = $column->otherMetadata['enum'];
+        ['name' => $enumName, 'values' => $enumValues] = $column->otherMetadata[
+          'enum'
+        ];
 
         EnumTemplate::from($modelsRoot)
           ->setup(
             name: $enumName,
             namespace: $entity->namespace . '\\Base',
-            items: array_map(fn($value, $key) => new EnumTemplateItem($key, $value), $enumValues, array_keys($enumValues))
+            items: array_map(
+              fn($value, $key) => new EnumTemplateItem($key, $value),
+              $enumValues,
+              array_keys($enumValues)
+            )
           )
           ->save();
       }
     }
 
-    $ormSchemaToolUpdateInput = new ArrayInput([
-      'command' => 'orm:schema-tool:update',
-      '--force' => true,
-      '--complete' => true,
-    ]);
-
-    $ormSchemaToolUpdate = $this->getApplication()->doRun($ormSchemaToolUpdateInput, $output);
-
-    return $ormSchemaToolUpdate && $this::SUCCESS;
+    return $this::SUCCESS;
   }
 }
