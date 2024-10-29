@@ -16,6 +16,46 @@ use PromCMS\Core\PromConfig;
 abstract class Entity
 {
   private array $cachedMetadata;
+  private string|null $cachedIdentifierGetter = null;
+
+  public function __getIdentifierPropertyName(): string
+  {
+    if (!$this->cachedIdentifierGetter) {
+      $ref = new \ReflectionClass(static::class);
+      $properties = $ref->getProperties();
+
+      /**
+       * @var \ReflectionProperty  $proper
+       */
+      foreach ($properties as $proper) {
+        /**
+         * @var \ReflectionAttribute  $$attribute
+         */
+        foreach ($proper->getAttributes() as $attribute) {
+          if ($attribute->getName() === ORM\Id::class) {
+            $this->cachedIdentifierGetter = $proper->getName();
+            break;
+          }
+        }
+
+        if ($this->cachedIdentifierGetter) {
+          break;
+        }
+      }
+    }
+
+    // If numeric id scalar is used
+    if (!$this->cachedIdentifierGetter) {
+      $this->cachedIdentifierGetter = 'getId';
+    }
+
+    return $this->cachedIdentifierGetter;
+  }
+
+  public function __getIdentifierPropertyGetterName()
+  {
+    return 'get' . ucfirst($this->__getIdentifierPropertyName());
+  }
 
   /**
    * returns metadata for current model, provide prom config to also include some data from prom config
@@ -105,7 +145,12 @@ abstract class Entity
           $result = [];
 
           foreach ($value as $row) {
-            $result[] = ['id' => $row->getId()];
+            $id = $row->__getIdentifierPropertyName();
+            $idGetterName = $row->__getIdentifierPropertyGetterName();
+
+            $result[] = [
+              $id => $row->$idGetterName(),
+            ];
           }
 
           $value = $result;
