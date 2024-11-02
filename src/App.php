@@ -41,7 +41,7 @@ class App
   {
     if (!$this->root) {
       throw new AppException(
-        'Please define your project root before running the app',
+        'Please define your project root before running the app'
       );
     }
 
@@ -72,7 +72,7 @@ class App
         $bootstrapClosure($this->app);
       }
 
-      // Define app middlewares after app bootstrap has been defined, 
+      // Define app middlewares after app bootstrap has been defined,
       // app middlewares should be run before them
       (new Bootstrap\Middlewares())->run($this->app, $container);
       // Define routes after everything is bootstraped
@@ -89,12 +89,22 @@ class App
       $this->app->addBodyParsingMiddleware();
 
       if (!$headless) {
-        // SLIM PHP error middleware - we need to add this after  
-        $this->app->addErrorMiddleware(
+        // SLIM PHP error middleware - we need to add this after
+        $errorMiddleware = $this->app->addErrorMiddleware(
           $config->env->debug || $isDevelopment,
           true,
-          true,
+          true
         );
+
+        $appErrorHandlingBootstrapFilepath = Path::join(
+          $appSrc,
+          Constants::BOOTSTRAP_ERROR_HANLDING_FILE
+        );
+        if (file_exists($appErrorHandlingBootstrapFilepath)) {
+          $appErrorHandlingBootstrapFilepath = require $appErrorHandlingBootstrapFilepath;
+
+          $appErrorHandlingBootstrapFilepath($this->app, $errorMiddleware);
+        }
 
         // Add session middleware
         $this->app->add(
@@ -104,7 +114,7 @@ class App
             'lifetime' => $config->security->session->lifetime,
             'httponly' => !$isDevelopment,
             'secure' => !$isDevelopment,
-          ]),
+          ])
         );
       }
     }
@@ -119,7 +129,7 @@ class App
   }
 
   /**
-   * Unset the slim app 
+   * Unset the slim app
    */
   public function destroySlimApp()
   {
