@@ -67,6 +67,7 @@ class MigrationApply extends AbstractCommand
       'command' => 'orm:schema-tool:update',
       '--force' => true,
       '--complete' => true,
+      '--dump-sql' => true,
     ]);
 
     $ormSchemaToolUpdate = $this->getApplication()->doRun(
