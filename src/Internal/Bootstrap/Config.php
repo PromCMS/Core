@@ -36,19 +36,21 @@ class Config implements AppModuleInterface
     $dotenvFilepath = Path::join($appRoot, '.env');
 
     if (file_exists($dotenvFilepath)) {
-      $dotenv->load($dotenvFilepath);
+      $dotenv->overload($dotenvFilepath);
     }
 
     $APP_ENV = $_ENV['APP_ENV'] ?? 'development';
     $RELATIVE_LOGGING_FILEPATH = $_ENV['SYSTEM_LOGGING_PATHNAME'] ?? null;
     $IS_DEV_ENV = $APP_ENV == 'development' || $APP_ENV == 'develop';
-    $DEBUG_ENABLED = $IS_DEV_ENV ? true : ($this->getEnvSafely('APP_DEBUG') ?? "false" === "true");
+    $DEBUG_ENABLED = $IS_DEV_ENV
+      ? true
+      : $this->getEnvSafely('APP_DEBUG') ?? 'false' === 'true';
 
     $config = new AppConfig([
       'security' => new ConfigPart__Security([
         'session' => new ConfigPart__Security__Session([
           'lifetime' => $this->getEnvSafely('SECURITY_SESSION_LIFETIME'),
-          'name' => $this->getEnvSafely('SECURITY_SESSION_NAME')
+          'name' => $this->getEnvSafely('SECURITY_SESSION_NAME'),
         ]),
         'token' => new ConfigPart__Security__Token([
           'lifetime' => $this->getEnvSafely('SECURITY_TOKEN_LIFETIME'),
@@ -61,13 +63,18 @@ class Config implements AppModuleInterface
       ]),
       'system' => new ConfigPart__System([
         'logging' => new ConfigPart__System__Logging([
-          'logFilepath' => !empty($RELATIVE_LOGGING_FILEPATH) ? Path::join($appRoot, $RELATIVE_LOGGING_FILEPATH) : null
-        ])
-      ])
+          'logFilepath' => !empty($RELATIVE_LOGGING_FILEPATH)
+            ? Path::join($appRoot, $RELATIVE_LOGGING_FILEPATH)
+            : null,
+        ]),
+      ]),
     ]);
     $coreIsInVendor = in_array('vendor', explode(DIRECTORY_SEPARATOR, __DIR__));
 
     $container->set(AppConfig::class, $config);
-    $container->set(PromConfig::class, PromConfig::fromProjectRoot($coreIsInVendor ? $appRoot : $coreRoot));
+    $container->set(
+      PromConfig::class,
+      PromConfig::fromProjectRoot($coreIsInVendor ? $appRoot : $coreRoot)
+    );
   }
 }
