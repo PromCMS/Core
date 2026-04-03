@@ -31,7 +31,6 @@
     "monolog/monolog": "^3.5",
     "league/flysystem": "^3.15",
     "firebase/php-jwt": "^6.8",
-    "paragonie/sodium_compat": "^1.17",
     "phpmailer/phpmailer": "^6.6",
     "slim/twig-view": "^3.3",
     "twig/html-extra": "^3.7",
