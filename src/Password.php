@@ -12,13 +12,9 @@ class Password
   /**
    * Validates string input by password schema
    */
-  public static function validateNew(string $input)
+  public static function validateNew(mixed $input): bool
   {
-    if (is_string(!$input) || strlen($input) < 6) {
-      return false;
-    }
-
-    return $input;
+    return is_string($input) && strlen(static::removeSpaces($input)) >= 6;
   }
 
   public static function hash(string $password)

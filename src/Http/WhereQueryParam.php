@@ -40,7 +40,11 @@ class WhereQueryParam
       // string in query could have dot and in that case we need to make sure that string includes dot back
       $value = implode($PIECE_SEPARATOR, array_slice($pieces, 2));
 
-      if (!empty($fieldName) && !empty($criteria) && in_array($criteria, $allowedCriteria)) {
+      if (
+        preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $fieldName) &&
+        !empty($criteria) &&
+        in_array($criteria, $allowedCriteria)
+      ) {
         if ($criteria === 'NOT IN' || $criteria === 'IN') {
           $this->parsed[$fieldName] = [
             'value' => explode(',', $value),
@@ -71,7 +75,10 @@ class WhereQueryParam
   public function add(string $name, string $criteria, mixed $value)
   {
     $allowedCriteria = array_keys(static::$searchParamsCriteriaToExpressionMethod);
-    if (!in_array($criteria, $allowedCriteria)) {
+    if (
+      !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name) ||
+      !in_array($criteria, $allowedCriteria)
+    ) {
       return $this;
     }
 

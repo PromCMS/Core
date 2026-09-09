@@ -25,6 +25,14 @@ final class EntryTypesRoutesTest extends AppTestCase
     $this->assertEquals(401, $response->getStatusCode());
   }
 
+  public function testLocalizedUnauthorizedRequestFailsWith401()
+  {
+    $request = $this->createRequest('GET', '/en/api/entry-types');
+    $response = static::$app->getSlimApp()->handle($request);
+
+    $this->assertEquals(401, $response->getStatusCode());
+  }
+
   public function testAuthorizedRequestDoesNotFail()
   {
     $request = $this->createRequest('GET', '/api/entry-types');

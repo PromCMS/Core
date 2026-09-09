@@ -4,6 +4,8 @@ namespace PromCMS\Core\Internal\Bootstrap;
 
 use DI\Container;
 use PromCMS\Core\Http\Routing\AsRouteGroup;
+use PromCMS\Core\Http\Routing\AsRedirectRoute;
+use PromCMS\Core\Http\Routing\AsRoute;
 use PromCMS\Core\Http\Routing\RouteImplementation;
 use PromCMS\Core\Http\Routing\WithMiddleware;
 use PromCMS\Core\Internal\Constants;
@@ -71,15 +73,14 @@ class Routes implements AppModuleInterface
       ]);
     }
 
-    // Every module should have been bootstrapped by now so we can continue to including custom routes
-    $app->group($routePrefix, function (Router $router) use ($controllerClassNames) {
+    $attachRoutes = function (Router $router, bool $localized = false) use ($controllerClassNames) {
       foreach ($controllerClassNames as $className) {
         $ref = new \ReflectionClass($className);
         $routesPrefix = "";
 
         $classRouteGroups = $ref->getAttributes(AsRouteGroup::class);
         /** @var \ReflectionAttribute $group */
-        if (isset ($classRouteGroups[0])) {
+        if (isset($classRouteGroups[0])) {
           $group = $classRouteGroups[0];
 
           /** @var AsRouteGroup */
@@ -104,6 +105,16 @@ class Routes implements AppModuleInterface
             $routeMetadata = $routeAttribute->newInstance();
             $routeMetadata->setRoutePrefix($routesPrefix);
 
+            if (
+              $localized &&
+              (
+                ($routeMetadata instanceof AsRoute && str_starts_with($routeMetadata->getRoutePathname(), '/public')) ||
+                ($routeMetadata instanceof AsRedirectRoute && str_starts_with($routeMetadata->getRoutePathname(), '/public'))
+              )
+            ) {
+              continue;
+            }
+
             $route = $routeMetadata->attach($router, $methodAddress);
 
             /** @var string $middlewareAttribute */
@@ -113,7 +124,9 @@ class Routes implements AppModuleInterface
           }
         }
       }
-    })->add(function ($request, $handler) use ($config) {
+    };
+
+    $app->group($routePrefix, fn(Router $router) => $attachRoutes($router))->add(function ($request, $handler) use ($config) {
       $response = $handler->handle($request);
 
       return $response
@@ -131,27 +144,9 @@ class Routes implements AppModuleInterface
         );
     });
 
-    $hasPrefix = !empty($routePrefix);
-    $intlRoutePrefix =
-      $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}';
-
-    // Attach localized routes on already created routes
-    foreach ($app->getRouteCollector()->getRoutes() as $route) {
-      $pattern = $route->getPattern();
-      // Ignore public files, they are not localized of course
-      if (str_starts_with($pattern, "/public")) {
-        continue;
-      }
-
-      // If has prefix then we remove it
-      if ($hasPrefix) {
-        $pos = strpos($pattern, $routePrefix);
-        if ($pos !== false) {
-          $pattern = substr_replace($pattern, "", $pos, strlen($routePrefix));
-        }
-      }
-
-      $app->map($route->getMethods(), $intlRoutePrefix . $pattern, $route->getCallable());
-    }
+    $app->group(
+      $routePrefix . '/{language:' . implode('|', $supportedLanguages) . '}',
+      fn(Router $router) => $attachRoutes($router, true),
+    );
   }
 }

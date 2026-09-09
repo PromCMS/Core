@@ -7,7 +7,6 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PromCMS\Core\Database\EntityManager;
 use PromCMS\Core\Database\Paginate;
-use PromCMS\Core\Database\Models\User;
 use PromCMS\Core\Database\Query\TranslationWalker;
 use PromCMS\Core\Http\WhereQueryParam;
 use PromCMS\Core\Internal\Http\Middleware\EntityPermissionMiddleware;
@@ -38,17 +37,9 @@ class EntityController
   ) {
   }
 
-  // TODO: Sharable models should have join tables for user ids
-  private function filterQueryOnlyToOwners(
-    string $modelTableMap,
-    User $currentUser,
-    &$query
-  ) {
-    $query->filterBy('createdBy', $currentUser->getId());
-
-    if ($this->isSharableModel($modelTableMap)) {
-      $query->_or()->filterBy('coeditors.user_id', $currentUser->getId());
-    }
+  private function allowsOnlyOwn(ServerRequestInterface $request, Entity $entity): bool
+  {
+    return $entity->ownable && $request->getAttribute('permission-only-own', false) === true;
   }
 
   /**
@@ -193,6 +184,11 @@ class EntityController
           ? intval($requestedItemId)
           : $requestedItemId
       );
+    if ($this->allowsOnlyOwn($request, $entity)) {
+      $query
+        ->andWhere('IDENTITY(i.createdBy) = :currentUserId')
+        ->setParameter('currentUserId', $request->getAttribute('user')->getId());
+    }
 
     $localize =
       $entity->localized && !$localizationService->isDefaultLanguage($language);
@@ -200,10 +196,6 @@ class EntityController
       ? $this->getLocalizedQuery($query, $request)
       : $query->getQuery();
     $item = $compiledQuery->getOneOrNullResult();
-
-    // if ($request->getAttribute('permission-only-own') === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
 
     try {
       if (!$item) {
@@ -245,9 +237,11 @@ class EntityController
       (new WhereQueryParam($queryParams['where']))->toQuery($query, 'i');
     }
 
-    // if ($request->getAttribute('permission-only-own', false) === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
+    if ($this->allowsOnlyOwn($request, $entity)) {
+      $query
+        ->andWhere('IDENTITY(i.createdBy) = :currentUserId')
+        ->setParameter('currentUserId', $request->getAttribute('user')->getId());
+    }
 
     // TODO - make it more dynamic and remove the param from admin list othervise it will try to add order to createdBy
     if (isset($queryParams['orderBy_created_at'])) {
@@ -296,19 +290,20 @@ class EntityController
 
     $fromId = intval($fromId);
     $toId = intval($toId);
+    $currentUser = $request->getAttribute('user');
+    $onlyOwn = $this->allowsOnlyOwn($request, $entity);
+    $criteria = [
+      'id' => [$fromId, $toId],
+    ];
 
-    // if ($request->getAttribute('permission-only-own', false) === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
+    if ($onlyOwn) {
+      $criteria['createdBy'] = $currentUser;
+    }
 
-    $items = new ArrayCollection(
-      $query->findBy([
-        'id' => [$fromId, $toId],
-      ])
-    );
+    $items = new ArrayCollection($query->findBy($criteria));
 
     if ($items->count() !== 2) {
-      return $response->withStatus(400);
+      return $response->withStatus($onlyOwn ? 404 : 400);
     }
 
     $this->em->getConnection()->beginTransaction();
@@ -321,7 +316,6 @@ class EntityController
       }
     }
 
-    $currentUser = $request->getAttribute('user');
     try {
       if ($entity->ownable && $currentUser) {
         $fromEntry->setUpdatedBy($currentUser);
@@ -410,17 +404,18 @@ class EntityController
     $parsedBody = $request->getParsedBody();
     $data = $parsedBody['data'];
     $identifierColumn = $entity->getIdentifierColumn();
-    $item = $query->find(
-      $identifierColumn->type === 'number'
-        ? intval($requestedItemId)
-        : $requestedItemId
-    );
-
-    // if ($request->getAttribute('permission-only-own', false) === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
-
     $currentUser = $request->getAttribute('user');
+    $criteria = [
+      $identifierColumn->name => $identifierColumn->type === 'number'
+        ? intval($requestedItemId)
+        : $requestedItemId,
+    ];
+
+    if ($this->allowsOnlyOwn($request, $entity)) {
+      $criteria['createdBy'] = $currentUser;
+    }
+
+    $item = $query->findOneBy($criteria);
 
     // We want to update references when user desires to
     foreach ($entity->getRelationshipColumns() as $column) {
@@ -549,8 +544,7 @@ class EntityController
     $entity = $request->getAttribute(Entity::class);
     $identifierColumn = $entity->getIdentifierColumn();
     $identifierColumnName = $identifierColumn->name;
-
-    $entity = $this->em
+    $query = $this->em
       ->createQueryBuilder()
       ->from($entity->className, 'i')
       ->select('i')
@@ -561,19 +555,21 @@ class EntityController
         $identifierColumn->type === 'number'
           ? intval($requestedItemId)
           : $requestedItemId
-      )
-      ->getQuery()
-      ->getOneOrNullResult();
+      );
 
-    if (!$entity) {
+    if ($this->allowsOnlyOwn($request, $entity)) {
+      $query
+        ->andWhere('IDENTITY(i.createdBy) = :currentUserId')
+        ->setParameter('currentUserId', $request->getAttribute('user')->getId());
+    }
+
+    $item = $query->getQuery()->getOneOrNullResult();
+
+    if (!$item) {
       return $response->withStatus(404);
     }
 
-    // if ($request->getAttribute('permission-only-own', false) === true) {
-    //   $this->filterQueryOnlyToOwners($modelTableMap, $this->currentUser, $query);
-    // }
-
-    $em->remove($entity);
+    $em->remove($item);
     $em->flush();
 
     return ResponseHelper::withServerResponse($response, [

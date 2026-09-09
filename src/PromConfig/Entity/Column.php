@@ -36,7 +36,7 @@ class Column
         'width' => 12,
         'placement' => 'aside',
       ],
-      $this->admin['editor']
+      $this->admin['editor'] ?? []
     );
 
     $this->otherMetadata = $other;

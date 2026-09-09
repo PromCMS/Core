@@ -62,8 +62,8 @@ class EntityPermissionMiddleware implements MiddlewareInterface
       throw new \Exception('Cannot run permission middleware before entry type middleware');
     }
 
-    $role = $user->getRole();
-    $role = $this->promConfig->getProject()->security->roles->getRoleBySlug($role);
+    $roleSlug = $user->getRole();
+    $role = $this->promConfig->getProject()->security->roles->getRoleBySlug($roleSlug);
     $permissionByRequestMethod = match ($request->getMethod()) {
       'POST' => RolePermissionOptionKey::CREATE->value,
       'GET' => RolePermissionOptionKey::READ->value,
@@ -74,12 +74,22 @@ class EntityPermissionMiddleware implements MiddlewareInterface
         '[permissionMiddleware]: Unexpected request method',
       )
     };
-    $rolePermissionOnTable = $role->getPermissionSetForModel($entity->tableName);
-    $rolePermissionOnTableValue = $rolePermissionOnTable[$permissionByRequestMethod];
 
-    if (!$role || $rolePermissionOnTableValue === RolePermissionOptionValue::DENY->value) {
+    if ($role) {
+      $rolePermissionOnTable = $role->getPermissionSetForModel($entity->tableName);
+      $rolePermissionOnTableValue = $rolePermissionOnTable[$permissionByRequestMethod];
+    }
+
+    if (
+      !$role ||
+      $rolePermissionOnTableValue === RolePermissionOptionValue::DENY->value ||
+      (
+        $rolePermissionOnTableValue === RolePermissionOptionValue::ALLOW_OWN->value &&
+        !$entity->ownable
+      )
+    ) {
       if (!$role) {
-        $this->logger->error("User logged in, but role under slug $role could not be found. Please check your config or change user role", [
+        $this->logger->error("User logged in, but role under slug $roleSlug could not be found. Please check your config or change user role", [
           'entity' => $entity->className,
           'route' => $route->getPattern(),
           'user' => [

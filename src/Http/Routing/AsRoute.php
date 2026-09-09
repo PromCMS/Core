@@ -21,7 +21,7 @@ class AsRoute implements RouteImplementation
     $this->methods = is_array($method) ? $method : [$method];
   }
 
-  protected function getRoutePathname()
+  public function getRoutePathname(): string
   {
     return $this->routePrefix . $this->route;
   }

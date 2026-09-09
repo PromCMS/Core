@@ -87,12 +87,18 @@ class UserProfileController
         }
 
         if (
-          $userState === 'password-reset' ||
-          $userState === 'blocked' ||
-          $userState === 'invited'
+          in_array($userState, [
+            UserState::PASSWORD_RESET,
+            UserState::BLOCKED,
+            UserState::INVITED,
+          ], true)
         ) {
           $userCannotLoginBecauseOfState = true;
-          throw new \Exception("user-state-$userState");
+          throw new \Exception("user-state-{$userState->value}");
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+          session_regenerate_id(true);
         }
 
         $this->session->set('user_id', $user->getId());
@@ -280,7 +286,7 @@ class UserProfileController
     }
 
     $this->userService->updateById($user->getId(), [
-      'password' => Password::hash($newPassword),
+      'password' => $newPassword,
     ]);
 
 
@@ -298,9 +304,18 @@ class UserProfileController
     ResponseInterface $response
   ): ResponseInterface {
     $params = $request->getParsedBody();
-    $token = $params['token'];
-    $newPassword = $params['new_password'];
-    $decodedPayload = $this->jwt->validate($token);
+    $token = $params['token'] ?? null;
+    $newPassword = $params['new_password'] ?? null;
+
+    if (!is_string($token) || !is_string($newPassword)) {
+      return $response->withStatus(401);
+    }
+
+    try {
+      $decodedPayload = $this->jwt->validate($token);
+    } catch (\Exception) {
+      return $response->withStatus(401);
+    }
 
     if (!$decodedPayload) {
       return $response->withStatus(401);
@@ -310,12 +325,19 @@ class UserProfileController
 
     try {
       $user = $this->userService->getOneById($decodedArray['id']);
-    } catch (\Exception $e) {
+    } catch (\Exception) {
       return $response->withStatus(404);
     }
 
+    if (
+      !in_array($user->getState(), [UserState::INVITED, UserState::PASSWORD_RESET], true) ||
+      !Password::validateNew($newPassword)
+    ) {
+      return $response->withStatus(401);
+    }
+
     $this->userService->updateById($user->getId(), [
-      'password' => Password::hash($newPassword),
+      'password' => $newPassword,
       'state' => UserState::ACTIVE,
     ]);
 

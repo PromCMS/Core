@@ -3,6 +3,7 @@
 use DI\Container;
 use PromCMS\Core\App;
 use PromCMS\Core\Database\EntityManager;
+use PromCMS\Core\Database\Models\Base\UserState;
 use PromCMS\Tests\AppTestCase;
 
 final class ProfileRoutesTest extends AppTestCase
@@ -36,6 +37,11 @@ final class ProfileRoutesTest extends AppTestCase
     $this->mockUser([
       "email" => "test@example.com",
     ]);
+    if (session_status() === PHP_SESSION_NONE) {
+      session_start();
+    }
+
+    $sessionId = session_id();
 
     $request = $this->createJsonRequest('POST', '/api/profile/login', [
       "email" => 'test@example.com',
@@ -52,6 +58,25 @@ final class ProfileRoutesTest extends AppTestCase
     foreach ($responseKeys as $responseKey) {
       $this->assertArrayHasKey($responseKey, $responseAsArray);
     }
+
+    $this->assertNotSame($sessionId, session_id());
+  }
+
+
+  public function testBlockedUserCannotLogin()
+  {
+    $this->mockUser([
+      'state' => UserState::BLOCKED,
+    ]);
+
+    $request = $this->createJsonRequest('POST', '/api/profile/login', [
+      'email' => 'test@example.com',
+      'password' => 'test1234',
+    ]);
+
+    $response = static::$app->getSlimApp()->handle($request);
+
+    $this->assertEquals(400, $response->getStatusCode());
   }
 
 

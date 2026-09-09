@@ -24,6 +24,11 @@ final class AsRedirectRoute implements RouteImplementation
   ) {
   }
 
+  public function getRoutePathname(): string
+  {
+    return $this->routePrefix . $this->from;
+  }
+
   public function attach(Router &$router, callable|string $callable): RouteInterface
   {
     $responseFactory = $router->getResponseFactory();
@@ -34,7 +39,7 @@ final class AsRedirectRoute implements RouteImplementation
       return $response->withHeader('Location', (string) $this->to);
     };
 
-    $route = $router->get($this->routePrefix . $this->from, $handler);
+    $route = $router->get($this->getRoutePathname(), $handler);
 
     if ($this->name) {
       $route->setName($this->name);

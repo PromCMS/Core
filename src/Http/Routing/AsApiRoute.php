@@ -12,7 +12,7 @@ use Slim\Interfaces\RouteInterface;
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class AsApiRoute extends AsRoute
 {
-  public function getRoutePathname()
+  public function getRoutePathname(): string
   {
     return '/api' . parent::getRoutePathname();
   }
