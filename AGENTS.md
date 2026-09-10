@@ -21,7 +21,7 @@ This is a PHP core for the PromCMS. This library offers opinionated ways to defi
 
 ## Commands
 
-- `phpunit` - runs phpunit tests
+- `phpunit` - runs phpunit tests. Just calling mentioned command will work as it is executable.
 
 ## Contribution Checklist
 

@@ -17,8 +17,8 @@ class PromConfig
     'project' => [
       'url' => 'http://localhost',
       'slug' => 'prom-core',
-      'languages' => ['en']
-    ]
+      'languages' => ['en'],
+    ],
   ];
   private array $coreConfiguration = [];
 
@@ -27,18 +27,38 @@ class PromConfig
     return Path::join($root, '.prom-cms', 'parsed', 'config.php');
   }
 
+  private static function processConfigValue(array $value): array
+  {
+    $value['database']['connections'] = array_map(function ($connection) {
+      if (str_starts_with($connection['uri'], '$env:')) {
+        $connection['uri'] = getenv(substr($connection['uri'], 5));
+      }
+
+      return $connection;
+    }, $value['database']['connections']);
+
+    return $value;
+  }
+
   private function init(array $config): static
   {
-    $config['project'] = array_merge($this->configuration['project'], $config['project']);
-    $this->configuration = array_merge($this->configuration, $config);
+    $config['project'] = array_merge(
+      $this->configuration['project'],
+      $config['project'],
+    );
+    $this->configuration = static::processConfigValue(
+      array_merge($this->configuration, $config),
+    );
 
-    $this->coreConfiguration = require static::resolveConfigFileByRoot(Path::join(__DIR__, '..'));
-    $this->appModelsNamespace = "PromCMS\App\Models";
+    $this->coreConfiguration = require static::resolveConfigFileByRoot(
+      Path::join(__DIR__, '..'),
+    );
+    $this->appModelsNamespace = 'PromCMS\App\Models';
 
     // Merge core files with app files
     $this->configuration['database']['models'] = array_merge(
       $this->configuration['database']['models'] ?? [],
-      $this->coreConfiguration['database']['models']
+      $this->coreConfiguration['database']['models'],
     );
 
     return $this;
@@ -49,7 +69,9 @@ class PromConfig
     $this->init($configContents);
 
     if (empty($this->configuration['database']['connections'])) {
-      throw new \Exception("No database connection was provided in your config, please make sure that there is atleast one");
+      throw new \Exception(
+        'No database connection was provided in your config, please make sure that there is atleast one',
+      );
     }
   }
 
@@ -58,7 +80,9 @@ class PromConfig
     $filename = static::resolveConfigFileByRoot($root);
 
     if (!file_exists($filename)) {
-      throw new \Exception("Could not find parsed Prom config, please make sure that it's present at {$filename}");
+      throw new \Exception(
+        "Could not find parsed Prom config, please make sure that it's present at {$filename}",
+      );
     }
 
     $configurationFromFile = require $filename;
@@ -76,19 +100,28 @@ class PromConfig
     $this->configuration['project']['security']['roles'] = array_filter(
       $this->configuration['project']['security']['roles'] ?? [],
       // Make sure thats only one admin in array
-      fn($role) => $role['slug'] !== 'admin'
+      fn($role) => $role['slug'] !== 'admin',
     );
 
     $this->configuration['project']['security']['roles'][] = [
       'name' => 'Admin',
       'slug' => 'admin',
       'description' => 'Main user role provided by PromCMS Core module',
-      'modelPermissions' => array_fill_keys($this->getEntityTableNames(), RolePermissionOptionValue::ALLOW_ALL->value)
+      'modelPermissions' => array_fill_keys(
+        $this->getEntityTableNames(),
+        RolePermissionOptionValue::ALLOW_ALL->value,
+      ),
     ];
 
-    $this->configuration['project']['security']['roles'] = new Roles($this->configuration['project']['security']['roles']);
-    $this->configuration['project']['security'] = new Security(...$this->configuration['project']['security']);
-    $this->configuration['project']['url'] = new Uri($this->configuration['project']['url']);
+    $this->configuration['project']['security']['roles'] = new Roles(
+      $this->configuration['project']['security']['roles'],
+    );
+    $this->configuration['project']['security'] = new Security(
+      ...$this->configuration['project']['security'],
+    );
+    $this->configuration['project']['url'] = new Uri(
+      $this->configuration['project']['url'],
+    );
 
     $this->cachedProject = new Project(...$this->configuration['project']);
 
@@ -109,10 +142,16 @@ class PromConfig
   {
     $models = $this->getDatabaseModels();
     $singletons = $this->getDatabaseSingletons();
-    $cachedTableNames = array_map(fn($entity) => $entity->tableName, $this->cachedEntities);
+    $cachedTableNames = array_map(
+      fn($entity) => $entity->tableName,
+      $this->cachedEntities,
+    );
 
     $entities = array_merge($models, $singletons);
-    $entities = array_filter($entities, fn($entity) => !in_array($entity['tableName'], $cachedTableNames));
+    $entities = array_filter(
+      $entities,
+      fn($entity) => !in_array($entity['tableName'], $cachedTableNames),
+    );
 
     foreach ($entities as $entity) {
       $entity['promConfig'] = $this;
@@ -139,12 +178,21 @@ class PromConfig
 
   public function getSingletonTableNames()
   {
-    return array_map(fn($entity) => $entity['tableName'], $this->getDatabaseSingletons());
+    return array_map(
+      fn($entity) => $entity['tableName'],
+      $this->getDatabaseSingletons(),
+    );
   }
 
   private function getEntityTableNames()
   {
-    return array_merge($this->getSingletonTableNames(), array_map(fn($entity) => $entity['tableName'], $this->getDatabaseModels()));
+    return array_merge(
+      $this->getSingletonTableNames(),
+      array_map(
+        fn($entity) => $entity['tableName'],
+        $this->getDatabaseModels(),
+      ),
+    );
   }
 
   function getEntityAsArray(string $entityTableName): ?array
