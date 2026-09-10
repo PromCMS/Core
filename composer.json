@@ -30,7 +30,7 @@
     "bryanjhv/slim-session": "^4.0",
     "monolog/monolog": "^3.5",
     "league/flysystem": "^3.15",
-    "firebase/php-jwt": "^6.8",
+    "firebase/php-jwt": "^7.1",
     "paragonie/sodium_compat": "^1.17",
     "phpmailer/phpmailer": "^6.6",
     "slim/twig-view": "^3.3",
@@ -60,6 +60,8 @@
       "phpunit --testdox"
     ],
     "database:migrate": "composer run cli orm:schema-tool:update -- --force --complete",
-    "cli": ["bin/prom-cms"]
+    "cli": [
+      "bin/prom-cms"
+    ]
   }
 }
