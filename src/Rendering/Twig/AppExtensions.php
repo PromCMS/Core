@@ -40,30 +40,30 @@ class AppExtensions extends AbstractExtension
     $this->appRoot = $container->get('app.root');
 
     $this->viteAssetsConfigSchema = new Schema([
-      "type" => "object",
-      "properties" => [
-        "manifestFileName" => [
-          "type" => "string",
-          "default" => ".vite/manifest.json"
+      'type' => 'object',
+      'properties' => [
+        'manifestFileName' => [
+          'type' => 'string',
+          'default' => '.vite/manifest.json',
         ],
-        "distFolderPath" => [
-          "type" => "string",
-          "required" => true
+        'distFolderPath' => [
+          'type' => 'string',
+          'required' => true,
         ],
-        "entries" => [
-          "type" => "array",
-          "required" => true,
-          "items" => [
-            "type" => "object",
-            "properties" => [
-              "path" => [
-                "type" => "string",
-                "required" => true
+        'entries' => [
+          'type' => 'array',
+          'required' => true,
+          'items' => [
+            'type' => 'object',
+            'properties' => [
+              'path' => [
+                'type' => 'string',
+                'required' => true,
               ],
-            ]
-          ]
-        ]
-      ]
+            ],
+          ],
+        ],
+      ],
     ]);
   }
 
@@ -76,7 +76,10 @@ class AppExtensions extends AbstractExtension
       new TwigFunction('getDynamicBlock', [$this, 'getDynamicBlock']),
       new TwigFunction('getViteAssets', [$this, 'getViteAssets']),
       new TwigFunction('isMaintananceEnabled', [$this, 'isMaintananceEnabled']),
-      new TwigFunction('getMaintananceMetadata', [$this, 'getMaintananceMetadata']),
+      new TwigFunction('getMaintananceMetadata', [
+        $this,
+        'getMaintananceMetadata',
+      ]),
     ];
   }
 
@@ -108,13 +111,16 @@ class AppExtensions extends AbstractExtension
     string|int|null|File $idOrImage,
     int $width = null,
     int $height = null,
-    int $quality = null
+    int $quality = null,
   ): array|null {
     if (!$idOrImage) {
       return null;
     }
 
-    $imageInfo = $idOrImage instanceof File ? $idOrImage : $this->fileService->getById($idOrImage);
+    $imageInfo =
+      $idOrImage instanceof File
+        ? $idOrImage
+        : $this->fileService->getById($idOrImage);
 
     return $this->imageService->getProcessed($imageInfo, [
       'w' => $width,
@@ -126,10 +132,9 @@ class AppExtensions extends AbstractExtension
   public function getDynamicBlock(string $blockPath, $payload = []): string
   {
     try {
-      return $this->twigService->getEnvironment()->render(
-        "$blockPath.twig",
-        $payload,
-      );
+      return $this->twigService
+        ->getEnvironment()
+        ->render("$blockPath.twig", $payload);
     } catch (Exception $e) {
       return "No block found for '$blockPath'";
     }
@@ -147,15 +152,23 @@ class AppExtensions extends AbstractExtension
     }
   }
 
-  public function getViteAssets(array $config = []): string
-  {
+  public function getViteAssets(
+    array $config = [],
+    string|null $baseUrl = null,
+  ): string {
     $config = $this->validateGetViteAssetsConfig($config);
 
     if ($config instanceof ValidateSchemaException) {
-      $formattedErrors = implode(', ', array_map(fn($key) => "$key(" . $config->exceptions[$key] . ")", array_keys($config->exceptions)));
+      $formattedErrors = implode(
+        ', ',
+        array_map(
+          fn($key) => "$key(" . $config->exceptions[$key] . ')',
+          array_keys($config->exceptions),
+        ),
+      );
 
       return "<script>alert('Invalid assets array in getViteAssets twig function, because: $formattedErrors');</script>";
-    } else if ($config instanceof Exception) {
+    } elseif ($config instanceof Exception) {
       throw $config;
     }
 
@@ -173,7 +186,10 @@ class AppExtensions extends AbstractExtension
 
     // In development we take whats defined rightaway, stylesheets should be imported through javascript files
     if ($this->config->env->development) {
-      $assets = array_map(fn($entry) => array_merge($entry, ['type' => 'script']), $definedAssets);
+      $assets = array_map(
+        fn($entry) => array_merge($entry, ['type' => 'script']),
+        $definedAssets,
+      );
     }
     // In production we have to parse compiled vite assets by manifest
     else {
@@ -197,13 +213,13 @@ class AppExtensions extends AbstractExtension
 
         $assets[] = [
           'path' => "$distFolderPath/$compiledAssetEntryPath",
-          'type' => 'script'
+          'type' => 'script',
         ];
 
-        foreach (($manifestInfo['css'] ?? []) as $cssPath) {
+        foreach ($manifestInfo['css'] ?? [] as $cssPath) {
           $assets[] = [
             'path' => "$distFolderPath/$cssPath",
-            'type' => 'stylesheet'
+            'type' => 'stylesheet',
           ];
         }
       }
@@ -214,13 +230,18 @@ class AppExtensions extends AbstractExtension
 
       $firstCharInPath = substr($path, 0, 1);
       if ($firstCharInPath !== '/') {
-        $path = "/$path";
+        $path = $baseUrl ? "$baseUrl/$path" : "/$path";
+      } else {
+        $path = $baseUrl ? "$baseUrl$path" : $path;
       }
 
-      $composedAssets .= "\n" . match ($assetInfo['type']) {
-        'script' => "<script type=\"module\" crossorigin src=\"$path\"></script>",
-        'stylesheet' => "<link rel=\"stylesheet\" href=\"$path\">",
-      };
+      $composedAssets .=
+        "\n" .
+        match ($assetInfo['type']) {
+          'script'
+            => "<script type=\"module\" crossorigin src=\"$path\"></script>",
+          'stylesheet' => "<link rel=\"stylesheet\" href=\"$path\">",
+        };
     }
 
     return $composedAssets;
